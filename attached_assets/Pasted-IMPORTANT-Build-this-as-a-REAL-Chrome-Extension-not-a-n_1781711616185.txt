@@ -1,0 +1,139 @@
+IMPORTANT: Build this as a REAL Chrome Extension, not a normal website preview.
+
+The extension must work directly while users are browsing any website and interact with actual on-screen content.
+
+Core behavior:
+
+Users should be able to click the extension icon and see two main options:
+
+1. Truth Layer
+2. Master Scan
+
+---
+
+REAL SCREEN SELECTION SYSTEM
+
+Implement a screen-selection tool similar to screenshot tools.
+
+User flow:
+
+1. User clicks Truth Layer or Master Scan.
+2. A transparent overlay appears over the current webpage.
+3. User drags a rectangular selection area anywhere on the screen.
+4. Capture ONLY the selected region.
+5. Process the captured content instantly.
+
+The selection should work on real websites while browsing:
+
+- Amazon
+- Flipkart
+- Myntra
+- YouTube
+- LinkedIn
+- Reddit
+- Google
+- Medium
+- Research papers
+- Blogs
+- News websites
+- Educational websites
+- Any webpage
+
+---
+
+TRUTH LAYER
+
+When a product area is scanned:
+
+Automatically:
+
+- Detect product name
+- Detect model/version/specifications
+- Detect brand
+- Extract visible text and images
+- Identify exact product
+
+Then perform real-time analysis using actual sources:
+
+- Customer reviews
+- Reddit discussions
+- Quora discussions
+- Google results
+- YouTube reviews
+- Community sentiment
+- Cross-platform feedback
+
+Generate:
+
+- Truth Score
+- Pros
+- Cons
+- Hidden complaints
+- Fake review detection
+- Overall sentiment
+- Buying recommendation
+
+Price Intelligence:
+
+- Search major marketplaces
+- Find same product elsewhere
+- Show cheaper prices if available
+- Show savings amount
+- Show direct product links
+
+---
+
+MASTER SCAN
+
+Master Scan acts as a universal AI assistant for anything on the screen.
+
+Detect:
+
+- Articles
+- Images
+- Research papers
+- PDFs
+- Text
+- Equations
+- Notes
+- Job posts
+- Study material
+- YouTube links
+
+Features:
+
+- OCR text extraction
+- Copy image text
+- Math solving with step-by-step explanation
+- Article summarization
+- Research paper explanation
+- Smart study/interview planner
+- YouTube summary and notes
+- Auto job application form filling
+- AI notes generation
+- Flashcards
+- Quiz generation
+
+---
+
+REAL FUNCTIONALITY REQUIREMENTS
+
+Do NOT create:
+
+- Demo buttons
+- Mock data
+- Fake outputs
+- Hardcoded responses
+- Simulated scans
+- Placeholder content
+
+Must use:
+
+- Chrome extension APIs
+- Screen capture APIs
+- OCR
+- Real webpage extraction
+- Real AI/API integration
+- Real-time processing
+
+The final result should behave like a real-world Chrome extension users install and actively use while browsing.

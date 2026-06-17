@@ -22,92 +22,90 @@
           </svg>
         </div>
         <span>MasterScan</span>
+        <span class="header-type-badge hidden" id="headerTypeBadge"></span>
       </div>
       <div class="header-spacer"></div>
     </header>
 
-    <main class="coming-soon">
-      <div class="cs-glow"></div>
+    <!-- No capture -->
+    <section class="no-capture hidden" id="noCaptureState">
+      <div class="nc-icon">
+        <svg viewBox="0 0 24 24" fill="none" width="48" height="48">
+          <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Start with a Screen Selection</h2>
+      <p>Click the DecisionAI extension icon, choose <strong>MasterScan</strong>, then drag to select any content — articles, math, job posts, research papers, and more.</p>
+    </section>
 
-      <div class="cs-illustration">
-        <div class="scan-grid">
-          <div class="scan-line"></div>
-          <div class="grid-dots">
-            <div class="dot d1"></div>
-            <div class="dot d2"></div>
-            <div class="dot d3"></div>
-            <div class="dot d4"></div>
-            <div class="dot d5"></div>
-            <div class="dot d6"></div>
-            <div class="dot d7"></div>
-            <div class="dot d8"></div>
-            <div class="dot d9"></div>
-          </div>
-          <div class="cs-center-icon">
-            <svg viewBox="0 0 24 24" fill="none">
+    <!-- Loading -->
+    <section class="loading-state hidden" id="loadingState">
+      <div class="loading-preview" id="loadingPreview"></div>
+      <div class="loading-body">
+        <div class="scan-spinner">
+          <div class="scan-ring r1"></div>
+          <div class="scan-ring r2"></div>
+          <div class="scan-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
               <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
               <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
               <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
           </div>
         </div>
-      </div>
-
-      <div class="cs-tag">Coming Soon</div>
-      <h1 class="cs-title">MasterScan</h1>
-      <p class="cs-desc">The next level of product intelligence. We're building something powerful — a full-spectrum market scanner that finds every deal, ranks every alternative, and scores every opportunity.</p>
-
-      <div class="features-preview">
-        <div class="preview-item">
-          <div class="preview-icon preview-blue">
-            <svg viewBox="0 0 20 20" fill="none"><path d="M2 18l4-4m0 0l4-8 2 6 2-3 4 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <div>
-            <div class="preview-title">Market Trend Analysis</div>
-            <div class="preview-sub">See if a product's price is rising or falling over time</div>
-          </div>
-        </div>
-        <div class="preview-item">
-          <div class="preview-icon preview-purple">
-            <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </div>
-          <div>
-            <div class="preview-title">Smart Deal Scoring</div>
-            <div class="preview-sub">Instantly know if the current price is a real deal or bait</div>
-          </div>
-        </div>
-        <div class="preview-item">
-          <div class="preview-icon preview-green">
-            <svg viewBox="0 0 20 20" fill="none"><path d="M3 17s2-5 7-5 7 5 7 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/></svg>
-          </div>
-          <div>
-            <div class="preview-title">Competitive Alternatives</div>
-            <div class="preview-sub">Ranked list of smarter buys for your exact need</div>
-          </div>
-        </div>
-        <div class="preview-item">
-          <div class="preview-icon preview-yellow">
-            <svg viewBox="0 0 20 20" fill="none"><path d="M10 2l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5L10 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          </div>
-          <div>
-            <div class="preview-title">Quality Intelligence</div>
-            <div class="preview-sub">Deep-scanned quality vs. price scoring across categories</div>
-          </div>
+        <h2 class="loading-title">Scanning content…</h2>
+        <p class="loading-sub" id="loadingStep">Detecting content type</p>
+        <div class="loading-steps">
+          <div class="load-step" id="step1"><div class="load-step-dot"></div><span>Reading screenshot</span></div>
+          <div class="load-step" id="step2"><div class="load-step-dot"></div><span>Detecting content type</span></div>
+          <div class="load-step" id="step3"><div class="load-step-dot"></div><span>Extracting text &amp; data</span></div>
+          <div class="load-step" id="step4"><div class="load-step-dot"></div><span>Running AI analysis</span></div>
+          <div class="load-step" id="step5"><div class="load-step-dot"></div><span>Generating insights</span></div>
         </div>
       </div>
+    </section>
 
-      <div class="notify-box">
-        <p class="notify-label">Want early access?</p>
-        <div class="notify-input-row">
-          <input type="email" class="notify-input" id="emailInput" placeholder="your@email.com" />
-          <button class="notify-btn" id="notifyBtn">Notify Me</button>
+    <!-- Results -->
+    <section class="results-state hidden" id="resultsState">
+      <!-- Image preview -->
+      <div class="capture-preview" id="capturePreview"></div>
+
+      <!-- Content type header -->
+      <div class="content-type-bar" id="contentTypeBar">
+        <div class="ct-icon" id="ctIcon"></div>
+        <div class="ct-text">
+          <div class="ct-label" id="ctLabel">Detected Content</div>
+          <div class="ct-title" id="ctTitle"></div>
         </div>
-        <p class="notify-status hidden" id="notifyStatus">You're on the list!</p>
+        <div class="ct-badge" id="ctBadge"></div>
       </div>
-    </main>
+
+      <div class="results-scroll" id="resultsScroll">
+        <!-- Dynamic sections rendered by JS -->
+      </div>
+
+      <div class="results-footer">
+        <button class="copy-text-btn" id="copyTextBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Copy extracted text
+        </button>
+        <button class="scan-again-btn" id="scanAgainBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Scan again
+        </button>
+      </div>
+    </section>
+
+    <!-- Error -->
+    <section class="error-state hidden" id="errorState">
+      <div class="error-icon"><svg viewBox="0 0 24 24" fill="none" width="48" height="48"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5M12 16v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <h2 class="error-title">Scan Failed</h2>
+      <p class="error-desc" id="errorDesc">Something went wrong. Please try again.</p>
+      <button class="retry-btn" id="retryBtn">Try Again</button>
+    </section>
   </div>
 
-  <script src="masterscan.js"></script>
+  <script type="module" src="masterscan.js"></script>
 </body>
 </html>

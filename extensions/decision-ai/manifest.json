@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DecisionAI",
   "version": "1.0.0",
-  "description": "AI-powered shopping assistant. Analyze reviews, detect fake ratings, find better prices, and make smarter buying decisions.",
+  "description": "AI-powered browser intelligence. Select any area on screen to analyze products, articles, research papers, and more.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -10,7 +10,8 @@
     "tabs"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "https://api.groq.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -23,8 +24,7 @@
     }
   },
   "background": {
-    "service_worker": "background/background.js",
-    "type": "module"
+    "service_worker": "background/background.js"
   },
   "content_scripts": [
     {
@@ -41,7 +41,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["views/*"],
+      "resources": ["views/*", "content/selector.js"],
       "matches": ["<all_urls>"]
     }
   ]

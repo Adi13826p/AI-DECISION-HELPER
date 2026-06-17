@@ -1,302 +1,266 @@
 /**
  * Truth Layer — DecisionAI
- *
- * Architecture note: This module is structured for AI API integration.
- * Replace the MOCK_* functions with real API calls to your AI backend.
- * The AIAnalyzer class handles all analysis logic; swap its methods to integrate live AI.
+ * Screen-selection based product analysis via Groq vision.
  */
 
-import { DecisionAIApi } from '../../lib/api.js';
-
-const api = new DecisionAIApi();
+import { analyzeTruthLayer } from '../../lib/api.js';
 
 const $ = (id) => document.getElementById(id);
 
-// ── State ────────────────────────────────────────────────────────────────────
+let capturedData = null;
 
-let currentTab = null;
-let analysisResult = null;
+const STATES = { NONE: 'none', LOADING: 'loading', RESULTS: 'results', ERROR: 'error' };
 
-const STATES = {
-  IDLE:    'idle',
-  LOADING: 'loading',
-  RESULTS: 'results',
-  ERROR:   'error'
-};
-
-function showState(state) {
-  $('idleState').classList.add('hidden');
-  $('loadingState').classList.add('hidden');
-  $('resultsState').classList.add('hidden');
-  $('errorState').classList.add('hidden');
-
-  switch (state) {
-    case STATES.IDLE:    $('idleState').classList.remove('hidden');    break;
-    case STATES.LOADING: $('loadingState').classList.remove('hidden'); break;
-    case STATES.RESULTS: $('resultsState').classList.remove('hidden'); break;
-    case STATES.ERROR:   $('errorState').classList.remove('hidden');   break;
-  }
+function showState(s) {
+  $('noCaptureState').classList.toggle('hidden', s !== STATES.NONE);
+  $('loadingState').classList.toggle('hidden', s !== STATES.LOADING);
+  $('resultsState').classList.toggle('hidden', s !== STATES.RESULTS);
+  $('errorState').classList.toggle('hidden', s !== STATES.ERROR);
 }
 
-// ── Loading step animation ────────────────────────────────────────────────────
+// ── Loading steps ─────────────────────────────────────────────────────────────
 
-const STEPS = ['step1', 'step2', 'step3', 'step4', 'step5'];
+const STEP_IDS = ['step1','step2','step3','step4','step5'];
 
-function resetSteps() {
-  STEPS.forEach(id => {
-    const el = $(id);
-    el.classList.remove('active', 'done');
+function setStep(i) {
+  STEP_IDS.forEach((id, idx) => {
+    $(id).classList.toggle('active', idx === i);
+    $(id).classList.toggle('done', idx < i);
   });
 }
 
-function setStep(index) {
-  STEPS.forEach((id, i) => {
-    const el = $(id);
-    el.classList.remove('active', 'done');
-    if (i < index) el.classList.add('done');
-    else if (i === index) el.classList.add('active');
-  });
-}
-
-async function runLoadingAnimation(durationMs) {
-  resetSteps();
-  const stepDelay = durationMs / STEPS.length;
-  for (let i = 0; i < STEPS.length; i++) {
+async function animateSteps(totalMs) {
+  const delay = totalMs / STEP_IDS.length;
+  for (let i = 0; i < STEP_IDS.length; i++) {
     setStep(i);
-    await sleep(stepDelay);
+    await sleep(delay);
   }
-  STEPS.forEach(id => $(id).classList.add('done'));
+  STEP_IDS.forEach(id => { $(id).classList.remove('active'); $(id).classList.add('done'); });
 }
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Page detection ───────────────────────────────────────────────────────────
-
-async function detectCurrentPage() {
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    currentTab = tab;
-    const url = new URL(tab.url);
-    $('pageUrl').textContent = url.hostname + (url.pathname !== '/' ? url.pathname.substring(0, 40) + '…' : '');
-  } catch {
-    $('pageUrl').textContent = 'Navigate to a product page';
-  }
-}
-
-// ── Analysis pipeline ────────────────────────────────────────────────────────
+// ── Analysis ──────────────────────────────────────────────────────────────────
 
 async function runAnalysis() {
-  if (!currentTab) {
-    showError('Could not detect the current page. Please try again.');
-    return;
-  }
+  if (!capturedData?.image) { showState(STATES.NONE); return; }
 
   showState(STATES.LOADING);
-  resetSteps();
 
-  const animPromise = runLoadingAnimation(3200);
+  // Show preview in loading screen
+  const prev = $('loadingPreview');
+  prev.style.backgroundImage = `url(${capturedData.image})`;
+  prev.classList.remove('hidden');
+
+  const animP = animateSteps(3500);
 
   try {
-    // 1. Extract product data from the page via content script
-    const pageData = await extractPageData(currentTab.id);
-
-    // 2. Run AI analysis (mocked — replace with real API calls)
-    const result = await api.analyzePage(pageData, currentTab.url);
-
-    await animPromise;
-
-    analysisResult = result;
+    const result = await analyzeTruthLayer(
+      capturedData.image,
+      capturedData.pageUrl,
+      capturedData.pageTitle
+    );
+    await animP;
     renderResults(result);
     showState(STATES.RESULTS);
-
+    logAnalysis(result);
   } catch (err) {
-    await animPromise;
-    showError(err.message || 'Analysis failed. Please try again.');
+    await animP;
+    showError(err.message);
   }
 }
 
-async function extractPageData(tabId) {
-  try {
-    const [result] = await chrome.scripting.executeScript({
-      target: { tabId },
-      func: () => {
-        return {
-          title: document.title,
-          url: window.location.href,
-          price: document.querySelector('[itemprop="price"]')?.content ||
-                 document.querySelector('.price, .product-price, [data-price]')?.textContent?.trim() || null,
-          description: document.querySelector('[itemprop="description"], .product-description')?.textContent?.trim()?.substring(0, 500) || null,
-          rating: document.querySelector('[itemprop="ratingValue"]')?.content || null,
-          reviewCount: document.querySelector('[itemprop="reviewCount"]')?.content || null,
-          bodyText: document.body.innerText?.substring(0, 2000) || ''
-        };
-      }
-    });
-    return result?.result || { title: currentTab.title, url: currentTab.url };
-  } catch {
-    return { title: currentTab?.title || '', url: currentTab?.url || '' };
+function showError(msg) {
+  if (msg === 'NO_API_KEY') {
+    $('errorDesc').innerHTML = 'No Groq API key found. Click the DecisionAI extension icon → ⚙ Settings to add your free API key from <a href="https://console.groq.com" target="_blank" style="color:#a855f7">console.groq.com</a>';
+  } else if (msg === 'INVALID_API_KEY') {
+    $('errorDesc').textContent = 'Your API key is invalid. Please check it in the extension settings.';
+  } else {
+    $('errorDesc').textContent = msg || 'Analysis failed. Please try again.';
   }
-}
-
-function showError(message) {
-  $('errorDesc').textContent = message;
   showState(STATES.ERROR);
 }
 
-// ── Render results ───────────────────────────────────────────────────────────
-
-function renderResults(data) {
-  renderVerdict(data.verdict);
-  renderProduct(data.product);
-  renderReviews(data.reviews);
-  renderFakeDetection(data.fakeDetection);
-  renderSentiment(data.sentiment);
-  renderPrices(data.prices);
-  renderSimilar(data.similar);
+function logAnalysis(result) {
+  try {
+    chrome.runtime.sendMessage({
+      type: 'LOG_ANALYSIS',
+      data: { url: capturedData.pageUrl, title: capturedData.pageTitle, mode: 'truth' }
+    });
+  } catch (_) {}
 }
 
-function renderVerdict(v) {
-  const banner = $('verdictBanner');
-  banner.className = `verdict-banner verdict-${v.type}`;
-  $('verdictIcon').textContent = v.emoji;
-  $('verdictLabel').textContent = v.label;
-  $('verdictSub').textContent = v.summary;
-  $('verdictScore').textContent = v.score + '/10';
+// ── Render Results ────────────────────────────────────────────────────────────
+
+function renderResults(data) {
+  // Captured image
+  const prev = $('capturePreview');
+  prev.style.backgroundImage = `url(${capturedData.image})`;
+
+  // Truth Score
+  const score = data.truthScore ?? 0;
+  const scoreEl = $('truthScoreNum');
+  scoreEl.textContent = score;
+  scoreEl.className = 'truth-score-num ' + (score >= 75 ? 'score-green' : score >= 50 ? 'score-yellow' : 'score-red');
+  $('truthScoreLabel').textContent = data.scoreLabel || scoreLabel(score);
+
+  const banner = $('truthBanner');
+  const vtype = data.verdict?.type || 'caution';
+  banner.className = `truth-banner verdict-${vtype}`;
+  $('verdictEmoji').textContent = data.verdict?.emoji || (vtype === 'buy' ? '✅' : vtype === 'caution' ? '⚠️' : '❌');
+  $('verdictLabel').textContent = data.verdict?.label || 'See Below';
+  $('verdictSub').textContent = data.verdict?.reasoning || '';
+
+  renderProduct(data.product || {});
+  renderReviews(data.reviews || {});
+  renderFakeDetection(data.fakeDetection || {});
+  renderSentiment(data.sentiment || []);
+  renderPriceIntel(data.priceIntel || {});
+  renderCompetitors(data.competitors || []);
+}
+
+function scoreLabel(n) {
+  if (n >= 80) return 'Excellent';
+  if (n >= 65) return 'Good';
+  if (n >= 45) return 'Caution';
+  return 'Poor';
 }
 
 function renderProduct(p) {
   $('productCard').innerHTML = `
     <div class="product-card-inner">
-      <div class="product-name">${esc(p.name)}</div>
+      <div class="product-name">${esc(p.name || 'Product detected')}</div>
       <div class="product-meta">
-        <span class="product-price">${esc(p.price)}</span>
-        <span class="product-store">${esc(p.store)}</span>
-        ${p.rating ? `<span class="product-rating">★ ${esc(p.rating)} (${esc(p.reviewCount)} reviews)</span>` : ''}
+        ${p.price ? `<span class="product-price">${esc(p.price)}</span>` : ''}
+        ${p.brand ? `<span class="product-store">${esc(p.brand)}</span>` : ''}
+        ${p.store ? `<span class="product-store">${esc(p.store)}</span>` : ''}
+        ${p.rating ? `<span class="product-rating">★ ${esc(p.rating)}${p.reviewCount ? ` · ${esc(p.reviewCount)} reviews` : ''}</span>` : ''}
       </div>
-    </div>
-  `;
+      ${p.model ? `<div class="product-model">${esc(p.model)}</div>` : ''}
+    </div>`;
 }
 
 function renderReviews(r) {
-  const stars = '★'.repeat(Math.round(r.rating)) + '☆'.repeat(5 - Math.round(r.rating));
+  const pros = (r.pros || []).map(p => `<li>${esc(p)}</li>`).join('');
+  const cons = (r.cons || []).map(c => `<li>${esc(c)}</li>`).join('');
+  const hidden = (r.hiddenComplaints || []);
+
   $('reviewSummary').innerHTML = `
     <div class="review-summary-inner">
-      <div class="rating-row">
-        <span class="rating-big">${r.rating}</span>
-        <div>
-          <div class="rating-stars">${stars}</div>
-          <div class="rating-count">${r.totalReviews} reviews analyzed</div>
-        </div>
-      </div>
-      <p class="review-summary-text">${esc(r.summary)}</p>
+      ${r.summary ? `<p class="review-summary-text">${esc(r.summary)}</p>` : ''}
       <div class="pros-cons">
-        <div class="pros-box">
-          <div class="pros-label">Pros</div>
-          <ul>${r.pros.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-        </div>
-        <div class="cons-box">
-          <div class="cons-label">Cons</div>
-          <ul>${r.cons.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
-        </div>
+        <div class="pros-box"><div class="pros-label">Pros</div><ul>${pros || '<li>—</li>'}</ul></div>
+        <div class="cons-box"><div class="cons-label">Cons</div><ul>${cons || '<li>—</li>'}</ul></div>
       </div>
-    </div>
-  `;
+      ${hidden.length ? `<div class="hidden-complaints"><span class="hc-label">⚠ Hidden complaints found</span>${hidden.map(h=>`<p>${esc(h)}</p>`).join('')}</div>` : ''}
+    </div>`;
 }
 
 function renderFakeDetection(f) {
-  const levelClass = f.riskLevel === 'Low' ? 'low' : f.riskLevel === 'Medium' ? 'med' : 'high';
-  const badgeClass = `fake-badge fake-badge-${levelClass}`;
-  const signals = f.signals.map(s => `
+  const level = f.riskLevel || 'Unknown';
+  const pct   = Math.min(100, Math.max(0, f.fakePercent ?? 0));
+  const cls   = level === 'Low' ? 'low' : level === 'Medium' ? 'med' : level === 'High' ? 'high' : 'med';
+  const signals = (f.signals || []).map(s => `
     <div class="fake-signal">
-      <div class="fake-signal-dot signal-${s.type}"></div>
+      <div class="fake-signal-dot signal-${s.type || 'ok'}"></div>
       <span>${esc(s.text)}</span>
-    </div>
-  `).join('');
+    </div>`).join('');
 
   $('fakeResult').innerHTML = `
     <div class="fake-result-inner">
       <div class="fake-score-row">
         <span class="fake-label">Fake review risk</span>
-        <span class="${badgeClass}">${esc(f.riskLevel)} Risk</span>
+        <span class="fake-badge fake-badge-${cls}">${esc(level)} Risk</span>
       </div>
-      <div class="fake-bar-track">
-        <div class="fake-bar-fill ${levelClass}" style="width:${f.riskPercent}%"></div>
-      </div>
+      <div class="fake-bar-track"><div class="fake-bar-fill ${cls}" style="width:${pct}%"></div></div>
+      ${f.confidence ? `<div class="fake-confidence">AI confidence: ${f.confidence}%</div>` : ''}
       <div class="fake-signals">${signals}</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderSentiment(items) {
+  if (!items.length) {
+    $('sentimentItems').innerHTML = '<p class="no-data">No community sentiment data available.</p>';
+    return;
+  }
   $('sentimentItems').innerHTML = items.map(s => `
     <div class="sentiment-item">
       <div class="sentiment-source">
-        <span class="source-badge source-${s.source.toLowerCase()}">${esc(s.source)}</span>
-        <span class="sentiment-mood">${s.mood}</span>
+        <span class="source-badge source-${esc(s.source?.toLowerCase())}">${esc(s.source)}</span>
+        <span class="sentiment-mood">${esc(s.mood)}</span>
       </div>
       <p class="sentiment-text">${esc(s.text)}</p>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function renderPrices(prices) {
-  const sorted = [...prices].sort((a, b) => a.numericPrice - b.numericPrice);
-  const bestIdx = 0;
+function renderPriceIntel(p) {
+  const alts = (p.alternatives || []).map(a => `
+    <div class="price-item">
+      <span class="price-store">${esc(a.store)}</span>
+      <div class="price-right">
+        ${a.note ? `<span class="price-note">${esc(a.note)}</span>` : ''}
+        <span class="price-amount">${esc(a.estimatedPrice)}</span>
+      </div>
+    </div>`).join('');
 
-  $('priceItems').innerHTML = sorted.map((p, i) => {
-    const cls = i === bestIdx ? 'best-price' : p.isCurrent ? 'current' : 'higher';
-    const tag = i === bestIdx ? '<span class="price-tag">Best</span>' : '';
-    const diff = i > 0 && sorted[0].numericPrice
-      ? `<span class="price-diff">+${((p.numericPrice - sorted[0].numericPrice) / sorted[0].numericPrice * 100).toFixed(0)}%</span>`
-      : '';
-    return `
-      <div class="price-item">
-        <span class="price-store">${esc(p.store)}${p.isCurrent ? ' (current)' : ''}</span>
-        <div class="price-right">
-          ${diff}
-          <span class="price-amount ${cls}">${esc(p.price)}</span>
-          ${tag}
+  $('priceIntel').innerHTML = `
+    <div class="price-intel-inner">
+      <div class="price-deal-row">
+        <div class="price-current-wrap">
+          <span class="price-current-label">Current Price</span>
+          <span class="price-current-val">${esc(p.currentPrice || '—')}</span>
+        </div>
+        <div class="price-deal-badge deal-${(p.dealRating||'').toLowerCase().replace(/\s+/g,'-')}">
+          ${esc(p.dealRating || 'Unknown')}
         </div>
       </div>
-    `;
-  }).join('');
+      ${p.fairPrice ? `<div class="fair-price-row">Fair market value: <strong>${esc(p.fairPrice)}</strong></div>` : ''}
+      ${alts ? `<div class="price-alts">${alts}</div>` : ''}
+      ${p.buyTiming ? `<div class="buy-timing"><strong>Buy Timing:</strong> ${esc(p.buyTiming.reason)}</div>` : ''}
+    </div>`;
 }
 
-function renderSimilar(items) {
-  $('similarItems').innerHTML = `
-    <div class="similar-items-inner">
-      ${items.map(s => `
-        <div class="similar-item">
-          <span class="similar-name">${esc(s.name)}</span>
-          <div class="similar-meta">
-            <span class="similar-price">${esc(s.price)}</span>
-            <span class="similar-note">${esc(s.note)}</span>
+function renderCompetitors(items) {
+  if (!items.length) {
+    $('competitors').innerHTML = '<p class="no-data">No competitor data available.</p>';
+    return;
+  }
+  $('competitors').innerHTML = `
+    <div class="competitors-list">
+      ${items.map(c => `
+        <div class="competitor-item">
+          <div class="comp-name">${esc(c.name)}</div>
+          <div class="comp-detail">
+            <span class="comp-why">${esc(c.why)}</span>
+            ${c.betterFor ? `<span class="comp-for">Better for: ${esc(c.betterFor)}</span>` : ''}
           </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+        </div>`).join('')}
+    </div>`;
 }
 
-function esc(str) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+async function init() {
+  const result = await chrome.storage.local.get('capturedData');
+  capturedData = result.capturedData;
+
+  if (!capturedData || !capturedData.image || capturedData.mode !== 'truth') {
+    showState(STATES.NONE);
+    return;
+  }
+
+  runAnalysis();
 }
 
-// ── Event listeners ──────────────────────────────────────────────────────────
+$('backBtn').addEventListener('click', () => window.close());
+$('retryBtn').addEventListener('click', () => runAnalysis());
+$('scanAgainBtn').addEventListener('click', () => window.close());
 
-$('analyzeBtn').addEventListener('click', runAnalysis);
-$('retryBtn').addEventListener('click', () => { showState(STATES.IDLE); });
-$('reAnalyzeBtn').addEventListener('click', runAnalysis);
-$('backBtn').addEventListener('click', () => { window.close(); });
-
-// ── Init ─────────────────────────────────────────────────────────────────────
-
-detectCurrentPage();
-showState(STATES.IDLE);
+init();

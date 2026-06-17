@@ -1,212 +1,273 @@
 /**
- * DecisionAI — API Layer
- *
- * This module is the single integration point for AI backends.
- * All analysis flows route through DecisionAIApi.
- *
- * To integrate a real AI provider (OpenAI, Anthropic, Gemini, etc.):
- *   1. Set your API key in the background script via chrome.storage
- *   2. Replace the MOCK_* methods below with real fetch() calls
- *   3. Update the prompts in buildPrompt() for your use case
- *
- * Architecture:
- *   truth-layer.js → DecisionAIApi.analyzePage(pageData, url)
- *                        → _extractProduct()
- *                        → _analyzeReviews()
- *                        → _detectFakeReviews()
- *                        → _fetchWebSentiment()
- *                        → _comparePrices()
- *                        → _findSimilar()
- *                        → _generateVerdict()
+ * DecisionAI — Groq Vision API Layer
+ * Calls Groq directly from the extension using the stored API key.
  */
 
-export class DecisionAIApi {
-  constructor() {
-    this.baseUrl = null; // Set to your AI API endpoint when ready
-    this.apiKey = null;  // Loaded from chrome.storage in _loadConfig()
+const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+const VISION_MODEL  = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const TEXT_MODEL    = 'llama-3.3-70b-versatile';
+
+async function getApiKey() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get('groqApiKey', (d) => resolve(d.groqApiKey || null));
+  });
+}
+
+async function groqCall(messages, model, json = true) {
+  const apiKey = await getApiKey();
+  if (!apiKey) throw new Error('NO_API_KEY');
+
+  const body = {
+    model,
+    messages,
+    temperature: 0.3,
+    max_tokens: 2048
+  };
+  if (json) body.response_format = { type: 'json_object' };
+
+  const resp = await fetch(GROQ_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text().catch(() => resp.statusText);
+    if (resp.status === 401) throw new Error('INVALID_API_KEY');
+    throw new Error(`Groq API error ${resp.status}: ${err}`);
   }
 
-  async _loadConfig() {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['aiApiKey', 'aiBaseUrl'], (data) => {
-        this.apiKey  = data.aiApiKey  || null;
-        this.baseUrl = data.aiBaseUrl || null;
-        resolve();
-      });
-    });
+  const data = await resp.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Empty response from AI');
+
+  if (json) {
+    try { return JSON.parse(text); }
+    catch { throw new Error('AI returned invalid JSON. Please try again.'); }
   }
+  return text;
+}
 
-  /**
-   * Main entry point — analyzes a product page end-to-end.
-   * Returns a structured result object consumed by truth-layer.js.
-   *
-   * @param {object} pageData  — extracted DOM data from content script
-   * @param {string} url       — current tab URL
-   * @returns {Promise<AnalysisResult>}
-   */
-  async analyzePage(pageData, url) {
-    await this._loadConfig();
+// ── Truth Layer ───────────────────────────────────────────────────────────────
 
-    // When a real AI key is configured, delegate to _realAnalysis().
-    // Until then, use mock data for UI development.
-    if (this.apiKey && this.baseUrl) {
-      return this._realAnalysis(pageData, url);
-    }
-
-    return this._mockAnalysis(pageData, url);
-  }
-
-  // ── Real AI integration (implement when ready) ───────────────────────────
-
-  async _realAnalysis(pageData, url) {
-    const prompt = this._buildPrompt(pageData, url);
-
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',   // swap for your preferred model
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user',   content: prompt }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.3
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`AI API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content;
-
-    try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error('Failed to parse AI response. Please try again.');
-    }
-  }
-
-  _buildPrompt(pageData, url) {
-    return `
-Analyze the following product page and return a JSON object matching the AnalysisResult schema.
-
-URL: ${url}
-Title: ${pageData.title}
-Price: ${pageData.price || 'unknown'}
-Rating: ${pageData.rating || 'unknown'}
-Review count: ${pageData.reviewCount || 'unknown'}
-Description: ${pageData.description || 'N/A'}
-Page text snippet: ${(pageData.bodyText || '').substring(0, 1000)}
-
-Return ONLY valid JSON. No markdown, no explanation.
-    `.trim();
-  }
-
-  // ── Mock data (development / demo mode) ─────────────────────────────────
-
-  async _mockAnalysis(pageData, url) {
-    await _delay(1200); // Simulate network latency
-
-    const domain = _getDomain(url);
-    const title  = pageData.title || 'Unknown Product';
-    const price  = pageData.price  || '$49.99';
-    const rating = parseFloat(pageData.rating) || 4.2;
-
-    return {
-      verdict: {
-        type:    'buy',
-        label:   '✅ Recommended Buy',
-        summary: 'Strong reviews, fair price, and minimal fake activity detected.',
-        score:   8,
-        emoji:   '✅'
-      },
-      product: {
-        name:        title,
-        price:       price,
-        store:       domain,
-        rating:      rating.toFixed(1),
-        reviewCount: pageData.reviewCount || '1,247'
-      },
-      reviews: {
-        rating:       rating,
-        totalReviews: pageData.reviewCount || '1,247',
-        summary: 'Customers consistently praise the build quality and value for money. A minority of buyers report minor shipping delays, but overall satisfaction is high.',
-        pros: ['Great build quality', 'Good value for money', 'Fast shipping'],
-        cons: ['Some reports of packaging issues', 'Instructions could be clearer']
-      },
-      fakeDetection: {
-        riskLevel:   'Low',
-        riskPercent: 18,
-        signals: [
-          { type: 'ok',      text: 'Review dates are spread naturally over time' },
-          { type: 'ok',      text: 'Reviewer profiles appear genuine with purchase history' },
-          { type: 'warning', text: '12% of reviews use very similar phrasing patterns' },
-          { type: 'ok',      text: 'Verified purchase ratio is 94%' }
-        ]
-      },
-      sentiment: [
+export async function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
+  const messages = [
+    {
+      role: 'system',
+      content: `You are DecisionAI Truth Layer — an expert product analyst AI. Analyze product screenshots and return comprehensive, honest assessments. Always return valid JSON only, no markdown.`
+    },
+    {
+      role: 'user',
+      content: [
         {
-          source: 'Reddit',
-          mood:   '😊 Positive',
-          text:   'r/BuyItForLife and r/Frugal both mention this product favorably. Users cite long-term durability and good customer support as standout qualities.'
+          type: 'image_url',
+          image_url: { url: imageDataUrl }
         },
         {
-          source: 'Quora',
-          mood:   '😐 Mixed',
-          text:   'Quora discussions are mostly positive but a few users note there are cheaper alternatives with comparable quality. Recommended by 2 of 3 verified experts.'
-        },
-        {
-          source: 'Web',
-          mood:   '😊 Positive',
-          text:   'Multiple review sites give it 4+ stars. Ranked #3 in its category on two major comparison sites. Featured in a "Best of 2024" roundup.'
+          type: 'text',
+          text: `Analyze this screenshot from: ${pageUrl || 'unknown page'}
+Title: ${pageTitle || 'unknown'}
+
+Extract product information and provide a complete analysis. Return ONLY this JSON structure:
+{
+  "product": {
+    "name": "full product name",
+    "brand": "brand name",
+    "model": "model/version if visible",
+    "price": "price as shown",
+    "currency": "currency symbol or code",
+    "rating": "rating as shown (e.g. 4.2/5)",
+    "reviewCount": "number of reviews",
+    "store": "website/store name",
+    "inStock": true
+  },
+  "truthScore": 75,
+  "scoreLabel": "Good",
+  "verdict": {
+    "type": "buy",
+    "label": "Recommended Buy",
+    "reasoning": "3-4 sentence explanation based on visible info and general knowledge about this product/brand",
+    "emoji": "✅"
+  },
+  "reviews": {
+    "summary": "What customers typically say about this product (2-3 sentences)",
+    "pros": ["Pro 1", "Pro 2", "Pro 3", "Pro 4"],
+    "cons": ["Con 1", "Con 2", "Con 3"],
+    "hiddenComplaints": ["Any common issue not shown in ratings"]
+  },
+  "fakeDetection": {
+    "riskLevel": "Low",
+    "fakePercent": 12,
+    "confidence": 80,
+    "signals": [
+      { "type": "ok", "text": "Signal text" },
+      { "type": "warning", "text": "Warning signal" }
+    ]
+  },
+  "sentiment": [
+    { "source": "Reddit", "mood": "Positive", "text": "Community sentiment from Reddit" },
+    { "source": "Quora", "mood": "Mixed", "text": "Expert opinions from Quora" },
+    { "source": "YouTube", "mood": "Positive", "text": "Video reviewer consensus" }
+  ],
+  "priceIntel": {
+    "currentPrice": "visible price",
+    "fairPrice": "estimated fair market value",
+    "dealRating": "Great Deal|Fair|Overpriced",
+    "alternatives": [
+      { "store": "Amazon", "estimatedPrice": "$XX", "note": "typically cheaper" },
+      { "store": "Walmart", "estimatedPrice": "$XX", "note": "" }
+    ]
+  },
+  "buyTiming": {
+    "recommendation": "buy-now",
+    "reason": "Short reason for timing recommendation"
+  },
+  "competitors": [
+    { "name": "Competitor Name", "why": "How it compares", "betterFor": "use case" }
+  ]
+}`
         }
-      ],
-      prices: [
-        { store: 'BestPrice.com',  price: '$41.99', numericPrice: 41.99, isCurrent: false },
-        { store: 'Amazon',         price: '$44.99', numericPrice: 44.99, isCurrent: false },
-        { store: domain,           price: price,    numericPrice: parseFloat(price.replace(/[^0-9.]/g, '')) || 49.99, isCurrent: true  },
-        { store: 'Walmart',        price: '$52.00', numericPrice: 52.00, isCurrent: false }
-      ],
-      similar: [
-        { name: 'ProModel X3 (Top Alternative)',      price: '$39.99', note: '⭐ 4.5 · Better value' },
-        { name: 'CompactPro Lite',                    price: '$34.99', note: '⭐ 4.3 · Budget pick'  },
-        { name: 'EliteChoice Premium Edition',        price: '$58.00', note: '⭐ 4.7 · Premium tier' }
       ]
-    };
-  }
+    }
+  ];
+
+  return groqCall(messages, VISION_MODEL, true);
 }
 
-// ── System prompt (customize for your AI model) ──────────────────────────────
+// ── Master Scan ───────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `
-You are DecisionAI, a smart shopping assistant. When given a product page, you analyze it and return a structured JSON object with the following fields:
-- verdict: { type: "buy"|"caution"|"skip", label, summary, score (1-10), emoji }
-- product: { name, price, store, rating, reviewCount }
-- reviews: { rating, totalReviews, summary, pros[], cons[] }
-- fakeDetection: { riskLevel: "Low"|"Medium"|"High", riskPercent, signals[{ type: "ok"|"warning"|"bad", text }] }
-- sentiment: [{ source: "Reddit"|"Quora"|"Web", mood, text }]
-- prices: [{ store, price, numericPrice, isCurrent }]
-- similar: [{ name, price, note }]
+export async function analyzeMasterScan(imageDataUrl, pageUrl, pageTitle) {
+  const messages = [
+    {
+      role: 'system',
+      content: `You are MasterScan — a universal AI content analyzer. You can analyze any type of web content from screenshots: articles, research papers, math problems, job postings, YouTube videos, social posts, code, recipes, and more. Always return valid JSON only, no markdown.`
+    },
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'image_url',
+          image_url: { url: imageDataUrl }
+        },
+        {
+          type: 'text',
+          text: `Analyze this screenshot from: ${pageUrl || 'unknown'}
+Title: ${pageTitle || 'unknown'}
 
-Be concise, accurate, and helpful. Always return valid JSON.
-`.trim();
+First detect the content type, then provide the most useful analysis for that content type.
+Return ONLY this JSON structure:
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+{
+  "contentType": "article|research_paper|math|job_posting|video|product|code|social_post|recipe|study_material|other",
+  "contentLabel": "Human-readable label like 'News Article' or 'Research Paper'",
+  "title": "Detected title or topic",
+  "language": "en",
+  "extractedText": "All visible text extracted from the screenshot, max 800 chars",
+  "confidence": 90,
 
-function _delay(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+  "article": {
+    "summary": "3-4 sentence summary of the article",
+    "keyPoints": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
+    "sentiment": "Positive|Neutral|Negative|Mixed",
+    "readingTime": "3 min",
+    "topics": ["topic1", "topic2"],
+    "flashcards": [
+      { "q": "Question 1?", "a": "Answer 1" },
+      { "q": "Question 2?", "a": "Answer 2" }
+    ]
+  },
 
-function _getDomain(url) {
-  try {
-    return new URL(url).hostname.replace('www.', '');
-  } catch {
-    return 'this store';
+  "research": {
+    "abstract": "Brief abstract summary",
+    "methodology": "Research method used",
+    "findings": ["Finding 1", "Finding 2", "Finding 3"],
+    "conclusions": "Main conclusion",
+    "simplifiedExplanation": "Explain this to a non-expert in 2-3 sentences",
+    "flashcards": [
+      { "q": "Key concept?", "a": "Definition" }
+    ]
+  },
+
+  "math": {
+    "problem": "The math problem as text",
+    "solution": "Final answer",
+    "steps": [
+      { "step": 1, "description": "Step description", "result": "intermediate result" }
+    ],
+    "concepts": ["concept1", "concept2"],
+    "difficulty": "Easy|Medium|Hard"
+  },
+
+  "job": {
+    "company": "Company name",
+    "role": "Job title",
+    "location": "Location or Remote",
+    "salary": "Salary if visible",
+    "requirements": ["Requirement 1", "Requirement 2"],
+    "niceToHave": ["Nice to have 1"],
+    "skills": ["skill1", "skill2", "skill3"],
+    "applicationTips": ["Tip 1", "Tip 2"],
+    "redFlags": ["Any red flag if visible"]
+  },
+
+  "video": {
+    "title": "Video title",
+    "channel": "Channel name if visible",
+    "summary": "What this video appears to be about",
+    "keyTopics": ["Topic 1", "Topic 2", "Topic 3"],
+    "studyNotes": ["Note 1", "Note 2", "Note 3"],
+    "estimatedDuration": "X min"
+  },
+
+  "code": {
+    "language": "Programming language",
+    "explanation": "What this code does",
+    "codeSnippet": "The code if readable",
+    "improvements": ["Improvement 1", "Improvement 2"],
+    "bugs": ["Bug if any"]
+  },
+
+  "social_post": {
+    "platform": "Twitter/Reddit/LinkedIn/etc",
+    "author": "Author if visible",
+    "content": "Post content",
+    "sentiment": "Positive|Negative|Neutral",
+    "context": "What this is about",
+    "keyTakeaway": "Main point in one sentence"
+  },
+
+  "recipe": {
+    "name": "Recipe name",
+    "ingredients": ["ingredient 1", "ingredient 2"],
+    "steps": ["Step 1", "Step 2"],
+    "prepTime": "X min",
+    "servings": "X",
+    "tips": ["Tip 1"]
+  },
+
+  "study_material": {
+    "subject": "Subject/topic",
+    "summary": "What this covers",
+    "keyTerms": [{ "term": "term", "definition": "definition" }],
+    "flashcards": [{ "q": "Question?", "a": "Answer" }],
+    "practiceQuestions": ["Q1?", "Q2?", "Q3?"],
+    "studyPlan": "Suggested study approach"
+  },
+
+  "general": {
+    "summary": "What this content is about",
+    "keyInsights": ["Insight 1", "Insight 2", "Insight 3"],
+    "actionItems": ["Action 1", "Action 2"],
+    "categories": ["tag1", "tag2"]
   }
+}`
+        }
+      ]
+    }
+  ];
+
+  return groqCall(messages, VISION_MODEL, true);
 }

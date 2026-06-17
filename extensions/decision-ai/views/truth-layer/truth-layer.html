@@ -17,7 +17,6 @@
           <svg viewBox="0 0 24 24" fill="none">
             <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
             <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
         </div>
         <span>Truth Layer</span>
@@ -25,179 +24,123 @@
       <div class="header-spacer"></div>
     </header>
 
-    <!-- Idle state -->
-    <section class="idle-state" id="idleState">
-      <div class="idle-illustration">
-        <div class="idle-rings">
-          <div class="ring ring-1"></div>
-          <div class="ring ring-2"></div>
-          <div class="ring ring-3"></div>
-        </div>
-        <div class="idle-center-icon">
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
+    <!-- No capture state -->
+    <section class="no-capture hidden" id="noCaptureState">
+      <div class="nc-icon">
+        <svg viewBox="0 0 24 24" fill="none" width="48" height="48">
+          <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
       </div>
-      <h1 class="idle-title">Analyze This Product</h1>
-      <p class="idle-desc">Navigate to any product page, then click Analyze to get a full review breakdown, fake review detection, price comparison, and a final recommendation.</p>
-
-      <div class="capability-pills">
-        <div class="pill">
-          <svg viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
-          Review Analysis
-        </div>
-        <div class="pill">
-          <svg viewBox="0 0 16 16" fill="none"><path d="M2 14l4-4m0 0l4-8 2 6 2-3 2 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Price Check
-        </div>
-        <div class="pill">
-          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          Fake Detection
-        </div>
-        <div class="pill">
-          <svg viewBox="0 0 16 16" fill="none"><path d="M3 13s1-4 5-4 5 4 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/></svg>
-          Web Opinions
-        </div>
-      </div>
-
-      <button class="analyze-btn" id="analyzeBtn">
-        <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Analyze Current Page
-      </button>
-
-      <p class="idle-note" id="pageUrl">Detecting page…</p>
+      <h2>Start with a Screen Selection</h2>
+      <p>Click the DecisionAI extension icon on any product page, choose <strong>Truth Layer</strong>, then drag to select the product area.</p>
     </section>
 
     <!-- Loading state -->
     <section class="loading-state hidden" id="loadingState">
-      <div class="loading-spinner-wrap">
+      <div class="loading-preview" id="loadingPreview"></div>
+      <div class="loading-body">
         <div class="spinner"></div>
-      </div>
-      <h2 class="loading-title" id="loadingTitle">Scanning product…</h2>
-      <p class="loading-sub" id="loadingStep">Extracting page data</p>
-
-      <div class="loading-steps">
-        <div class="load-step" id="step1">
-          <div class="load-step-dot"></div>
-          <span>Extracting product info</span>
-        </div>
-        <div class="load-step" id="step2">
-          <div class="load-step-dot"></div>
-          <span>Analyzing customer reviews</span>
-        </div>
-        <div class="load-step" id="step3">
-          <div class="load-step-dot"></div>
-          <span>Searching Reddit &amp; Quora</span>
-        </div>
-        <div class="load-step" id="step4">
-          <div class="load-step-dot"></div>
-          <span>Checking prices across stores</span>
-        </div>
-        <div class="load-step" id="step5">
-          <div class="load-step-dot"></div>
-          <span>Generating recommendation</span>
+        <h2 class="loading-title">Analyzing product…</h2>
+        <p class="loading-sub" id="loadingStep">Reading screenshot</p>
+        <div class="loading-steps">
+          <div class="load-step" id="step1"><div class="load-step-dot"></div><span>Identifying product &amp; brand</span></div>
+          <div class="load-step" id="step2"><div class="load-step-dot"></div><span>Analyzing review patterns</span></div>
+          <div class="load-step" id="step3"><div class="load-step-dot"></div><span>Detecting fake reviews</span></div>
+          <div class="load-step" id="step4"><div class="load-step-dot"></div><span>Checking sentiment across Reddit, Quora</span></div>
+          <div class="load-step" id="step5"><div class="load-step-dot"></div><span>Generating Truth Score &amp; verdict</span></div>
         </div>
       </div>
     </section>
 
     <!-- Results state -->
     <section class="results-state hidden" id="resultsState">
-      <!-- Verdict banner -->
-      <div class="verdict-banner" id="verdictBanner">
-        <div class="verdict-icon" id="verdictIcon"></div>
-        <div class="verdict-text">
-          <div class="verdict-label" id="verdictLabel"></div>
-          <div class="verdict-sub" id="verdictSub"></div>
+      <!-- Captured image preview -->
+      <div class="capture-preview" id="capturePreview"></div>
+
+      <!-- Truth Score banner -->
+      <div class="truth-banner" id="truthBanner">
+        <div class="truth-score-wrap">
+          <div class="truth-score-num" id="truthScoreNum">—</div>
+          <div class="truth-score-label" id="truthScoreLabel">Truth Score</div>
         </div>
-        <div class="verdict-score" id="verdictScore"></div>
+        <div class="truth-verdict" id="truthVerdict">
+          <div class="truth-verdict-emoji" id="verdictEmoji"></div>
+          <div class="truth-verdict-text">
+            <div class="truth-verdict-label" id="verdictLabel"></div>
+            <div class="truth-verdict-sub" id="verdictSub"></div>
+          </div>
+        </div>
       </div>
 
       <div class="results-scroll">
-        <!-- Product detected -->
-        <div class="result-section" id="productSection">
+        <!-- Product -->
+        <div class="result-section">
           <div class="section-header">
-            <div class="section-icon section-icon-blue">
-              <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M5 5.5h6M5 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            </div>
+            <div class="section-icon section-icon-blue"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M5 5.5h6M5 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
             <h3 class="section-title">Product Detected</h3>
           </div>
-          <div class="product-card" id="productCard"></div>
+          <div id="productCard"></div>
         </div>
 
-        <!-- Review analysis -->
-        <div class="result-section" id="reviewSection">
+        <!-- Review Analysis -->
+        <div class="result-section">
           <div class="section-header">
-            <div class="section-icon section-icon-green">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
-            </div>
+            <div class="section-icon section-icon-green"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
             <h3 class="section-title">Review Analysis</h3>
           </div>
-          <div class="review-summary" id="reviewSummary"></div>
+          <div id="reviewSummary"></div>
         </div>
 
-        <!-- Fake review detection -->
-        <div class="result-section" id="fakeSection">
+        <!-- Fake Detection -->
+        <div class="result-section">
           <div class="section-header">
-            <div class="section-icon section-icon-red">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L2 14h12L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 6v4M8 11.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            </div>
+            <div class="section-icon section-icon-red"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2L2 14h12L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 6v4M8 11.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
             <h3 class="section-title">Fake Review Detection</h3>
           </div>
-          <div class="fake-result" id="fakeResult"></div>
+          <div id="fakeResult"></div>
         </div>
 
-        <!-- Web sentiment -->
-        <div class="result-section" id="sentimentSection">
+        <!-- Web Sentiment -->
+        <div class="result-section">
           <div class="section-header">
-            <div class="section-icon section-icon-purple">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M14 5H2v7a1 1 0 001 1h10a1 1 0 001-1V5z" stroke="currentColor" stroke-width="1.2"/><path d="M14 5l-6-3-6 3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
-            </div>
-            <h3 class="section-title">Web Sentiment</h3>
+            <div class="section-icon section-icon-purple"><svg viewBox="0 0 16 16" fill="none"><path d="M14 5H2v7a1 1 0 001 1h10a1 1 0 001-1V5z" stroke="currentColor" stroke-width="1.2"/><path d="M14 5l-6-3-6 3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+            <h3 class="section-title">Community Sentiment</h3>
           </div>
-          <div class="sentiment-items" id="sentimentItems"></div>
+          <div id="sentimentItems"></div>
         </div>
 
-        <!-- Price comparison -->
-        <div class="result-section" id="priceSection">
+        <!-- Price Intel -->
+        <div class="result-section">
           <div class="section-header">
-            <div class="section-icon section-icon-yellow">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M2 14l4-4m0 0l4-8 2 6 2-3 2 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <h3 class="section-title">Price Comparison</h3>
+            <div class="section-icon section-icon-yellow"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2l1.2 3.5H13l-3 2.2 1.2 3.5L8 9l-3.2 2.2L6 7.7 3 5.5h3.8L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+            <h3 class="section-title">Price Intelligence</h3>
           </div>
-          <div class="price-items" id="priceItems"></div>
+          <div id="priceIntel"></div>
         </div>
 
-        <!-- Similar products -->
-        <div class="result-section" id="similarSection">
+        <!-- Competitors -->
+        <div class="result-section">
           <div class="section-header">
-            <div class="section-icon section-icon-blue">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M2 8h12M8 2v12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            </div>
-            <h3 class="section-title">Similar Products</h3>
+            <div class="section-icon section-icon-blue"><svg viewBox="0 0 16 16" fill="none"><path d="M2 8h12M8 2v12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <h3 class="section-title">Competitors &amp; Alternatives</h3>
           </div>
-          <div class="similar-items" id="similarItems"></div>
+          <div id="competitors"></div>
         </div>
       </div>
 
       <div class="results-footer">
-        <button class="re-analyze-btn" id="reAnalyzeBtn">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 0112-8.46M21 12a9 9 0 01-12 8.46" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M21 3v5h-5M3 21v-5h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Re-analyze
+        <button class="scan-again-btn" id="scanAgainBtn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Scan a new area
         </button>
       </div>
     </section>
 
     <!-- Error state -->
     <section class="error-state hidden" id="errorState">
-      <div class="error-icon">
-        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5M12 16v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </div>
+      <div class="error-icon"><svg viewBox="0 0 24 24" fill="none" width="48" height="48"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5M12 16v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
       <h2 class="error-title">Analysis Failed</h2>
-      <p class="error-desc" id="errorDesc">Unable to analyze this page. Make sure you're on a product page and try again.</p>
+      <p class="error-desc" id="errorDesc">Something went wrong. Please try again.</p>
       <button class="analyze-btn" id="retryBtn">Try Again</button>
     </section>
   </div>

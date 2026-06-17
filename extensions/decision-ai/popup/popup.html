@@ -10,24 +10,49 @@
   <div class="app">
     <header class="header">
       <div class="logo">
-        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
           <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
           <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
           <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
         </svg>
         <span class="logo-text">Decision<span class="logo-accent">AI</span></span>
       </div>
-      <div class="header-badge">Beta</div>
+      <div class="header-right">
+        <div class="header-badge">Beta</div>
+        <button class="settings-btn" id="settingsBtn" title="API Key Settings">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
     </header>
 
+    <!-- Settings panel -->
+    <div class="settings-panel hidden" id="settingsPanel">
+      <div class="settings-title">
+        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+          <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Groq API Key
+      </div>
+      <div class="settings-desc">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
+      <div class="settings-input-row">
+        <input type="password" id="apiKeyInput" class="api-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+        <button class="save-key-btn" id="saveKeyBtn">Save</button>
+      </div>
+      <div class="key-status hidden" id="keyStatus"></div>
+    </div>
+
     <div class="hero">
-      <p class="hero-tagline">Shop smarter. Decide with confidence.</p>
+      <p class="hero-tagline">Select any area on screen. Get instant AI insights.</p>
     </div>
 
     <main class="features">
-      <a class="feature-card" href="../views/truth-layer/truth-layer.html" target="_blank">
+      <button class="feature-card" id="truthLayerBtn">
         <div class="feature-icon-wrap feature-icon-truth">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 24 24" fill="none">
             <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
             <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -38,7 +63,7 @@
             <h2 class="feature-title">Truth Layer</h2>
             <span class="feature-tag feature-tag-live">Live</span>
           </div>
-          <p class="feature-desc">Deep-dive analysis of any product. Reviews, pricing, red flags, and a final buy recommendation.</p>
+          <p class="feature-desc">Select any product on screen for a full analysis — reviews, fake detection, price comparison, and buy recommendation.</p>
           <ul class="feature-bullets">
             <li>
               <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -57,11 +82,11 @@
         <div class="feature-arrow">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-      </a>
+      </button>
 
-      <a class="feature-card feature-card-dim" href="../views/masterscan/masterscan.html" target="_blank">
+      <button class="feature-card" id="masterScanBtn">
         <div class="feature-icon-wrap feature-icon-scan">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 24 24" fill="none">
             <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
             <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
             <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -71,33 +96,35 @@
         <div class="feature-content">
           <div class="feature-header">
             <h2 class="feature-title">MasterScan</h2>
-            <span class="feature-tag feature-tag-soon">Soon</span>
+            <span class="feature-tag feature-tag-new">New</span>
           </div>
-          <p class="feature-desc">Advanced product intelligence. Full market scan, alternatives ranking, and deal scoring.</p>
+          <p class="feature-desc">Universal AI copilot. Select articles, research papers, math, job posts, videos — get instant summaries, notes, and solutions.</p>
           <ul class="feature-bullets">
             <li>
-              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/></svg>
-              Market trend analysis
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Summarize &amp; explain anything
             </li>
             <li>
-              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/></svg>
-              Smart deal scoring
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Solve math step-by-step
             </li>
             <li>
-              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/></svg>
-              Competitive alternatives
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Flashcards &amp; quiz generation
             </li>
           </ul>
         </div>
         <div class="feature-arrow">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-      </a>
+      </button>
     </main>
 
     <footer class="footer">
-      <span>Powered by AI</span>
-      <span class="footer-dot">·</span>
+      <div class="api-key-indicator" id="apiKeyIndicator">
+        <span class="indicator-dot" id="indicatorDot"></span>
+        <span id="indicatorLabel">Checking…</span>
+      </div>
       <span>v1.0.0</span>
     </footer>
   </div>
