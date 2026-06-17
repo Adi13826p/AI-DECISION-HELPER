@@ -428,57 +428,10 @@ function detectSmartyType(val: string): { icon:string; label:string; color:strin
   return { icon:"✨", label:"", color:"#a374ff", type:"" };
 }
 
-function IdleView({ onStart, onJobApply, onSmarty }: { onStart: () => void; onJobApply: () => void; onSmarty: (q:string) => void }) {
+function IdleView({ onStart: _onStart, onJobApply: _onJobApply, onSmarty }: { onStart: () => void; onJobApply: () => void; onSmarty: (q:string) => void }) {
   return (
     <div style={s.idle}>
-      {/* Smarty bar — top of idle */}
       <SmartyBar onSubmit={onSmarty} />
-
-      <div style={s.idleDivider}>
-        <div style={{flex:1,height:1,background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.1))"}}/>
-        <span style={s.idleDividerText}>or capture your screen</span>
-        <div style={{flex:1,height:1,background:"linear-gradient(90deg,rgba(255,255,255,0.1),transparent)"}}/>
-      </div>
-
-      <div style={{...s.scannerAnim, marginTop:36}}>
-        <div style={s.scannerCornerTL}/><div style={s.scannerCornerTR}/>
-        <div style={s.scannerCornerBL}/><div style={s.scannerCornerBR}/>
-        <div style={s.scannerLine}/>
-        <span style={{fontSize:28}}>🧠</span>
-      </div>
-
-      <h1 style={{...s.idleTitle, marginTop:20}}>Capture Any Screen.<br/><span style={s.gradText}>AI Does the Rest.</span></h1>
-      <p style={{...s.idleDesc, marginTop:12}}>Select any content on your screen. MasterScan instantly detects what it is and unlocks the right AI tools — all in one workspace.</p>
-
-      <div style={{...s.capsPills, marginTop:18}}>
-        {CAPS.map(c => (
-          <div key={c.label} style={s.capPill}><span style={{fontSize:11}}>{c.icon}</span>{c.label}</div>
-        ))}
-      </div>
-
-      <button style={{...s.startBtn, marginTop:28}} onClick={onStart}>
-        <svg style={{width:15,height:15}} viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-          <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-          <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-          <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-        Start Master Scan
-      </button>
-
-      {/* Job Apply CTA */}
-      <div style={{...s.jobCta, marginTop:24}}>
-        <div style={s.jobCtaLeft}>
-          <span style={{fontSize:18}}>💼</span>
-          <div>
-            <div style={{fontSize:12,fontWeight:700,marginBottom:1}}>Auto Job Apply</div>
-            <div style={{fontSize:11,color:"var(--text-muted)"}}>Scan any job post → AI fills the form</div>
-          </div>
-        </div>
-        <button style={s.jobCtaBtn} onClick={onJobApply}>Try Demo</button>
-      </div>
-
-      <p style={{fontSize:11,color:"var(--text-muted)",marginTop:12}}>Demo mode — simulates a real screen capture</p>
     </div>
   );
 }
@@ -1640,7 +1593,7 @@ const s: Record<string, React.CSSProperties> = {
   liveDot: { width:5, height:5, borderRadius:"50%", background:"#34d399", flexShrink:0, boxShadow:"0 0 7px #34d399", animation:"pulse-glow 2s ease-in-out infinite" } as React.CSSProperties,
 
   // Idle
-  idle:        { display:"flex", flexDirection:"column", alignItems:"center", padding:"24px 22px 40px", textAlign:"center", gap:0 },
+  idle:        { display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", flex:1, padding:"0 22px 40px", textAlign:"center" },
   scannerAnim: {
     position:"relative", width:100, height:100,
     display:"flex", alignItems:"center", justifyContent:"center",
@@ -1750,7 +1703,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize:58,
     fontWeight:900,
     letterSpacing:"2px",
-    margin:"0 0 28px 0",
+    margin:"0 0 44px 0",
     background:"linear-gradient(90deg, #4fc3f7 0%, #a78bfa 60%, #c084fc 100%)",
     WebkitBackgroundClip:"text",
     WebkitTextFillColor:"transparent",
