@@ -1,6 +1,9 @@
 /**
  * DecisionAI — Background Service Worker
+ * Handles selection capture, AI analysis, and overlay messaging.
  */
+
+import { analyzeTruthLayer, analyzeMasterScan } from '../lib/api.js';
 
 let pendingMode = 'truth';
 
@@ -42,30 +45,56 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case 'SELECTION_MADE': {
       const { rect, dpr, pageUrl, pageTitle } = message;
+      const tabId    = sender.tab?.id;
       const windowId = sender.tab?.windowId;
 
+      if (!tabId || !windowId) return false;
+
+      // Step 1 — capture the visible tab immediately (selector overlay is already gone)
       chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, async (dataUrl) => {
         if (chrome.runtime.lastError || !dataUrl) {
-          console.error('[DecisionAI] captureVisibleTab error:', chrome.runtime.lastError?.message);
+          chrome.tabs.sendMessage(tabId, {
+            type: 'OVERLAY_ERROR',
+            error: chrome.runtime.lastError?.message || 'Screen capture failed'
+          }).catch(() => {});
           return;
         }
+
         try {
+          // Step 2 — crop to the selected area
           const croppedDataUrl = await cropImage(dataUrl, rect, dpr);
-          await chrome.storage.local.set({
-            capturedData: {
-              image: croppedDataUrl,
-              mode: pendingMode,
-              pageUrl: pageUrl || '',
-              pageTitle: pageTitle || '',
-              timestamp: Date.now()
-            }
-          });
-          const viewPath = pendingMode === 'masterscan'
-            ? 'views/masterscan/masterscan.html'
-            : 'views/truth-layer/truth-layer.html';
-          chrome.tabs.create({ url: chrome.runtime.getURL(viewPath) });
+
+          // Step 3 — show loading overlay on the page with the cropped preview
+          chrome.tabs.sendMessage(tabId, {
+            type: 'SHOW_OVERLAY',
+            mode: pendingMode,
+            imageDataUrl: croppedDataUrl,
+            pageUrl: pageUrl || '',
+            pageTitle: pageTitle || ''
+          }).catch(() => {});
+
+          // Step 4 — run AI analysis
+          let result;
+          if (pendingMode === 'masterscan') {
+            result = await analyzeMasterScan(croppedDataUrl, pageUrl, pageTitle);
+          } else {
+            result = await analyzeTruthLayer(croppedDataUrl, pageUrl, pageTitle);
+          }
+
+          // Step 5 — send results to overlay
+          chrome.tabs.sendMessage(tabId, {
+            type: 'OVERLAY_RESULT',
+            result,
+            mode: pendingMode
+          }).catch(() => {});
+
+          logAnalysis({ url: pageUrl, title: pageTitle, mode: pendingMode });
+
         } catch (err) {
-          console.error('[DecisionAI] Processing failed:', err);
+          chrome.tabs.sendMessage(tabId, {
+            type: 'OVERLAY_ERROR',
+            error: err.message
+          }).catch(() => {});
         }
       });
       return false;
@@ -108,9 +137,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// ── Image utilities ────────────────────────────────────────────────────────────
+
 async function cropImage(dataUrl, rect, dpr) {
-  const resp = await fetch(dataUrl);
-  const blob = await resp.blob();
+  const resp   = await fetch(dataUrl);
+  const blob   = await resp.blob();
   const bitmap = await createImageBitmap(blob);
 
   const sx = Math.max(0, Math.round(rect.x * dpr));
@@ -118,13 +149,13 @@ async function cropImage(dataUrl, rect, dpr) {
   const sw = Math.min(Math.round(rect.width  * dpr), bitmap.width  - sx);
   const sh = Math.min(Math.round(rect.height * dpr), bitmap.height - sy);
 
-  const MAX = 1280;
+  const MAX   = 1280;
   const scale = Math.min(1, MAX / Math.max(sw, sh));
-  const ow = Math.round(sw * scale);
-  const oh = Math.round(sh * scale);
+  const ow    = Math.round(sw * scale);
+  const oh    = Math.round(sh * scale);
 
   const canvas = new OffscreenCanvas(ow, oh);
-  const ctx = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
   ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, ow, oh);
 
   const outBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.88 });
@@ -132,9 +163,9 @@ async function cropImage(dataUrl, rect, dpr) {
 }
 
 async function blobToDataUrl(blob) {
-  const ab = await blob.arrayBuffer();
+  const ab    = await blob.arrayBuffer();
   const bytes = new Uint8Array(ab);
-  let binary = '';
+  let binary  = '';
   const CHUNK = 65536;
   for (let i = 0; i < bytes.length; i += CHUNK) {
     binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + CHUNK, bytes.length)));
@@ -142,9 +173,11 @@ async function blobToDataUrl(blob) {
   return `data:${blob.type || 'image/jpeg'};base64,` + btoa(binary);
 }
 
+// ── History ────────────────────────────────────────────────────────────────────
+
 async function logAnalysis(data) {
-  const result = await chrome.storage.local.get('analysisHistory');
-  const history = (result.analysisHistory || []);
+  const result  = await chrome.storage.local.get('analysisHistory');
+  const history = result.analysisHistory || [];
   history.unshift({ url: data.url, title: data.title, mode: data.mode, timestamp: Date.now() });
   chrome.storage.local.set({ analysisHistory: history.slice(0, 50) });
 }

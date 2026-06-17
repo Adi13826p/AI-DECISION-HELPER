@@ -1,19 +1,20 @@
 /**
  * DecisionAI — Groq Vision API Layer
- * Calls Groq directly from the extension using the stored API key.
+ * Calls Groq directly using the stored API key.
+ * Used by both background.js (service worker) and views (ES module pages).
  */
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const VISION_MODEL  = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const TEXT_MODEL    = 'llama-3.3-70b-versatile';
 
-async function getApiKey() {
+export async function getApiKey() {
   return new Promise((resolve) => {
     chrome.storage.local.get('groqApiKey', (d) => resolve(d.groqApiKey || null));
   });
 }
 
-async function groqCall(messages, model, json = true) {
+export async function groqCall(messages, model, json = true) {
   const apiKey = await getApiKey();
   if (!apiKey) throw new Error('NO_API_KEY');
 
