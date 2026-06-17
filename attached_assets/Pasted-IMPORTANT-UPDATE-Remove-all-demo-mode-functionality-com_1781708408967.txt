@@ -1,0 +1,155 @@
+IMPORTANT UPDATE
+
+Remove all demo mode functionality completely.
+
+Do NOT use:
+
+- Demo buttons
+- Sample cards
+- Fake scans
+- Mock results
+- Placeholder outputs
+- Simulated AI responses
+- Hardcoded data
+
+Every feature must work with real browsing and real content.
+
+Examples:
+
+- Truth Layer should analyze actual scanned products using real data from reviews, Reddit, Quora, Google, YouTube and other available sources.
+- Price Intelligence should find actual prices and actual links.
+- OCR should extract real text.
+- YouTube Summary should summarize actual videos.
+- Research Analysis should process actual papers.
+- Math Solver should solve actual equations.
+- Job AutoFill should fill actual forms.
+- Smarty should process actual URLs and real user input.
+
+No fake testing environment.
+
+---
+
+CHROME EXTENSION REDESIGN
+
+Completely redesign the extension into a premium, startup-quality Chrome extension.
+
+The current UI feels unfinished.
+
+Create a highly polished, colorful, professional and visually attractive extension that feels like a real-world product.
+
+Extension popup size:
+
+- Modern large popup layout
+- Proper spacing
+- Responsive layout
+- Smooth interactions
+
+Main popup should contain ONLY two premium cards/options:
+
+━━━━━━━━━━━━━━━━━━━━
+
+🔍 Truth Layer
+
+Subtitle:
+
+"Reveal what people really think before buying"
+
+Features:
+
+- Scan products
+- Cross-platform review analysis
+- Truth score
+- Price intelligence
+
+Visual:
+
+Modern glowing product intelligence card with premium animations
+
+━━━━━━━━━━━━━━━━━━━━
+
+🧠 Master Scan
+
+Subtitle:
+
+"Capture anything. AI does the rest."
+
+Features:
+
+- OCR text extraction
+- Math solving
+- Article summaries
+- Research analysis
+- Smart planner
+- Job autofill
+- YouTube intelligence
+
+Visual:
+
+Futuristic AI workspace card with dynamic effects
+
+━━━━━━━━━━━━━━━━━━━━
+
+DESIGN REQUIREMENTS
+
+Theme:
+
+Premium Pink AI Theme
+
+Primary Colors:
+
+- Neon Pink (#FF4FD8)
+- Soft Pink (#FF80DF)
+
+Secondary Colors:
+
+- Purple (#8A5CFF)
+- Deep Violet (#6B3DFF)
+
+Background:
+
+- Deep Black (#05070D)
+- Dark Purple Gradient (#0B0615 → #140A24)
+
+Use:
+
+- Glassmorphism
+- Neon pink glow effects
+- Gradient borders
+- Soft shadows
+- Rounded corners
+- Animated transitions
+- Modern icons
+- Gradient buttons
+- Floating particles
+- Premium typography
+- Smooth hover effects
+- Professional micro-interactions
+- High-quality visuals
+- Clean spacing
+- Luxury futuristic styling
+
+Buttons:
+
+Pink → Purple gradient
+
+Apply on:
+
+- Scan buttons
+- Analyze buttons
+- Search buttons
+- Truth Layer cards
+- Master Scan cards
+
+Typography:
+
+- Large bold headings
+- Clean premium font
+- White text with subtle pink highlights
+
+Keep the UI visually rich but avoid clutter.
+
+Decorate the entire experience with elegant premium effects while maintaining simplicity.
+
+Goal:
+
+The extension should feel like a premium AI startup product that users would genuinely install from the Chrome Web Store and immediately feel impressed by.
