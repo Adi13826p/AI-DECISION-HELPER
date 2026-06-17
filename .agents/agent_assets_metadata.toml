@@ -6,3 +6,9 @@ id = "8yp90fVSrcKyAd8jkYKoB"
 uri = "file://extensions/decision-ai.tar.gz"
 type = "unspecified"
 title = "DecisionAI Chrome Extension"
+
+[[outputs]]
+id = "5sRly9HDaxR6RdpF9Idm-"
+uri = "file://decision-ai-extension.zip"
+type = "unspecified"
+title = "DecisionAI Chrome Extension"
