@@ -19,11 +19,9 @@ const ANALYSIS_STEPS = [
 
 export default function TruthLayer() {
   const [, navigate] = useLocation();
-  const [state, setState] = useState<ViewState>("idle");
+  const [state, setState] = useState<ViewState>("capturing");
   const [stepIdx, setStepIdx] = useState(0);
   const [result, setResult] = useState<TruthLayerResult | null>(null);
-
-  async function startDemo() { setState("capturing"); }
 
   async function runAnalysis() {
     setState("analyzing");
@@ -43,14 +41,13 @@ export default function TruthLayer() {
       <div style={s.dotGrid} />
       <div style={s.page}>
         <Header onBack={() => {
-          if (state === "results" || state === "capturing") setState("idle");
+          if (state === "results") setState("capturing");
           else navigate("/");
         }} />
-        {state === "idle"      && <IdleView onDemo={startDemo} />}
         {state === "capturing" && <CapturingView product={MOCK_RESULT.product} onAnalyze={runAnalysis} />}
         {state === "analyzing" && <AnalyzingView stepIdx={stepIdx} />}
         {state === "results"   && result && (
-          <ResultsDashboard result={result} onReanalyze={() => setState("idle")} />
+          <ResultsDashboard result={result} onReanalyze={() => setState("capturing")} />
         )}
       </div>
     </div>
