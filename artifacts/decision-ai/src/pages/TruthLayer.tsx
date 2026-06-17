@@ -244,9 +244,6 @@ function ResultsDashboard({ result, onReanalyze }: { result: TruthLayerResult; o
 function ProductHero({ product }: { product: TruthLayerResult["product"] }) {
   return (
     <div style={s.productHero}>
-      <div style={s.productImgWrap}>
-        <img src={product.image} alt="" style={s.productImg} onError={e => { (e.target as HTMLImageElement).style.display="none"; }} />
-      </div>
       <div style={{ flex:1, minWidth:0 }}>
         <div style={s.productBrand}>{product.brand}</div>
         <div style={s.productName}>{product.name}</div>
@@ -444,9 +441,6 @@ function CompetitorCard({ comp, rank }: { comp: TruthLayerResult["competitors"][
   return (
     <div style={s.compCard}>
       <div style={s.compRank}>{rank}</div>
-      <div style={s.compImgWrap}>
-        <img src={comp.image} alt="" style={s.compImg} onError={e => { (e.target as HTMLImageElement).style.display="none"; }} />
-      </div>
       <div style={{ flex:1, minWidth:0 }}>
         <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:8, marginBottom:4 }}>
           <div>
