@@ -1,0 +1,165 @@
+MASTER SCAN
+
+Build a powerful AI feature called Master Scan.
+
+Master Scan allows users to drag and select any area of the screen. After capture, AI automatically analyzes the selected content and provides the most relevant actions inside a single unified workspace.
+
+There should be NO separate pages or sub-menus for each capability. Everything should work from one intelligent interface.
+
+---
+
+USER FLOW
+
+1. User clicks "Master Scan".
+
+2. A screen selection overlay appears.
+
+3. User drags a rectangle around any content.
+
+4. Capture the selected region.
+
+5. Automatically detect the content type.
+
+Supported content:
+
+- Text
+- Images
+- Articles
+- Blogs
+- Research Papers
+- PDFs
+- Study Notes
+- Screenshots
+- Math Equations
+- Job Descriptions
+- Infographics
+
+6. Display relevant actions and AI outputs inside the same workspace.
+
+---
+
+OCR & TEXT EXTRACTION
+
+If an image contains text:
+
+- Extract all text accurately.
+- Preserve formatting when possible.
+- One-click copy button.
+- Export extracted text.
+
+---
+
+MATH SOLVER
+
+If a mathematical equation is detected:
+
+- Automatically recognize the equation.
+- Integrate with WolframAlpha API or an advanced reasoning model.
+- Solve step-by-step.
+- Explain each step clearly.
+- Show final answer.
+- Support Algebra, Calculus, Statistics, Geometry and Trigonometry.
+
+---
+
+ARTICLE / BLOG ANALYSIS
+
+If an article, webpage, blog or document is detected:
+
+Generate:
+
+- 30-Second Summary
+- Key Takeaways
+- Important Facts
+- Main Insights
+- Final Conclusion
+
+---
+
+RESEARCH PAPER ANALYSIS
+
+If a research paper is detected:
+
+Generate:
+
+- Plain-English Explanation
+- Research Objective
+- Methodology
+- Key Findings
+- Limitations
+- Practical Applications
+- Important Facts
+- 30-Second Summary
+
+Make technical content easy to understand.
+
+---
+
+SMART PLANNER
+
+Master Scan includes an AI planner called Smarty.
+
+Users can create:
+
+- Study Plans
+- Interview Preparation Plans
+- Learning Roadmaps
+- Project Plans
+- Career Plans
+
+Smarty should ask intelligent follow-up questions before generating a plan.
+
+Examples:
+
+Study Planner:
+
+- What exam are you preparing for?
+- Target score?
+- Hours available per day?
+- Exam date?
+
+Interview Planner:
+
+- Company name?
+- Role?
+- Experience level?
+- Interview date?
+
+Based on answers, generate highly personalized and realistic plans with milestones, timelines and daily goals.
+
+---
+
+UNIVERSAL AI ACTIONS
+
+Users can instantly:
+
+- Summarize
+- Explain
+- Simplify
+- Translate
+- Create Notes
+- Generate Flashcards
+- Create Quiz Questions
+- Extract Key Insights
+- Analyze Content
+
+AI should automatically adapt output based on the detected content.
+
+---
+
+DESIGN REQUIREMENTS
+
+- Modern AI copilot interface.
+- One unified workspace.
+- Context-aware actions.
+- No feature switching.
+- Minimal and professional UI.
+- Fast response time.
+- Startup-quality design.
+- Responsive layout.
+
+---
+
+GOAL
+
+Master Scan should feel like an intelligent AI copilot that can understand anything visible on a user's screen and instantly provide analysis, explanations, planning, learning assistance and actionable insights from a single interface.

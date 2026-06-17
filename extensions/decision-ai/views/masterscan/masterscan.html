@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MasterScan — DecisionAI</title>
+  <link rel="stylesheet" href="masterscan.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <button class="back-btn" id="backBtn">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="header-center">
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>MasterScan</span>
+      </div>
+      <div class="header-spacer"></div>
+    </header>
+
+    <main class="coming-soon">
+      <div class="cs-glow"></div>
+
+      <div class="cs-illustration">
+        <div class="scan-grid">
+          <div class="scan-line"></div>
+          <div class="grid-dots">
+            <div class="dot d1"></div>
+            <div class="dot d2"></div>
+            <div class="dot d3"></div>
+            <div class="dot d4"></div>
+            <div class="dot d5"></div>
+            <div class="dot d6"></div>
+            <div class="dot d7"></div>
+            <div class="dot d8"></div>
+            <div class="dot d9"></div>
+          </div>
+          <div class="cs-center-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-tag">Coming Soon</div>
+      <h1 class="cs-title">MasterScan</h1>
+      <p class="cs-desc">The next level of product intelligence. We're building something powerful — a full-spectrum market scanner that finds every deal, ranks every alternative, and scores every opportunity.</p>
+
+      <div class="features-preview">
+        <div class="preview-item">
+          <div class="preview-icon preview-blue">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M2 18l4-4m0 0l4-8 2 6 2-3 4 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="preview-title">Market Trend Analysis</div>
+            <div class="preview-sub">See if a product's price is rising or falling over time</div>
+          </div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-icon preview-purple">
+            <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div class="preview-title">Smart Deal Scoring</div>
+            <div class="preview-sub">Instantly know if the current price is a real deal or bait</div>
+          </div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-icon preview-green">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M3 17s2-5 7-5 7 5 7 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/></svg>
+          </div>
+          <div>
+            <div class="preview-title">Competitive Alternatives</div>
+            <div class="preview-sub">Ranked list of smarter buys for your exact need</div>
+          </div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-icon preview-yellow">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 2l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5L10 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="preview-title">Quality Intelligence</div>
+            <div class="preview-sub">Deep-scanned quality vs. price scoring across categories</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notify-box">
+        <p class="notify-label">Want early access?</p>
+        <div class="notify-input-row">
+          <input type="email" class="notify-input" id="emailInput" placeholder="your@email.com" />
+          <button class="notify-btn" id="notifyBtn">Notify Me</button>
+        </div>
+        <p class="notify-status hidden" id="notifyStatus">You're on the list!</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="masterscan.js"></script>
+</body>
+</html>

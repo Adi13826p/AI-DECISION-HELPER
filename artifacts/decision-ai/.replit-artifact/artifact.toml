@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "DecisionAI"
+version = "1.0.0"
+id = "artifacts/decision-ai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21102
+
+[services.development]
+run = "pnpm --filter @workspace/decision-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/decision-ai", "run", "build" ]
+publicDir = "artifacts/decision-ai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21102"
+BASE_PATH = "/"

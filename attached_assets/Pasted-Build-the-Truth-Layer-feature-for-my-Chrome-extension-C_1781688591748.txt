@@ -1,0 +1,219 @@
+Build the "Truth Layer" feature for my Chrome extension.
+
+Core Idea:
+
+Users should not copy links or search manually.
+
+Instead, the extension should let users capture a product directly from any e-commerce website (Amazon, Flipkart, Myntra, etc.) and instantly reveal what people genuinely think about that exact product across the internet.
+
+--------------------------------------------------
+USER FLOW
+--------------------------------------------------
+
+1. User clicks "Truth Layer".
+
+2. A screen-selection mode activates.
+
+3. The page darkens with a transparent overlay.
+
+4. User drags a rectangle around a product card or product section.
+
+5. Capture the selected area.
+
+6. Extract:
+   - Product Name
+   - Brand
+   - Price
+   - Rating
+   - Product Image
+   - Model Number (if available)
+
+7. Identify the exact product.
+
+8. Automatically search and analyze the SAME PRODUCT across multiple sources.
+
+--------------------------------------------------
+MULTI-PLATFORM ANALYSIS
+--------------------------------------------------
+
+Analyze the product from:
+
+1. Customer Reviews
+   - Amazon
+   - Flipkart
+   - Other marketplace reviews
+
+2. Reddit
+   Search discussions about:
+   - product review
+   - product issues
+   - product experience
+   - product comparison
+
+3. Quora
+   Search:
+   - Is this product worth buying?
+   - Long-term user experiences
+   - Recommendations
+
+4. Google Search
+   Search:
+   - Professional reviews
+   - Expert opinions
+   - Product comparisons
+   - Reliability reports
+
+5. YouTube Reviews
+   Analyze:
+   - Review titles
+   - Review summaries
+   - Frequently mentioned strengths
+   - Frequently mentioned weaknesses
+
+--------------------------------------------------
+AI INTELLIGENCE LAYER
+--------------------------------------------------
+
+The AI must combine all findings and remove marketing noise.
+
+Detect:
+
+- Common praise
+- Common complaints
+- Reliability concerns
+- Hidden issues
+- Value for money
+- Long-term ownership experience
+- Community sentiment
+- Expert sentiment
+
+Do not simply summarize reviews.
+
+Find patterns repeated across platforms.
+
+If a complaint appears repeatedly on Amazon, Reddit and YouTube, treat it as highly reliable.
+
+If praise appears only in marketing-style reviews, reduce confidence.
+
+--------------------------------------------------
+OUTPUT FORMAT
+--------------------------------------------------
+
+Display a premium dashboard.
+
+--------------------------------------------------
+TRUTH SCORE
+--------------------------------------------------
+
+Score: XX/100
+
+Meaning:
+
+90-100 = Excellent
+80-89 = Recommended
+70-79 = Good
+60-69 = Average
+Below 60 = Avoid
+
+--------------------------------------------------
+TRUTH SUMMARY
+--------------------------------------------------
+
+A concise AI-generated summary explaining the reality of the product.
+
+Example:
+
+"Although the product maintains a high marketplace rating, users across Reddit and long-term reviews consistently report battery degradation after several months. Overall performance remains strong, but durability concerns reduce the final score."
+
+--------------------------------------------------
+WHAT PEOPLE LOVE
+--------------------------------------------------
+
+✓ Point 1
+
+✓ Point 2
+
+✓ Point 3
+
+✓ Point 4
+
+✓ Point 5
+
+--------------------------------------------------
+WHAT PEOPLE HATE
+--------------------------------------------------
+
+✗ Point 1
+
+✗ Point 2
+
+✗ Point 3
+
+✗ Point 4
+
+✗ Point 5
+
+--------------------------------------------------
+PLATFORM BREAKDOWN
+--------------------------------------------------
+
+Amazon Sentiment
+
+Reddit Sentiment
+
+Quora Sentiment
+
+Google Review Sentiment
+
+YouTube Review Sentiment
+
+Show percentage scores for each.
+
+--------------------------------------------------
+HIDDEN INSIGHTS
+--------------------------------------------------
+
+Display findings that are not obvious from product ratings.
+
+Examples:
+
+- Many users report issues after 6 months.
+- Build quality is weaker than expected.
+- Excellent value despite minor flaws.
+- Customer support receives frequent complaints.
+
+--------------------------------------------------
+FINAL VERDICT
+--------------------------------------------------
+
+Display one of:
+
+🟢 Recommended
+
+🟡 Consider Alternatives
+
+🔴 Avoid
+
+Provide reasoning using evidence gathered from multiple platforms.
+
+--------------------------------------------------
+DESIGN
+--------------------------------------------------
+
+Create a modern startup-quality UI.
+
+Dark theme.
+
+Glassmorphism cards.
+
+Smooth animations.
+
+Professional dashboard layout.
+
+Looks similar to a funded SaaS product rather than a student project.
+
+--------------------------------------------------
+GOAL
+--------------------------------------------------
+
+Truth Layer should feel like an AI investigator that looks beyond ratings and reviews to reveal the actual reputation of a product by comparing opinions from Amazon, Flipkart, Reddit, Quora, Google and YouTube before the user makes a purchase.

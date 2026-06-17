@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DecisionAI</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        <span class="logo-text">Decision<span class="logo-accent">AI</span></span>
+      </div>
+      <div class="header-badge">Beta</div>
+    </header>
+
+    <div class="hero">
+      <p class="hero-tagline">Shop smarter. Decide with confidence.</p>
+    </div>
+
+    <main class="features">
+      <a class="feature-card" href="../views/truth-layer/truth-layer.html" target="_blank">
+        <div class="feature-icon-wrap feature-icon-truth">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-header">
+            <h2 class="feature-title">Truth Layer</h2>
+            <span class="feature-tag feature-tag-live">Live</span>
+          </div>
+          <p class="feature-desc">Deep-dive analysis of any product. Reviews, pricing, red flags, and a final buy recommendation.</p>
+          <ul class="feature-bullets">
+            <li>
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Fake review detection
+            </li>
+            <li>
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Price comparison across stores
+            </li>
+            <li>
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Reddit &amp; Quora sentiment
+            </li>
+          </ul>
+        </div>
+        <div class="feature-arrow">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </a>
+
+      <a class="feature-card feature-card-dim" href="../views/masterscan/masterscan.html" target="_blank">
+        <div class="feature-icon-wrap feature-icon-scan">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-header">
+            <h2 class="feature-title">MasterScan</h2>
+            <span class="feature-tag feature-tag-soon">Soon</span>
+          </div>
+          <p class="feature-desc">Advanced product intelligence. Full market scan, alternatives ranking, and deal scoring.</p>
+          <ul class="feature-bullets">
+            <li>
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/></svg>
+              Market trend analysis
+            </li>
+            <li>
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/></svg>
+              Smart deal scoring
+            </li>
+            <li>
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5"/></svg>
+              Competitive alternatives
+            </li>
+          </ul>
+        </div>
+        <div class="feature-arrow">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </a>
+    </main>
+
+    <footer class="footer">
+      <span>Powered by AI</span>
+      <span class="footer-dot">·</span>
+      <span>v1.0.0</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
