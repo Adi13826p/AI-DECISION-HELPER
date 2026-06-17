@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { useLocation } from "wouter";
+import { TruthLayerPanel } from "@/pages/TruthLayer";
+import { MasterScanPanel } from "@/pages/MasterScan";
 
 export default function Popup() {
-  const [, navigate] = useLocation();
+  const [view, setView] = useState<"home" | "truth-layer" | "masterscan">("home");
 
   return (
     <div style={s.root}>
@@ -55,7 +56,7 @@ export default function Popup() {
         {/* Feature Cards */}
         <main style={s.features}>
           <FeatureCard
-            onClick={() => navigate("/truth-layer")}
+            onClick={() => setView("truth-layer")}
             accentColor="#FF4FD8"
             accentScan={false}
             icon={
@@ -73,7 +74,7 @@ export default function Popup() {
           />
 
           <FeatureCard
-            onClick={() => navigate("/masterscan")}
+            onClick={() => setView("masterscan")}
             accentColor="#a374ff"
             accentScan
             dimmed
@@ -117,6 +118,18 @@ export default function Popup() {
           </div>
           <span style={s.footerVersion}>v1.0.0</span>
         </footer>
+
+        {/* Inline overlays — slide up over popup content */}
+        {view === "truth-layer" && (
+          <div style={{ position:"absolute", inset:0, zIndex:10, borderRadius:26, overflow:"hidden", animation:"slide-up 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+            <TruthLayerPanel onClose={() => setView("home")} />
+          </div>
+        )}
+        {view === "masterscan" && (
+          <div style={{ position:"absolute", inset:0, zIndex:10, borderRadius:26, overflow:"hidden", animation:"slide-up 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+            <MasterScanPanel onClose={() => setView("home")} />
+          </div>
+        )}
       </div>
     </div>
   );
