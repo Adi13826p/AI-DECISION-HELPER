@@ -437,10 +437,6 @@
     const pi     = d.priceIntel || {};
     const comps  = d.competitors || [];
 
-    const previewHTML = currentImage
-      ? `<div style="width:100%;height:110px;background:url('${currentImage}') center/cover no-repeat;border-bottom:1px solid rgba(255,255,255,0.07);opacity:0.75;flex-shrink:0"></div>`
-      : '';
-
     const prosHTML    = (r.pros || []).map(x => listItem(x, '#10b981')).join('');
     const consHTML    = (r.cons || []).map(x => listItem(x, '#ef4444')).join('');
     const hiddenHTML  = (r.hiddenComplaints || []).map(x => `<div style="font-size:11.5px;color:rgba(240,238,255,0.6);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">${esc(x)}</div>`).join('');
@@ -459,7 +455,6 @@
       </div>`).join('');
 
     return `
-      ${previewHTML}
       <div style="padding:16px 16px 20px;display:flex;flex-direction:column;gap:16px">
 
         <!-- Score + Verdict -->
