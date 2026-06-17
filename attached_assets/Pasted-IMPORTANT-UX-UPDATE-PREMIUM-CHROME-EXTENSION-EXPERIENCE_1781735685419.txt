@@ -1,0 +1,130 @@
+IMPORTANT UX UPDATE — PREMIUM CHROME EXTENSION EXPERIENCE
+
+The current behavior is incorrect.
+
+Right now:
+
+User scans product → Extension redirects to a separate Truth Layer page.
+
+This breaks the browsing experience and makes it feel like a website instead of a real Chrome extension.
+
+Replace this completely.
+
+--------------------------------------------------
+REQUIRED BEHAVIOR
+--------------------------------------------------
+
+The extension should behave like a premium real-world Chrome extension.
+
+User flow:
+
+1. User is browsing any website.
+
+Examples:
+- Amazon
+- Flipkart
+- Myntra
+- YouTube
+- Reddit
+- Google
+- LinkedIn
+- Blogs
+- Any website
+
+2. User clicks the extension icon.
+
+3. User selects:
+
+🔍 Truth Layer
+
+4. A transparent overlay appears on the current webpage.
+
+5. User drags a rectangular selection around the product.
+
+6. Capture the selected region.
+
+7. Start analysis immediately.
+
+8. Show results inside a floating popup/modal on top of the CURRENT webpage.
+
+9. User must remain on the same website.
+
+--------------------------------------------------
+DO NOT DO THIS
+--------------------------------------------------
+
+Do NOT:
+
+- Redirect to another page
+- Open separate Truth Layer pages
+- Open a new browser tab
+- Change route
+- Navigate to another screen
+- Reload the page
+- Replace browsing content
+- Open full-page dashboards
+
+The user should never leave the page they are browsing.
+
+--------------------------------------------------
+PREMIUM POPUP EXPERIENCE
+--------------------------------------------------
+
+The popup should feel like a premium AI assistant overlay.
+
+Behavior:
+
+- Smooth animation while opening
+- Slight background blur
+- Fade-in transition
+- Draggable popup
+- Closable
+- Resizable if needed
+- Scroll only inside popup if content is long
+- Maintain current page visibility in background
+
+Popup size:
+
+- Medium size
+- Around 500–700px width
+- Dynamic height
+
+--------------------------------------------------
+RESULT DISPLAY INSIDE POPUP
+--------------------------------------------------
+
+Show all results directly in popup:
+
+Header:
+Truth Layer | LIVE
+
+Body:
+
+- Product image
+- Product name
+- Truth Score
+- Pros
+- Cons
+- Hidden complaints
+- Fake review indicators
+- Reddit summary
+- Quora summary
+- Review summary
+- Price comparison
+- Better deals
+- Links
+
+Bottom actions:
+
+- Copy summary
+- Scan again
+- View sources
+- Close
+
+--------------------------------------------------
+GOAL
+--------------------------------------------------
+
+The extension should feel like a real premium Chrome extension where AI appears on top of the page and assists users without interrupting browsing.
+
+Think of the experience like an intelligent assistant overlay, not a separate website.
