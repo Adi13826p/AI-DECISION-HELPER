@@ -361,34 +361,40 @@ function SmartyBar({ onSubmit }: { onSubmit: (q: string) => void }) {
 
   return (
     <div style={s.smartyBarWrap}>
-      <div style={{fontSize:11,fontWeight:700,color:"#a374ff",letterSpacing:"0.5px",marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
-        <span>✨</span> SMARTY — Universal AI Search
-      </div>
-      <div style={s.smartyBarRow}>
-        <div style={s.smartyBarInner}>
-          <span style={{fontSize:14,flexShrink:0}}>{detected.icon}</span>
-          <input
-            ref={inputRef}
-            style={s.smartyInput}
-            placeholder="Paste a YouTube URL, PDF link, or ask anything…"
-            value={val}
-            onChange={e => setVal(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && submit()}
-          />
-          {val && <button style={s.smartyClear} onClick={() => { setVal(""); inputRef.current?.focus(); }}>✕</button>}
-        </div>
-        <button style={{...s.smartySend, opacity: val.trim() ? 1 : 0.4}} onClick={submit} disabled={!val.trim()}>
-          <svg style={{width:14,height:14}} viewBox="0 0 24 24" fill="none">
-            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Hero title */}
+      <h2 style={s.smartyHeroTitle}>SMARTY</h2>
+
+      {/* Search bar */}
+      <div style={s.smartyBarInner}>
+        <svg style={{width:18,height:18,flexShrink:0,color:"rgba(255,255,255,0.35)"}} viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/>
+          <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+        <input
+          ref={inputRef}
+          style={s.smartyInput}
+          placeholder="Paste URL or ask anything..."
+          value={val}
+          onChange={e => setVal(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && submit()}
+        />
+        {val && (
+          <button style={s.smartyClear} onClick={() => { setVal(""); inputRef.current?.focus(); }}>✕</button>
+        )}
+        <button style={{...s.smartySend, opacity: val.trim() ? 1 : 0.5}} onClick={submit} disabled={!val.trim()}>
+          <svg style={{width:16,height:16}} viewBox="0 0 24 24" fill="none">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
       </div>
+
       {val && (
         <div style={s.smartyDetected}>
           <span style={{fontSize:10,color:"var(--text-muted)"}}>Detected:</span>
           <span style={{fontSize:11,fontWeight:600,color:detected.color,background:detected.color+"18",border:`1px solid ${detected.color}30`,borderRadius:20,padding:"1px 8px"}}>{detected.label}</span>
         </div>
       )}
+
       <div style={s.smartyChips}>
         {SMARTY_QUICK.map(q => (
           <button key={q.label} style={s.smartyChip} onClick={() => onSubmit(q.val)}>
@@ -434,23 +440,23 @@ function IdleView({ onStart, onJobApply, onSmarty }: { onStart: () => void; onJo
         <div style={{flex:1,height:1,background:"linear-gradient(90deg,rgba(255,255,255,0.1),transparent)"}}/>
       </div>
 
-      <div style={s.scannerAnim}>
+      <div style={{...s.scannerAnim, marginTop:36}}>
         <div style={s.scannerCornerTL}/><div style={s.scannerCornerTR}/>
         <div style={s.scannerCornerBL}/><div style={s.scannerCornerBR}/>
         <div style={s.scannerLine}/>
         <span style={{fontSize:28}}>🧠</span>
       </div>
 
-      <h1 style={s.idleTitle}>Capture Any Screen.<br/><span style={s.gradText}>AI Does the Rest.</span></h1>
-      <p style={s.idleDesc}>Select any content on your screen. MasterScan instantly detects what it is and unlocks the right AI tools — all in one workspace.</p>
+      <h1 style={{...s.idleTitle, marginTop:20}}>Capture Any Screen.<br/><span style={s.gradText}>AI Does the Rest.</span></h1>
+      <p style={{...s.idleDesc, marginTop:12}}>Select any content on your screen. MasterScan instantly detects what it is and unlocks the right AI tools — all in one workspace.</p>
 
-      <div style={s.capsPills}>
+      <div style={{...s.capsPills, marginTop:18}}>
         {CAPS.map(c => (
           <div key={c.label} style={s.capPill}><span style={{fontSize:11}}>{c.icon}</span>{c.label}</div>
         ))}
       </div>
 
-      <button style={s.startBtn} onClick={onStart}>
+      <button style={{...s.startBtn, marginTop:28}} onClick={onStart}>
         <svg style={{width:15,height:15}} viewBox="0 0 24 24" fill="none">
           <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
           <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5"/>
@@ -461,7 +467,7 @@ function IdleView({ onStart, onJobApply, onSmarty }: { onStart: () => void; onJo
       </button>
 
       {/* Job Apply CTA */}
-      <div style={s.jobCta}>
+      <div style={{...s.jobCta, marginTop:24}}>
         <div style={s.jobCtaLeft}>
           <span style={{fontSize:18}}>💼</span>
           <div>
@@ -472,7 +478,7 @@ function IdleView({ onStart, onJobApply, onSmarty }: { onStart: () => void; onJo
         <button style={s.jobCtaBtn} onClick={onJobApply}>Try Demo</button>
       </div>
 
-      <p style={{fontSize:11,color:"var(--text-muted)",marginTop:6}}>Demo mode — simulates a real screen capture</p>
+      <p style={{fontSize:11,color:"var(--text-muted)",marginTop:12}}>Demo mode — simulates a real screen capture</p>
     </div>
   );
 }
@@ -1634,7 +1640,7 @@ const s: Record<string, React.CSSProperties> = {
   liveDot: { width:5, height:5, borderRadius:"50%", background:"#34d399", flexShrink:0, boxShadow:"0 0 7px #34d399", animation:"pulse-glow 2s ease-in-out infinite" } as React.CSSProperties,
 
   // Idle
-  idle:        { display:"flex", flexDirection:"column", alignItems:"center", padding:"32px 22px 36px", textAlign:"center" },
+  idle:        { display:"flex", flexDirection:"column", alignItems:"center", padding:"24px 22px 40px", textAlign:"center", gap:0 },
   scannerAnim: {
     position:"relative", width:100, height:100,
     display:"flex", alignItems:"center", justifyContent:"center",
@@ -1729,27 +1735,37 @@ const s: Record<string, React.CSSProperties> = {
   resumeUploadBtn: { fontSize:12, fontWeight:600, padding:"7px 18px", background:"rgba(163,116,255,0.12)", border:"1px solid rgba(163,116,255,0.3)", borderRadius:20, color:"#a374ff" },
 
   // Idle divider
-  idleDivider:     { display:"flex", alignItems:"center", gap:10, width:"100%", margin:"20px 0 20px" },
+  idleDivider:     { display:"flex", alignItems:"center", gap:10, width:"100%", margin:"28px 0 28px" },
   idleDividerText: { fontSize:10.5, color:"rgba(255,255,255,0.2)", whiteSpace:"nowrap", padding:"0 10px", letterSpacing:"0.4px", fontWeight:500 },
 
   // Smarty Bar (on idle screen)
   smartyBarWrap: {
     width:"100%",
-    background:"linear-gradient(145deg,rgba(163,116,255,0.08),rgba(108,141,250,0.04))",
-    border:"1px solid rgba(163,116,255,0.25)",
-    borderRadius:18,
-    padding:"16px 15px 13px",
-    boxShadow:"0 0 40px rgba(163,116,255,0.1), inset 0 1px 0 rgba(255,255,255,0.06)",
-    animation:"smarty-border-glow 4s ease-in-out infinite",
+    display:"flex",
+    flexDirection:"column" as React.CSSProperties["flexDirection"],
+    alignItems:"center",
+    paddingBottom:4,
   },
+  smartyHeroTitle: {
+    fontSize:58,
+    fontWeight:900,
+    letterSpacing:"2px",
+    margin:"0 0 28px 0",
+    background:"linear-gradient(90deg, #4fc3f7 0%, #a78bfa 60%, #c084fc 100%)",
+    WebkitBackgroundClip:"text",
+    WebkitTextFillColor:"transparent",
+    backgroundClip:"text",
+    lineHeight:1,
+    textAlign:"center",
+  } as React.CSSProperties,
   smartyBarRow:    { display:"flex", gap:8, marginBottom:7 },
-  smartyBarInner:  { flex:1, display:"flex", alignItems:"center", gap:9, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(163,116,255,0.28)", borderRadius:12, padding:"10px 13px", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05), 0 0 20px rgba(163,116,255,0.06)" },
-  smartyInput:     { flex:1, background:"none", border:"none", outline:"none", fontSize:13, color:"#eef0ff", fontFamily:"inherit", letterSpacing:"-0.1px" },
+  smartyBarInner:  { width:"100%", display:"flex", alignItems:"center", gap:10, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(130,100,220,0.5)", borderRadius:100, padding:"13px 16px 13px 20px", boxShadow:"0 0 28px rgba(120,80,200,0.15), inset 0 1px 0 rgba(255,255,255,0.06)" },
+  smartyInput:     { flex:1, background:"none", border:"none", outline:"none", fontSize:14, color:"#eef0ff", fontFamily:"inherit", letterSpacing:"-0.1px" },
   smartyClear:     { fontSize:12, color:"rgba(255,255,255,0.25)", background:"none", border:"none", padding:"0 3px", cursor:"pointer", flexShrink:0 },
-  smartySend:      { width:42, height:42, background:"linear-gradient(135deg,#b084ff,#7fa3ff)", border:"none", borderRadius:12, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"opacity 0.15s, box-shadow 0.15s", boxShadow:"0 0 20px rgba(163,116,255,0.4), inset 0 1px 0 rgba(255,255,255,0.2)" },
-  smartyDetected:  { display:"flex", alignItems:"center", gap:6, marginBottom:9 },
-  smartyChips:     { display:"flex", gap:6, flexWrap:"wrap" as React.CSSProperties["flexWrap"] },
-  smartyChip:      { display:"flex", alignItems:"center", gap:5, fontSize:10.5, fontWeight:600, color:"rgba(255,255,255,0.35)", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:20, padding:"4px 10px", transition:"all 0.15s", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.04)" },
+  smartySend:      { width:38, height:38, background:"transparent", border:"1.5px solid rgba(150,110,230,0.55)", borderRadius:"50%", color:"rgba(255,255,255,0.75)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.15s", cursor:"pointer" },
+  smartyDetected:  { display:"flex", alignItems:"center", gap:6, marginTop:10, alignSelf:"flex-start" as React.CSSProperties["alignSelf"] } as React.CSSProperties,
+  smartyChips:     { display:"flex", gap:6, flexWrap:"wrap" as React.CSSProperties["flexWrap"], marginTop:16, justifyContent:"center" },
+  smartyChip:      { display:"flex", alignItems:"center", gap:5, fontSize:10.5, fontWeight:600, color:"rgba(255,255,255,0.35)", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:20, padding:"5px 12px", transition:"all 0.15s", boxShadow:"inset 0 1px 0 rgba(255,255,255,0.04)" },
 
   // Smarty loading screen
   smartyLoading:    { display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", flex:1, padding:"40px 24px", gap:14, textAlign:"center" },
