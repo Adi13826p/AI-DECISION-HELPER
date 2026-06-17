@@ -29,7 +29,7 @@ router.post("/analyze", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `You are DecisionAI, an expert product analyst with deep knowledge of consumer electronics, appliances, and popular products. Analyze the given product based on your training knowledge and return ONLY a valid JSON object (no markdown, no explanation, no code fences) with this exact structure:
+          content: `You are DecisionAI, a professional product intelligence analyst. Analyze the given product and return ONLY a valid JSON object (no markdown, no explanation, no code fences) with this exact structure:
 {
   "product": {
     "name": "full product name",
@@ -43,66 +43,58 @@ router.post("/analyze", async (req, res) => {
   },
   "analysisStats": {
     "reviewsAnalyzed": 5000,
-    "sourcesScanned": 5,
+    "sourcesScanned": 4,
     "dataPoints": 15000,
     "timeTaken": "2.1s"
   },
   "truthScore": 78,
   "scoreLabel": "Recommended",
-  "truthSummary": "2-3 sentence honest summary of the product based on cross-platform sentiment",
-  "fakeReviewAnalysis": {
-    "fakePercentage": 15,
-    "realPercentage": 85,
-    "totalAnalyzed": 5000,
-    "confidence": 91,
-    "patterns": [
-      { "label": "Incentivized reviews detected", "count": 320, "severity": "high" },
-      { "label": "Unverified purchase accounts", "count": 450, "severity": "medium" },
-      { "label": "Burst posting (same-day flood)", "count": 180, "severity": "medium" },
-      { "label": "Generic 5-star with no detail", "count": 120, "severity": "low" }
-    ],
-    "monthlySpike": [
-      { "month": "Aug", "fake": 10 },
-      { "month": "Sep", "fake": 13 },
-      { "month": "Oct", "fake": 25 },
-      { "month": "Nov", "fake": 38 },
-      { "month": "Dec", "fake": 20 },
-      { "month": "Jan", "fake": 12 }
-    ]
-  },
-  "buyTiming": {
-    "recommendation": "buy-now",
-    "confidence": 72,
-    "reason": "2-sentence reason about whether to buy now or wait based on typical pricing cycles",
-    "priceHistory": [
-      { "month": "Aug", "price": 329 },
-      { "month": "Sep", "price": 309 },
-      { "month": "Oct", "price": 289 },
-      { "month": "Nov", "price": 259 },
-      { "month": "Dec", "price": 269 },
-      { "month": "Now", "price": 279 }
-    ],
-    "prediction": "short price prediction sentence"
-  },
+  "truthSummary": "2-3 sentence professional cross-platform verdict. Concise and direct.",
   "loves": ["top praised feature 1", "top praised feature 2", "top praised feature 3", "top praised feature 4", "top praised feature 5"],
   "hates": ["top criticism 1", "top criticism 2", "top criticism 3", "top criticism 4"],
   "platforms": [
-    { "name": "Amazon", "icon": "🛒", "sentiment": 85, "label": "Very Positive", "summary": "brief summary of Amazon sentiment", "color": "#f97316" },
-    { "name": "Reddit", "icon": "💬", "sentiment": 72, "label": "Mostly Positive", "summary": "brief summary of Reddit sentiment", "color": "#ff6a3d" },
-    { "name": "Quora", "icon": "❓", "sentiment": 74, "label": "Positive", "summary": "brief summary of Quora sentiment", "color": "#e54040" },
-    { "name": "Google Reviews", "icon": "🔍", "sentiment": 80, "label": "Very Positive", "summary": "brief summary of Google/expert reviews", "color": "#6c8dfa" },
-    { "name": "YouTube", "icon": "▶", "sentiment": 77, "label": "Positive", "summary": "brief summary of YouTube reviewer sentiment", "color": "#f43f5e" }
+    {
+      "name": "Reddit",
+      "icon": "💬",
+      "score": 7.6,
+      "label": "Good",
+      "source": "r/relevant_subreddit · r/another_subreddit",
+      "points": ["short finding 1", "short finding 2", "short finding 3"],
+      "color": "#ff6a3d"
+    },
+    {
+      "name": "Quora",
+      "icon": "❓",
+      "score": 7.9,
+      "label": "Good",
+      "source": "quora.com/topic/relevant-topic",
+      "points": ["short finding 1", "short finding 2", "short finding 3"],
+      "color": "#e54040"
+    },
+    {
+      "name": "Google Reviews",
+      "icon": "🔍",
+      "score": 8.5,
+      "label": "Excellent",
+      "source": "Publication1 · Publication2 · Publication3",
+      "points": ["short finding 1", "short finding 2", "short finding 3"],
+      "color": "#6c8dfa"
+    },
+    {
+      "name": "YouTube",
+      "icon": "▶",
+      "score": 8.1,
+      "label": "Excellent",
+      "source": "Reviewer1 · Reviewer2 · Reviewer3",
+      "points": ["short finding 1", "short finding 2", "short finding 3"],
+      "color": "#f43f5e"
+    }
   ],
   "hiddenInsights": [
-    { "type": "warning", "text": "a hidden concern most buyers miss" },
-    { "type": "positive", "text": "a hidden positive most buyers miss" },
-    { "type": "neutral", "text": "a neutral insight about the product" }
+    { "type": "warning", "text": "a hidden concern most buyers miss — short and direct" },
+    { "type": "positive", "text": "a hidden positive most buyers miss — short and direct" },
+    { "type": "neutral", "text": "a neutral insight — short and direct" }
   ],
-  "priceIntel": {
-    "hasBetterDeal": false,
-    "currentPlatform": "Amazon",
-    "currentPrice": "$279.99"
-  },
   "competitors": [
     { "name": "Best competing product 1", "brand": "Brand", "price": "$249", "score": 75, "badge": "💰 Best Value", "badgeColor": "#34d399", "pros": "main advantage", "cons": "main disadvantage", "image": "" },
     { "name": "Best competing product 2", "brand": "Brand", "price": "$349", "score": 82, "badge": "⭐ Premium Pick", "badgeColor": "#6c8dfa", "pros": "main advantage", "cons": "main disadvantage", "image": "" },
@@ -112,18 +104,27 @@ router.post("/analyze", async (req, res) => {
     "type": "recommended",
     "label": "Recommended",
     "emoji": "🟢",
-    "reasoning": "2-3 sentence honest final verdict"
+    "reasoning": "2-sentence honest final verdict. Direct and professional."
   }
 }
-truthScore must be 0-100. scoreLabel must be one of: Highly Recommended / Recommended / Consider Carefully / Avoid. verdict.type must be one of: recommended / consider / avoid. buyTiming.recommendation must be buy-now or wait.`
+Rules:
+- truthScore: 0–100 integer
+- scoreLabel: one of "Highly Recommended" / "Recommended" / "Average" / "Below Average" / "Avoid"
+- platform score: decimal out of 10, e.g. 7.6
+- platform label: one of "Exceptional" / "Excellent" / "Good" / "Average" / "Poor"
+- platform points: exactly 3 items, each under 60 characters
+- loves: exactly 5 items, each under 70 characters
+- hates: exactly 4 items, each under 70 characters
+- verdict.type: one of "recommended" / "consider" / "avoid"
+- Use real reviewer/publication names for sources when known`
         },
         {
           role: "user",
           content: `Analyze this product and return the JSON: ${productName}`
         }
       ],
-      temperature: 0.6,
-      max_tokens: 3500,
+      temperature: 0.5,
+      max_tokens: 2500,
     });
 
     const text = completion.choices[0]?.message?.content ?? "{}";
