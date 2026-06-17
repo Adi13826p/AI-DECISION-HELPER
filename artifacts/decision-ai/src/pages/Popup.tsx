@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { useLocation } from "wouter";
 
 export default function Popup() {
@@ -92,6 +93,23 @@ export default function Popup() {
           />
         </main>
 
+        {/* Download Extension Banner */}
+        <div style={s.downloadBanner}>
+          <div style={s.downloadLeft}>
+            <div style={s.downloadIconWrap}>
+              <svg style={s.downloadIcon} viewBox="0 0 24 24" fill="none">
+                <path d="M12 3v13M7 11l5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4 20h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div style={s.downloadTitle}>Install Chrome Extension</div>
+              <div style={s.downloadSub}>Get the real browser overlay</div>
+            </div>
+          </div>
+          <DownloadButton />
+        </div>
+
         <footer style={s.footer}>
           <div style={s.footerLeft}>
             <span style={s.footerDot} />
@@ -101,6 +119,60 @@ export default function Popup() {
         </footer>
       </div>
     </div>
+  );
+}
+
+function DownloadButton() {
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+
+  const handleDownload = async () => {
+    if (state === "loading") return;
+    setState("loading");
+    try {
+      const res = await fetch("/api/extension/download");
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "decision-ai-extension.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+      setState("done");
+      setTimeout(() => setState("idle"), 3000);
+    } catch {
+      setState("idle");
+    }
+  };
+
+  return (
+    <button
+      onClick={handleDownload}
+      style={{
+        ...s.dlBtn,
+        background: state === "done"
+          ? "linear-gradient(135deg, #34d399, #059669)"
+          : "linear-gradient(135deg, #FF4FD8, #8A5CFF)",
+        opacity: state === "loading" ? 0.7 : 1,
+        cursor: state === "loading" ? "wait" : "pointer",
+      }}
+    >
+      {state === "loading" ? (
+        <svg style={{ width: 13, height: 13, animation: "spin 1s linear infinite" }} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeDasharray="32" strokeDashoffset="10"/>
+        </svg>
+      ) : state === "done" ? (
+        <svg style={{ width: 13, height: 13 }} viewBox="0 0 24 24" fill="none">
+          <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ) : (
+        <svg style={{ width: 13, height: 13 }} viewBox="0 0 24 24" fill="none">
+          <path d="M12 3v13M7 11l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M4 20h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      )}
+      <span>{state === "loading" ? "Zipping…" : state === "done" ? "Downloaded!" : "Download .zip"}</span>
+    </button>
   );
 }
 
@@ -378,5 +450,47 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 10,
     fontWeight: 600,
     letterSpacing: "0.3px",
+  },
+
+  downloadBanner: {
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    margin: "8px 12px 0",
+    padding: "12px 14px",
+    background: "linear-gradient(135deg, rgba(255,79,216,0.07) 0%, rgba(138,92,255,0.07) 100%)",
+    border: "1px solid rgba(255,79,216,0.18)",
+    borderRadius: 14,
+    gap: 10,
+  },
+  downloadLeft: {
+    display: "flex", alignItems: "center", gap: 10, minWidth: 0,
+  },
+  downloadIconWrap: {
+    flexShrink: 0,
+    width: 34, height: 34, borderRadius: 10,
+    background: "linear-gradient(135deg, rgba(255,79,216,0.2), rgba(138,92,255,0.15))",
+    border: "1px solid rgba(255,79,216,0.25)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    color: "#FF80DF",
+  },
+  downloadIcon: { width: 16, height: 16 },
+  downloadTitle: {
+    fontSize: 12, fontWeight: 700, color: "#eef0ff", letterSpacing: "-0.2px",
+  },
+  downloadSub: {
+    fontSize: 10.5, color: "rgba(255,255,255,0.35)", marginTop: 1,
+  },
+  dlBtn: {
+    flexShrink: 0,
+    display: "flex", alignItems: "center", gap: 6,
+    padding: "7px 13px",
+    borderRadius: 10,
+    border: "none",
+    color: "#fff",
+    fontSize: 11.5,
+    fontWeight: 700,
+    letterSpacing: "-0.1px",
+    transition: "opacity 0.2s, transform 0.15s",
+    boxShadow: "0 4px 16px rgba(255,79,216,0.3)",
+    whiteSpace: "nowrap" as const,
   },
 };
