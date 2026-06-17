@@ -190,21 +190,21 @@ function FeatureCard({
   bulletDone: boolean;
   dimmed?: boolean;
 }) {
-  const glowColor = accentScan ? "rgba(163,116,255,0.18)" : "rgba(108,141,250,0.18)";
+  const glowColor = accentScan ? "rgba(244,63,94,0.12)" : "rgba(236,72,153,0.12)";
 
   const handleEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     const el = e.currentTarget;
-    el.style.background = `linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)`;
+    el.style.background = `linear-gradient(135deg, ${accentColor}0a 0%, #fff 100%)`;
     el.style.borderColor = accentColor + "55";
     el.style.transform = "translateY(-2px)";
-    el.style.boxShadow = `0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px ${accentColor}33, inset 0 1px 0 rgba(255,255,255,0.08)`;
+    el.style.boxShadow = `0 8px 32px ${accentColor}22, 0 0 0 1px ${accentColor}22`;
   };
   const handleLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
     const el = e.currentTarget;
-    el.style.background = "rgba(255,255,255,0.018)";
-    el.style.borderColor = "rgba(255,255,255,0.08)";
+    el.style.background = "#ffffff";
+    el.style.borderColor = "rgba(236,72,153,0.14)";
     el.style.transform = "translateY(0)";
-    el.style.boxShadow = "0 4px 24px rgba(0,0,0,0.2)";
+    el.style.boxShadow = "0 2px 12px rgba(236,72,153,0.08)";
   };
 
   return (
@@ -221,7 +221,7 @@ function FeatureCard({
         pointerEvents:"none",
       }}/>
 
-      <div style={{ ...s.featureIconWrap, background: `linear-gradient(135deg, ${accentColor}22, ${accentColor}0a)`, color: accentColor, boxShadow: `0 0 24px ${accentColor}28, inset 0 1px 0 rgba(255,255,255,0.08)`, border: `1px solid ${accentColor}22` }}>
+      <div style={{ ...s.featureIconWrap, background: `linear-gradient(135deg, ${accentColor}18, ${accentColor}08)`, color: accentColor, border: `1px solid ${accentColor}25` }}>
         {icon}
       </div>
 
@@ -277,14 +277,14 @@ const s: Record<string, React.CSSProperties> = {
   blob1: {
     position: "fixed", top: "-5%", left: "5%",
     width: 500, height: 500, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(255,79,216,0.15) 0%, transparent 65%)",
+    background: "radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 65%)",
     animation: "orb-drift 20s ease-in-out infinite",
     pointerEvents: "none", zIndex: 0,
   },
   blob2: {
     position: "fixed", bottom: "5%", right: "5%",
     width: 480, height: 480, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(138,92,255,0.15) 0%, transparent 65%)",
+    background: "radial-gradient(circle, rgba(244,63,94,0.10) 0%, transparent 65%)",
     animation: "orb-drift-2 24s ease-in-out infinite",
     pointerEvents: "none", zIndex: 0,
   },
@@ -292,12 +292,12 @@ const s: Record<string, React.CSSProperties> = {
     position: "fixed", top: "50%", left: "50%",
     width: 600, height: 300,
     transform: "translate(-50%, -50%)",
-    background: "radial-gradient(ellipse, rgba(255,128,223,0.06) 0%, transparent 70%)",
+    background: "radial-gradient(ellipse, rgba(236,72,153,0.06) 0%, transparent 70%)",
     pointerEvents: "none", zIndex: 0,
   },
   dotGrid: {
     position: "fixed", inset: 0,
-    backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)",
+    backgroundImage: "radial-gradient(circle, rgba(236,72,153,0.08) 1px, transparent 1px)",
     backgroundSize: "28px 28px",
     pointerEvents: "none", zIndex: 0,
     maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)",
@@ -307,20 +307,20 @@ const s: Record<string, React.CSSProperties> = {
   // Card shell
   popup: {
     width: 430,
-    background: "linear-gradient(160deg, rgba(14,16,26,0.97) 0%, rgba(10,12,20,0.98) 100%)",
+    background: "#ffffff",
     backdropFilter: "blur(40px)",
     WebkitBackdropFilter: "blur(40px)",
-    border: "1px solid rgba(255,255,255,0.09)",
+    border: "1px solid rgba(236,72,153,0.18)",
     borderRadius: 26,
     overflow: "hidden",
-    boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,79,216,0.08), 0 0 80px rgba(255,79,216,0.08), inset 0 1px 0 rgba(255,255,255,0.07)",
+    boxShadow: "0 20px 60px rgba(236,72,153,0.12), 0 4px 20px rgba(236,72,153,0.08)",
     animation: "slide-up 0.5s cubic-bezier(0.16,1,0.3,1)",
     position: "relative",
     zIndex: 1,
   },
   topBorder: {
     height: 2,
-    background: "linear-gradient(90deg, transparent 0%, rgba(255,79,216,0.8) 25%, rgba(255,128,223,0.9) 45%, rgba(138,92,255,0.9) 70%, rgba(107,61,255,0.6) 90%, transparent 100%)",
+    background: "linear-gradient(90deg, transparent 0%, #ec4899 25%, #f472b6 50%, #f43f5e 75%, transparent 100%)",
     opacity: 1,
   },
 
@@ -328,22 +328,22 @@ const s: Record<string, React.CSSProperties> = {
   header: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "18px 22px 16px",
-    borderBottom: "1px solid rgba(255,255,255,0.055)",
-    background: "rgba(255,255,255,0.01)",
+    borderBottom: "1px solid rgba(236,72,153,0.12)",
+    background: "#fff",
   },
   logo: { display: "flex", alignItems: "center", gap: 10 },
   logoIconWrap: {
     width: 32, height: 32,
-    background: "linear-gradient(135deg, rgba(255,79,216,0.28), rgba(138,92,255,0.2))",
-    border: "1px solid rgba(255,79,216,0.35)",
+    background: "linear-gradient(135deg, rgba(236,72,153,0.2), rgba(244,63,94,0.12))",
+    border: "1px solid rgba(236,72,153,0.3)",
     borderRadius: 10,
     display: "flex", alignItems: "center", justifyContent: "center",
-    boxShadow: "0 0 20px rgba(255,79,216,0.25), inset 0 1px 0 rgba(255,255,255,0.12)",
+    boxShadow: "0 0 16px rgba(236,72,153,0.2)",
   },
-  logoIcon: { width: 15, height: 15, color: "#FF80DF" },
-  logoText: { fontSize: 17, fontWeight: 800, letterSpacing: "-0.6px", color: "#f0f2ff" },
+  logoIcon: { width: 15, height: 15, color: "#ec4899" },
+  logoText: { fontSize: 17, fontWeight: 800, letterSpacing: "-0.6px", color: "var(--text-primary)" },
   logoAccent: {
-    background: "linear-gradient(135deg, #FF4FD8, #8A5CFF)",
+    background: "linear-gradient(135deg, #ec4899, #f43f5e)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
@@ -351,17 +351,16 @@ const s: Record<string, React.CSSProperties> = {
   headerBadge: {
     display: "flex", alignItems: "center", gap: 5,
     fontSize: 9, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase",
-    color: "rgba(255,255,255,0.35)",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    color: "var(--text-muted)",
+    background: "var(--bg-elevated)",
+    border: "1px solid var(--border)",
     borderRadius: 20,
     padding: "4px 10px",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
   },
   headerBadgeDot: {
     width: 5, height: 5, borderRadius: "50%",
-    background: "#34d399",
-    boxShadow: "0 0 8px #34d399",
+    background: "#10b981",
+    boxShadow: "0 0 8px #10b981",
     animation: "pulse-glow 2.5s ease-in-out infinite",
     flexShrink: 0,
   },
@@ -371,35 +370,35 @@ const s: Record<string, React.CSSProperties> = {
   heroEyebrow: {
     display: "flex", alignItems: "center", gap: 10, marginBottom: 14,
     fontSize: 10.5, fontWeight: 600, letterSpacing: "0.4px",
-    color: "rgba(255,255,255,0.28)", textTransform: "uppercase",
+    color: "var(--text-muted)", textTransform: "uppercase",
   },
-  eyebrowLine: { flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1))" },
+  eyebrowLine: { flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(236,72,153,0.2))" },
   heroTitle: {
     fontSize: 24, fontWeight: 800, lineHeight: 1.2,
-    letterSpacing: "-0.8px", color: "#eef0ff", marginBottom: 10,
+    letterSpacing: "-0.8px", color: "var(--text-primary)", marginBottom: 10,
   },
   heroGrad: {
-    background: "linear-gradient(135deg, #FF4FD8 0%, #FF80DF 40%, #8A5CFF 100%)",
+    background: "linear-gradient(135deg, #ec4899 0%, #f472b6 40%, #f43f5e 100%)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
   },
   heroSub: {
-    fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.65, fontWeight: 400,
+    fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.65, fontWeight: 400,
   },
 
   // Feature cards
   features: { display: "flex", flexDirection: "column", gap: 8, padding: "14px 12px 4px" },
   featureCard: {
     display: "flex", alignItems: "flex-start", gap: 13, padding: "16px 15px",
-    background: "rgba(255,255,255,0.018)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "#ffffff",
+    border: "1px solid rgba(236,72,153,0.14)",
     borderRadius: 18, color: "inherit", textAlign: "left",
     transition: "background 0.25s, border-color 0.25s, transform 0.18s, box-shadow 0.25s",
     width: "100%",
     position: "relative",
     overflow: "hidden",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+    boxShadow: "0 2px 12px rgba(236,72,153,0.08)",
   },
   featureIconWrap: {
     flexShrink: 0, width: 46, height: 46, borderRadius: 14,
@@ -408,14 +407,14 @@ const s: Record<string, React.CSSProperties> = {
   featureIconSvg: { width: 21, height: 21 },
   featureContent: { flex: 1, minWidth: 0 },
   featureHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 },
-  featureTitle: { fontSize: 14.5, fontWeight: 700, color: "#eef0ff", letterSpacing: "-0.3px" },
+  featureTitle: { fontSize: 14.5, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.3px" },
   featureTag: {
     display: "flex", alignItems: "center", gap: 4,
     fontSize: 9.5, fontWeight: 700, letterSpacing: "0.4px",
     borderRadius: 20, padding: "3px 9px",
   },
   tagDot: { width: 5, height: 5, borderRadius: "50%", flexShrink: 0, animation: "pulse-glow 2s ease-in-out infinite" },
-  featureDesc: { fontSize: 11.5, color: "rgba(255,255,255,0.4)", marginBottom: 11, lineHeight: 1.65 },
+  featureDesc: { fontSize: 11.5, color: "var(--text-secondary)", marginBottom: 11, lineHeight: 1.65 },
   featureBullets: { display: "flex", flexDirection: "column", gap: 5 },
   bulletItem: { display: "flex", alignItems: "center", gap: 7 },
   bulletIcon: { width: 13, height: 13, flexShrink: 0 },
@@ -429,35 +428,36 @@ const s: Record<string, React.CSSProperties> = {
     display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "13px 22px 16px",
     fontSize: 10.5,
-    color: "rgba(255,255,255,0.25)",
-    borderTop: "1px solid rgba(255,255,255,0.05)",
+    color: "var(--text-muted)",
+    borderTop: "1px solid rgba(236,72,153,0.1)",
     marginTop: 10,
-    background: "rgba(255,255,255,0.01)",
+    background: "var(--bg-elevated)",
   },
   footerLeft: { display: "flex", alignItems: "center", gap: 6 },
   footerDot: {
     display: "inline-block", width: 5, height: 5, borderRadius: "50%",
-    background: "#34d399",
-    boxShadow: "0 0 8px #34d399",
+    background: "#10b981",
+    boxShadow: "0 0 8px #10b981",
     animation: "pulse-glow 3s ease-in-out infinite",
     flexShrink: 0,
   },
   footerVersion: {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.07)",
+    background: "#fff",
+    border: "1px solid rgba(236,72,153,0.15)",
     borderRadius: 6,
     padding: "2px 7px",
     fontSize: 10,
     fontWeight: 600,
     letterSpacing: "0.3px",
+    color: "var(--text-muted)",
   },
 
   downloadBanner: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
     margin: "8px 12px 0",
     padding: "12px 14px",
-    background: "linear-gradient(135deg, rgba(255,79,216,0.07) 0%, rgba(138,92,255,0.07) 100%)",
-    border: "1px solid rgba(255,79,216,0.18)",
+    background: "linear-gradient(135deg, rgba(236,72,153,0.07) 0%, rgba(244,63,94,0.05) 100%)",
+    border: "1px solid rgba(236,72,153,0.2)",
     borderRadius: 14,
     gap: 10,
   },
@@ -467,17 +467,17 @@ const s: Record<string, React.CSSProperties> = {
   downloadIconWrap: {
     flexShrink: 0,
     width: 34, height: 34, borderRadius: 10,
-    background: "linear-gradient(135deg, rgba(255,79,216,0.2), rgba(138,92,255,0.15))",
-    border: "1px solid rgba(255,79,216,0.25)",
+    background: "linear-gradient(135deg, rgba(236,72,153,0.15), rgba(244,63,94,0.1))",
+    border: "1px solid rgba(236,72,153,0.25)",
     display: "flex", alignItems: "center", justifyContent: "center",
-    color: "#FF80DF",
+    color: "#ec4899",
   },
   downloadIcon: { width: 16, height: 16 },
   downloadTitle: {
-    fontSize: 12, fontWeight: 700, color: "#eef0ff", letterSpacing: "-0.2px",
+    fontSize: 12, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.2px",
   },
   downloadSub: {
-    fontSize: 10.5, color: "rgba(255,255,255,0.35)", marginTop: 1,
+    fontSize: 10.5, color: "var(--text-muted)", marginTop: 1,
   },
   dlBtn: {
     flexShrink: 0,
@@ -490,7 +490,7 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     letterSpacing: "-0.1px",
     transition: "opacity 0.2s, transform 0.15s",
-    boxShadow: "0 4px 16px rgba(255,79,216,0.3)",
+    boxShadow: "0 4px 16px rgba(236,72,153,0.35)",
     whiteSpace: "nowrap" as const,
   },
 };

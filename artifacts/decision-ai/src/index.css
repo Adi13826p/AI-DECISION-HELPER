@@ -7,45 +7,45 @@
 }
 
 :root {
-  --bg-base:       #080a10;
-  --bg-surface:    #0f111a;
-  --bg-elevated:   #171b27;
-  --bg-hover:      #1c2133;
-  --border:        rgba(255,255,255,0.07);
-  --border-hover:  rgba(255,255,255,0.14);
-  --border-accent: rgba(108,141,250,0.25);
+  --bg-base:       #fff0f7;
+  --bg-surface:    #ffffff;
+  --bg-elevated:   #fce7f3;
+  --bg-hover:      #fbd5ea;
+  --border:        rgba(236,72,153,0.14);
+  --border-hover:  rgba(236,72,153,0.28);
+  --border-accent: rgba(236,72,153,0.4);
 
-  --text-primary:   #eef0f8;
-  --text-secondary: #7b87a6;
-  --text-muted:     #4a5270;
+  --text-primary:   #1a0810;
+  --text-secondary: #7a3358;
+  --text-muted:     #c28aab;
 
-  --accent:        #6c8dfa;
-  --accent-bg:     rgba(108,141,250,0.1);
-  --accent-glow:   rgba(108,141,250,0.25);
+  --accent:        #ec4899;
+  --accent-bg:     rgba(236,72,153,0.1);
+  --accent-glow:   rgba(236,72,153,0.25);
 
-  --accent-scan:    #a374ff;
-  --accent-scan-bg: rgba(163,116,255,0.1);
-  --accent-scan-glow: rgba(163,116,255,0.25);
+  --accent-scan:    #f43f5e;
+  --accent-scan-bg: rgba(244,63,94,0.1);
+  --accent-scan-glow: rgba(244,63,94,0.25);
 
-  --green:         #34d399;
-  --green-bg:      rgba(52,211,153,0.1);
-  --green-glow:    rgba(52,211,153,0.2);
+  --green:         #10b981;
+  --green-bg:      rgba(16,185,129,0.1);
+  --green-glow:    rgba(16,185,129,0.2);
 
-  --yellow:        #fbbf24;
-  --yellow-bg:     rgba(251,191,36,0.1);
-  --yellow-glow:   rgba(251,191,36,0.2);
+  --yellow:        #f59e0b;
+  --yellow-bg:     rgba(245,158,11,0.1);
+  --yellow-glow:   rgba(245,158,11,0.2);
 
-  --red:           #f87171;
-  --red-bg:        rgba(248,113,113,0.1);
-  --red-glow:      rgba(248,113,113,0.2);
+  --red:           #ef4444;
+  --red-bg:        rgba(239,68,68,0.1);
+  --red-glow:      rgba(239,68,68,0.2);
 
-  --purple:        #c084fc;
-  --purple-bg:     rgba(192,132,252,0.1);
+  --purple:        #db2777;
+  --purple-bg:     rgba(219,39,119,0.1);
 
-  --tag-live-bg:   rgba(52,211,153,0.12);
-  --tag-live-text: #34d399;
-  --tag-soon-bg:   rgba(251,191,36,0.1);
-  --tag-soon-text: #fbbf24;
+  --tag-live-bg:   rgba(16,185,129,0.12);
+  --tag-live-text: #059669;
+  --tag-soon-bg:   rgba(245,158,11,0.1);
+  --tag-soon-text: #d97706;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -78,7 +78,7 @@ ul { list-style: none; }
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(108,141,250,0.2);
+  background: rgba(236,72,153,0.25);
   border-radius: 4px;
 }
 
@@ -141,13 +141,13 @@ ul { list-style: none; }
 }
 
 @keyframes border-pulse {
-  0%, 100% { border-color: rgba(108,141,250,0.2); }
-  50%       { border-color: rgba(108,141,250,0.5); }
+  0%, 100% { border-color: rgba(236,72,153,0.2); }
+  50%       { border-color: rgba(236,72,153,0.5); }
 }
 
 @keyframes score-glow {
-  0%, 100% { filter: drop-shadow(0 0 6px rgba(52,211,153,0.3)); }
-  50%       { filter: drop-shadow(0 0 16px rgba(52,211,153,0.6)); }
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(16,185,129,0.3)); }
+  50%       { filter: drop-shadow(0 0 16px rgba(16,185,129,0.6)); }
 }
 
 @keyframes orb-drift {
@@ -165,8 +165,8 @@ ul { list-style: none; }
 }
 
 @keyframes capture-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(108,141,250,0.4), 0 0 16px rgba(108,141,250,0.2); }
-  50%       { box-shadow: 0 0 0 6px rgba(108,141,250,0), 0 0 24px rgba(108,141,250,0.4); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(236,72,153,0.4), 0 0 16px rgba(236,72,153,0.2); }
+  50%       { box-shadow: 0 0 0 6px rgba(236,72,153,0), 0 0 24px rgba(236,72,153,0.4); }
 }
 
 @keyframes card-reveal {
@@ -186,8 +186,8 @@ ul { list-style: none; }
 }
 
 @keyframes smarty-border-glow {
-  0%, 100% { box-shadow: 0 0 40px rgba(163,116,255,0.10), inset 0 1px 0 rgba(255,255,255,0.06); border-color: rgba(163,116,255,0.25); }
-  50%       { box-shadow: 0 0 60px rgba(163,116,255,0.20), 0 0 20px rgba(108,141,250,0.10), inset 0 1px 0 rgba(255,255,255,0.08); border-color: rgba(163,116,255,0.40); }
+  0%, 100% { box-shadow: 0 0 40px rgba(244,63,94,0.10), inset 0 1px 0 rgba(236,72,153,0.06); border-color: rgba(244,63,94,0.25); }
+  50%       { box-shadow: 0 0 60px rgba(244,63,94,0.20), 0 0 20px rgba(236,72,153,0.10), inset 0 1px 0 rgba(236,72,153,0.12); border-color: rgba(244,63,94,0.40); }
 }
 
 @keyframes gradient-shift {

@@ -128,21 +128,21 @@ function InputView({ onAnalyze, error }: { onAnalyze: (name: string) => void; er
           autoFocus
           style={{
             width:"100%", padding:"14px 18px",
-            background:"rgba(255,255,255,0.04)",
-            border:"1px solid rgba(255,255,255,0.1)",
+            background:"#fff",
+            border:"1px solid rgba(236,72,153,0.2)",
             borderRadius:14, color:"var(--text-primary)",
             fontSize:13.5, outline:"none", boxSizing:"border-box",
             transition:"border-color 0.2s, box-shadow 0.2s",
           }}
-          onFocus={e => { e.currentTarget.style.borderColor="rgba(108,141,250,0.5)"; e.currentTarget.style.boxShadow="0 0 0 3px rgba(108,141,250,0.1)"; }}
-          onBlur={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.boxShadow="none"; }}
+          onFocus={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.5)"; e.currentTarget.style.boxShadow="0 0 0 3px rgba(236,72,153,0.1)"; }}
+          onBlur={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.2)"; e.currentTarget.style.boxShadow="none"; }}
         />
         <button
           type="submit"
           disabled={!value.trim()}
           style={{
             padding:"14px",
-            background: value.trim() ? "linear-gradient(135deg, #6c8dfa, #a374ff)" : "rgba(255,255,255,0.06)",
+            background: value.trim() ? "linear-gradient(135deg, #ec4899, #f43f5e)" : "var(--bg-elevated)",
             border:"none", borderRadius:14,
             color: value.trim() ? "#fff" : "var(--text-muted)",
             fontSize:14, fontWeight:700,
@@ -164,9 +164,9 @@ function InputView({ onAnalyze, error }: { onAnalyze: (name: string) => void; er
           <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
             {examples.map(ex => (
               <button key={ex} type="button" onClick={() => setValue(ex)}
-                style={{ padding:"5px 12px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:20, color:"var(--text-secondary)", fontSize:11, cursor:"pointer", transition:"all 0.15s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(108,141,250,0.4)"; e.currentTarget.style.color="#a374ff"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="var(--text-secondary)"; }}
+                style={{ padding:"5px 12px", background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:20, color:"var(--text-secondary)", fontSize:11, cursor:"pointer", transition:"all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.4)"; e.currentTarget.style.color="var(--accent)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.14)"; e.currentTarget.style.color="var(--text-secondary)"; }}
               >{ex}</button>
             ))}
           </div>
@@ -176,7 +176,7 @@ function InputView({ onAnalyze, error }: { onAnalyze: (name: string) => void; er
       {/* Source badges */}
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"center", opacity:0.5, marginTop:4 }}>
         {[{ icon:"🔍", label:"Expert Reviews" },{ icon:"▶", label:"YouTube" },{ icon:"🛒", label:"Store Reviews" }].map(p => (
-          <div key={p.label} style={{ display:"flex", alignItems:"center", gap:5, fontSize:10.5, color:"var(--text-muted)", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:20, padding:"4px 10px" }}>
+          <div key={p.label} style={{ display:"flex", alignItems:"center", gap:5, fontSize:10.5, color:"var(--text-muted)", background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:20, padding:"4px 10px" }}>
             <span style={{ fontSize:11 }}>{p.icon}</span>{p.label}
           </div>
         ))}
@@ -202,8 +202,8 @@ function AnalyzingView({ stepIdx }: { stepIdx: number }) {
         {ANALYSIS_STEPS.map((step, i) => {
           const done = i < stepIdx, active = i === stepIdx;
           return (
-            <div key={i} style={{ ...s.stepRow, opacity: i > stepIdx+1 ? 0.3 : 1, borderBottom: i < ANALYSIS_STEPS.length-1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-              <div style={{ ...s.stepDot, background: done?"var(--green)":active?"var(--accent)":"var(--bg-elevated)", borderColor: done?"var(--green)":active?"var(--accent)":"var(--border)", boxShadow: active?"0 0 0 3px rgba(108,141,250,0.2)":done?"0 0 6px rgba(52,211,153,0.3)":"none" }} />
+            <div key={i} style={{ ...s.stepRow, opacity: i > stepIdx+1 ? 0.3 : 1, borderBottom: i < ANALYSIS_STEPS.length-1 ? "1px solid var(--border)" : "none" }}>
+              <div style={{ ...s.stepDot, background: done?"var(--green)":active?"var(--accent)":"var(--bg-elevated)", borderColor: done?"var(--green)":active?"var(--accent)":"var(--border)", boxShadow: active?"0 0 0 3px rgba(236,72,153,0.15)":done?"0 0 6px rgba(16,185,129,0.3)":"none" }} />
               <span style={{ fontSize:14 }}>{step.icon}</span>
               <span style={{ fontSize:12.5, flex:1, color:done?"var(--green)":active?"var(--text-primary)":"var(--text-muted)", fontWeight:active?600:400 }}>{step.text}</span>
               {done && <div style={s.stepCheck}>✓</div>}
@@ -336,7 +336,7 @@ function TruthScoreCard({ score, label, summary }: { score: number; label: strin
         {/* Score ring */}
         <div style={{ position:"relative", width:size, height:size, flexShrink:0 }}>
           <svg width={size} height={size}>
-            <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={8}
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(236,72,153,0.12)" strokeWidth={8}
               strokeDasharray={`${arc} ${circ-arc}`} strokeLinecap="round" transform={`rotate(-215 ${cx} ${cy})`} />
             <circle cx={cx} cy={cy} r={r} fill="none" stroke={col} strokeWidth={8}
               strokeDasharray={`${filled} ${circ-filled}`} strokeLinecap="round" transform={`rotate(-215 ${cx} ${cy})`}
@@ -370,7 +370,7 @@ function TruthScoreCard({ score, label, summary }: { score: number; label: strin
       </div>
 
       {/* Summary below */}
-      <div style={{ marginTop:16, paddingTop:14, borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ marginTop:16, paddingTop:14, borderTop:"1px solid var(--border)" }}>
         <div style={{ fontSize:10, color:"var(--text-muted)", fontWeight:600, letterSpacing:"0.5px", textTransform:"uppercase", marginBottom:6 }}>AI Summary</div>
         <p style={{ fontSize:12.5, color:"var(--text-secondary)", lineHeight:1.7, margin:0 }}>{summary}</p>
       </div>
@@ -427,7 +427,7 @@ function KeyInsights({ insights }: { insights: TruthLayerResult["hiddenInsights"
 /* ─── Competitor Comparison ───────────────────────── */
 function CompetitorComparison({ competitors }: { competitors: TruthLayerResult["competitors"] }) {
   return (
-    <div style={{ ...s.glassCard, background:"linear-gradient(135deg, rgba(163,116,255,0.06) 0%, rgba(15,17,26,0.9) 100%)", border:"1px solid rgba(163,116,255,0.15)" }}>
+    <div style={{ ...s.glassCard, background:"linear-gradient(135deg, rgba(236,72,153,0.05) 0%, #fff 100%)", border:"1px solid rgba(236,72,153,0.15)" }}>
       <SectionHead icon="⚡" title="Top Alternatives" />
       <p style={{ fontSize:11.5, color:"var(--text-muted)", marginBottom:14, marginTop:-6 }}>
         Ranked by value. Compare before you buy.
@@ -458,7 +458,7 @@ function CompetitorCard({ comp, rank }: { comp: TruthLayerResult["competitors"][
             <div style={{ fontSize:11, fontWeight:700, color:scoreCol }}>{(comp.score / 10).toFixed(1)}/10</div>
           </div>
         </div>
-        <div style={{ display:"inline-flex", alignItems:"center", gap:5, marginBottom:7, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:6, padding:"2px 8px" }}>
+        <div style={{ display:"inline-flex", alignItems:"center", gap:5, marginBottom:7, background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:6, padding:"2px 8px" }}>
           <span style={{ fontSize:10 }}>{comp.badge}</span>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
@@ -510,7 +510,7 @@ function FinalVerdictCard({ verdict }: { verdict: TruthLayerResult["verdict"] })
 }
 
 function GlassCard({ children, accent, style }: { children: React.ReactNode; accent?: string; style?: React.CSSProperties }) {
-  return <div style={{ ...s.glassCard, background:accent?`linear-gradient(135deg,${accent} 0%,rgba(15,17,26,0.9) 100%)`:"rgba(15,17,26,0.9)", ...style }}>{children}</div>;
+  return <div style={{ ...s.glassCard, ...(accent ? { background:`linear-gradient(135deg,${accent} 0%,#fff 100%)` } : {}), ...style }}>{children}</div>;
 }
 
 function SectionHead({ icon, title, titleColor }: { icon: string; title: string; titleColor?: string }) {
@@ -520,69 +520,69 @@ function SectionHead({ icon, title, titleColor }: { icon: string; title: string;
 /* ══ Styles ══════════════════════════════════════════ */
 const s: Record<string, React.CSSProperties> = {
   root: { minHeight:"100vh", background:"var(--bg-base)", display:"flex", justifyContent:"center", position:"relative", overflow:"hidden" },
-  blob1: { position:"fixed", top:"-5%", left:"-10%", width:600, height:600, borderRadius:"50%", pointerEvents:"none", background:"radial-gradient(circle,rgba(108,141,250,0.14) 0%,transparent 65%)", animation:"orb-drift 20s ease-in-out infinite", zIndex:0 },
-  blob2: { position:"fixed", bottom:"5%", right:"-10%", width:560, height:560, borderRadius:"50%", pointerEvents:"none", background:"radial-gradient(circle,rgba(163,116,255,0.12) 0%,transparent 65%)", animation:"orb-drift-2 25s ease-in-out infinite", zIndex:0 },
-  blob3: { position:"fixed", top:"45%", left:"50%", transform:"translate(-50%,-50%)", width:400, height:400, borderRadius:"50%", pointerEvents:"none", background:"radial-gradient(circle,rgba(52,211,153,0.04) 0%,transparent 70%)", zIndex:0 },
-  dotGrid: { position:"fixed", inset:0, backgroundImage:"radial-gradient(circle,rgba(255,255,255,0.045) 1px,transparent 1px)", backgroundSize:"28px 28px", WebkitMaskImage:"radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)", maskImage:"radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)", pointerEvents:"none", zIndex:0 } as React.CSSProperties,
+  blob1: { position:"fixed", top:"-5%", left:"-10%", width:600, height:600, borderRadius:"50%", pointerEvents:"none", background:"radial-gradient(circle,rgba(236,72,153,0.12) 0%,transparent 65%)", animation:"orb-drift 20s ease-in-out infinite", zIndex:0 },
+  blob2: { position:"fixed", bottom:"5%", right:"-10%", width:560, height:560, borderRadius:"50%", pointerEvents:"none", background:"radial-gradient(circle,rgba(244,63,94,0.10) 0%,transparent 65%)", animation:"orb-drift-2 25s ease-in-out infinite", zIndex:0 },
+  blob3: { position:"fixed", top:"45%", left:"50%", transform:"translate(-50%,-50%)", width:400, height:400, borderRadius:"50%", pointerEvents:"none", background:"radial-gradient(circle,rgba(236,72,153,0.05) 0%,transparent 70%)", zIndex:0 },
+  dotGrid: { position:"fixed", inset:0, backgroundImage:"radial-gradient(circle,rgba(236,72,153,0.07) 1px,transparent 1px)", backgroundSize:"28px 28px", WebkitMaskImage:"radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)", maskImage:"radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%)", pointerEvents:"none", zIndex:0 } as React.CSSProperties,
   page: { width:"100%", maxWidth:720, minHeight:"100vh", display:"flex", flexDirection:"column", position:"relative", zIndex:1 },
 
-  header: { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"13px 20px", borderBottom:"1px solid rgba(255,255,255,0.06)", position:"sticky", top:0, background:"rgba(8,10,16,0.88)", backdropFilter:"blur(28px)", zIndex:10, boxShadow:"0 1px 0 rgba(108,141,250,0.08),0 4px 24px rgba(0,0,0,0.4)" },
-  backBtn: { width:32, height:32, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.09)", borderRadius:8, color:"var(--text-secondary)", cursor:"pointer" },
+  header: { display:"flex", alignItems:"center", justifyContent:"space-between", padding:"13px 20px", borderBottom:"1px solid rgba(236,72,153,0.12)", position:"sticky", top:0, background:"rgba(255,240,247,0.94)", backdropFilter:"blur(28px)", zIndex:10, boxShadow:"0 1px 0 rgba(236,72,153,0.08),0 4px 24px rgba(236,72,153,0.06)" },
+  backBtn: { width:32, height:32, display:"flex", alignItems:"center", justifyContent:"center", background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:8, color:"var(--text-secondary)", cursor:"pointer" },
   headerCenter: { display:"flex", alignItems:"center", gap:9 },
-  headerIconWrap: { width:26, height:26, background:"linear-gradient(135deg,rgba(108,141,250,0.25),rgba(108,141,250,0.1))", border:"1px solid rgba(108,141,250,0.3)", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", color:"var(--accent)" },
-  livePill: { display:"flex", alignItems:"center", gap:5, fontSize:9, fontWeight:700, letterSpacing:"0.8px", background:"rgba(52,211,153,0.12)", color:"var(--green)", border:"1px solid rgba(52,211,153,0.22)", borderRadius:20, padding:"3px 9px" },
+  headerIconWrap: { width:26, height:26, background:"linear-gradient(135deg,rgba(236,72,153,0.2),rgba(236,72,153,0.08))", border:"1px solid rgba(236,72,153,0.25)", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", color:"var(--accent)" },
+  livePill: { display:"flex", alignItems:"center", gap:5, fontSize:9, fontWeight:700, letterSpacing:"0.8px", background:"rgba(16,185,129,0.12)", color:"var(--green)", border:"1px solid rgba(16,185,129,0.22)", borderRadius:20, padding:"3px 9px" },
   liveDot: { width:5, height:5, borderRadius:"50%", flexShrink:0, background:"var(--green)", animation:"pulse-glow 2s ease-in-out infinite" },
 
   analyzing: { flex:1, display:"flex", flexDirection:"column", alignItems:"center", padding:"40px 24px", gap:20 },
   orbWrap: { position:"relative", width:120, height:120, display:"flex", alignItems:"center", justifyContent:"center" },
-  orbRing1: { position:"absolute", inset:0, borderRadius:"50%", border:"1px solid rgba(108,141,250,0.2)", animation:"spin 8s linear infinite" },
-  orbRing2: { position:"absolute", inset:10, borderRadius:"50%", border:"1px solid rgba(163,116,255,0.15)", animation:"spin 12s linear infinite reverse" },
-  orbRing3: { position:"absolute", inset:20, borderRadius:"50%", border:"1px solid rgba(108,141,250,0.1)", animation:"spin 6s linear infinite" },
-  orbCore: { width:64, height:64, borderRadius:"50%", background:"linear-gradient(135deg,rgba(108,141,250,0.2),rgba(163,116,255,0.15))", border:"1px solid rgba(108,141,250,0.3)", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" },
-  orbGlow: { position:"absolute", inset:0, borderRadius:"50%", background:"radial-gradient(circle,rgba(108,141,250,0.3) 0%,transparent 70%)", animation:"pulse-glow 2s ease-in-out infinite" },
+  orbRing1: { position:"absolute", inset:0, borderRadius:"50%", border:"1px solid rgba(236,72,153,0.25)", animation:"spin 8s linear infinite" },
+  orbRing2: { position:"absolute", inset:10, borderRadius:"50%", border:"1px solid rgba(244,63,94,0.18)", animation:"spin 12s linear infinite reverse" },
+  orbRing3: { position:"absolute", inset:20, borderRadius:"50%", border:"1px solid rgba(236,72,153,0.12)", animation:"spin 6s linear infinite" },
+  orbCore: { width:64, height:64, borderRadius:"50%", background:"linear-gradient(135deg,rgba(236,72,153,0.18),rgba(244,63,94,0.12))", border:"1px solid rgba(236,72,153,0.3)", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" },
+  orbGlow: { position:"absolute", inset:0, borderRadius:"50%", background:"radial-gradient(circle,rgba(236,72,153,0.25) 0%,transparent 70%)", animation:"pulse-glow 2s ease-in-out infinite" },
   analyzingTitle: { fontSize:18, fontWeight:800, letterSpacing:"-0.4px", color:"var(--text-primary)", textAlign:"center" },
   analyzingSub: { fontSize:12.5, color:"var(--text-muted)", textAlign:"center", marginTop:-12 },
-  stepsCard: { width:"100%", maxWidth:420, background:"var(--bg-surface)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, overflow:"hidden" },
+  stepsCard: { width:"100%", maxWidth:420, background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:14, overflow:"hidden" },
   stepRow: { display:"flex", alignItems:"center", gap:10, padding:"10px 14px" },
   stepDot: { width:8, height:8, borderRadius:"50%", flexShrink:0, border:"1.5px solid" },
   stepCheck: { fontSize:10, color:"var(--green)", fontWeight:700 },
-  stepSpinner: { width:12, height:12, borderRadius:"50%", border:"1.5px solid rgba(108,141,250,0.2)", borderTopColor:"var(--accent)", animation:"spin 0.7s linear infinite", flexShrink:0 },
+  stepSpinner: { width:12, height:12, borderRadius:"50%", border:"1.5px solid rgba(236,72,153,0.2)", borderTopColor:"var(--accent)", animation:"spin 0.7s linear infinite", flexShrink:0 },
 
   dashboard: { flex:1, display:"flex", flexDirection:"column", overflow:"hidden" },
   dashScroll: { flex:1, overflowY:"auto", padding:"16px 16px 40px", display:"flex", flexDirection:"column", gap:12 },
 
-  productHero: { display:"flex", gap:14, padding:"16px", background:"var(--bg-surface)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:16 },
-  productImgWrap: { width:72, height:72, borderRadius:12, overflow:"hidden", flexShrink:0, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)" },
+  productHero: { display:"flex", gap:14, padding:"16px", background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:16 },
+  productImgWrap: { width:72, height:72, borderRadius:12, overflow:"hidden", flexShrink:0, background:"var(--bg-elevated)", border:"1px solid var(--border)" },
   productImg: { width:"100%", height:"100%", objectFit:"cover" },
   productBrand: { fontSize:10, color:"var(--text-muted)", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.6px", marginBottom:3 },
   productName: { fontSize:14, fontWeight:700, color:"var(--text-primary)", lineHeight:1.35 },
-  productPrice: { fontSize:16, fontWeight:800, color:"var(--text-primary)", letterSpacing:"-0.3px" },
+  productPrice: { fontSize:16, fontWeight:800, color:"var(--accent)", letterSpacing:"-0.3px" },
   productRating: { fontSize:11, color:"var(--yellow)", fontWeight:500 },
-  productStore: { fontSize:10, color:"var(--text-muted)", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:5, padding:"2px 7px" },
+  productStore: { fontSize:10, color:"var(--text-muted)", background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:5, padding:"2px 7px" },
 
   statsRow: { display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8 },
-  statItem: { display:"flex", flexDirection:"column", alignItems:"center", gap:4, padding:"12px 8px", background:"var(--bg-surface)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12 },
+  statItem: { display:"flex", flexDirection:"column", alignItems:"center", gap:4, padding:"12px 8px", background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:12 },
   statValue: { fontSize:20, fontWeight:900, letterSpacing:"-1px", lineHeight:1 },
   statLabel: { fontSize:10, color:"var(--text-muted)", textAlign:"center", fontWeight:500 },
 
-  glassCard: { padding:"16px 16px 14px", border:"1px solid rgba(255,255,255,0.07)", borderRadius:16, overflow:"hidden" },
+  glassCard: { padding:"16px 16px 14px", border:"1px solid var(--border)", borderRadius:16, overflow:"hidden", background:"var(--bg-surface)" },
   sectionHead: { display:"flex", alignItems:"center", gap:8, marginBottom:14 },
   listPoints: { listStyle:"none", padding:0, margin:0 },
 
   insightRow: { display:"flex", alignItems:"flex-start", gap:10, padding:"10px 12px", borderRadius:10 },
-  insightsBadge: { fontSize:9.5, fontWeight:600, color:"var(--yellow)", background:"rgba(251,191,36,0.1)", border:"1px solid rgba(251,191,36,0.2)", borderRadius:5, padding:"2px 8px" },
+  insightsBadge: { fontSize:9.5, fontWeight:600, color:"var(--yellow)", background:"rgba(245,158,11,0.1)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:5, padding:"2px 8px" },
 
-  compCard: { display:"flex", alignItems:"flex-start", gap:10, padding:"12px 14px", background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12 },
-  compRank: { width:22, height:22, borderRadius:"50%", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", fontSize:11, fontWeight:700, color:"var(--text-muted)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:2 },
-  compImgWrap: { width:46, height:46, borderRadius:10, overflow:"hidden", flexShrink:0, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)" },
+  compCard: { display:"flex", alignItems:"flex-start", gap:10, padding:"12px 14px", background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:12 },
+  compRank: { width:22, height:22, borderRadius:"50%", background:"#fff", border:"1px solid var(--border)", fontSize:11, fontWeight:700, color:"var(--text-muted)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:2 },
+  compImgWrap: { width:46, height:46, borderRadius:10, overflow:"hidden", flexShrink:0, background:"var(--bg-elevated)", border:"1px solid var(--border)" },
   compImg: { width:"100%", height:"100%", objectFit:"cover" },
 
   verdictCard: { padding:"18px 18px 16px", borderRadius:16 },
   verdictTop: { display:"flex", alignItems:"center", gap:14, marginBottom:12 },
-  verdictEmoji: { width:56, height:56, borderRadius:16, background:"rgba(255,255,255,0.05)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 },
+  verdictEmoji: { width:56, height:56, borderRadius:16, background:"var(--bg-elevated)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 },
 
-  reanalyzeBtn: { display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"12px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.09)", borderRadius:12, color:"var(--text-secondary)", fontSize:13, fontWeight:600, cursor:"pointer", marginTop:4 },
+  reanalyzeBtn: { display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"12px", background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:12, color:"var(--text-secondary)", fontSize:13, fontWeight:600, cursor:"pointer", marginTop:4 },
 
-  barTrack: { width:"100%", background:"rgba(255,255,255,0.06)", borderRadius:3, overflow:"hidden" },
+  barTrack: { width:"100%", background:"var(--bg-elevated)", borderRadius:3, overflow:"hidden" },
   barFill: { height:"100%", borderRadius:3, transition:"width 0.9s cubic-bezier(0.16,1,0.3,1)" },
 };
