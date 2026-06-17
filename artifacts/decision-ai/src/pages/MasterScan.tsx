@@ -554,7 +554,7 @@ const SWITCH_TYPES = [
   { id: "job"      as DemoId, icon: "💼", label: "Job Apply" },
 ];
 
-function WorkspaceView({ demo, onRescan, onSwitch }: { demo: DemoScenario; onRescan: () => void; onSwitch: (id: DemoId) => void }) {
+function WorkspaceView({ demo, onRescan, onSwitch, onProfile }: { demo: DemoScenario; onRescan: () => void; onSwitch: (id: DemoId) => void; onProfile: () => void }) {
   const [action, setAction] = useState(demo.actions[0].id);
 
   const isPlannerAction = action === "planner";
