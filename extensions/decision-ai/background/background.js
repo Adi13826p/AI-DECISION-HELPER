@@ -1,9 +1,8 @@
 /**
  * DecisionAI — Background Service Worker
- * Handles selection capture, AI analysis, and overlay messaging.
+ * Responsibilities: screenshot capture, cropping, messaging to content script.
+ * AI analysis is handled directly by the content script.
  */
-
-import { analyzeTruthLayer, analyzeMasterScan } from '../lib/api.js';
 
 let pendingMode = 'truth';
 
@@ -50,51 +49,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       if (!tabId || !windowId) return false;
 
-      // Step 1 — capture the visible tab immediately (selector overlay is already gone)
+      // Capture the visible tab (selector overlay is already removed by this point)
       chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, async (dataUrl) => {
         if (chrome.runtime.lastError || !dataUrl) {
           chrome.tabs.sendMessage(tabId, {
-            type: 'OVERLAY_ERROR',
+            type: 'SHOW_OVERLAY',
+            mode: pendingMode,
             error: chrome.runtime.lastError?.message || 'Screen capture failed'
-          }).catch(() => {});
+          });
           return;
         }
 
         try {
-          // Step 2 — crop to the selected area
           const croppedDataUrl = await cropImage(dataUrl, rect, dpr);
 
-          // Step 3 — show loading overlay on the page with the cropped preview
+          // Send cropped image to content script — it handles the AI call and UI
           chrome.tabs.sendMessage(tabId, {
             type: 'SHOW_OVERLAY',
             mode: pendingMode,
             imageDataUrl: croppedDataUrl,
             pageUrl: pageUrl || '',
             pageTitle: pageTitle || ''
-          }).catch(() => {});
-
-          // Step 4 — run AI analysis
-          let result;
-          if (pendingMode === 'masterscan') {
-            result = await analyzeMasterScan(croppedDataUrl, pageUrl, pageTitle);
-          } else {
-            result = await analyzeTruthLayer(croppedDataUrl, pageUrl, pageTitle);
-          }
-
-          // Step 5 — send results to overlay
-          chrome.tabs.sendMessage(tabId, {
-            type: 'OVERLAY_RESULT',
-            result,
-            mode: pendingMode
-          }).catch(() => {});
+          });
 
           logAnalysis({ url: pageUrl, title: pageTitle, mode: pendingMode });
-
         } catch (err) {
           chrome.tabs.sendMessage(tabId, {
-            type: 'OVERLAY_ERROR',
+            type: 'SHOW_OVERLAY',
+            mode: pendingMode,
             error: err.message
-          }).catch(() => {});
+          });
         }
       });
       return false;
@@ -172,8 +156,6 @@ async function blobToDataUrl(blob) {
   }
   return `data:${blob.type || 'image/jpeg'};base64,` + btoa(binary);
 }
-
-// ── History ────────────────────────────────────────────────────────────────────
 
 async function logAnalysis(data) {
   const result  = await chrome.storage.local.get('analysisHistory');
