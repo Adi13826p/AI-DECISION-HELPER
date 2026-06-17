@@ -20,15 +20,6 @@ export interface TruthLayerResult {
   truthSummary: string;
   loves: string[];
   hates: string[];
-  platforms: {
-    name: string;
-    icon: string;
-    score: number;
-    label: string;
-    source: string;
-    points: string[];
-    color: string;
-  }[];
   hiddenInsights: {
     type: 'warning' | 'positive' | 'neutral';
     text: string;
@@ -72,7 +63,7 @@ export const MOCK_RESULT: TruthLayerResult = {
   truthScore: 82,
   scoreLabel: 'Recommended',
   truthSummary:
-    "Cross-platform consensus strongly favors this product. Best-in-class ANC, 30-hour battery, and consistent praise across Reddit, Google, and YouTube. Hinge fragility is a known long-term concern — not a dealbreaker at this price.",
+    "Expert consensus strongly favors this product. Best-in-class ANC, 30-hour battery, and consistent praise across Google and YouTube reviews. Hinge fragility is a known long-term concern — not a dealbreaker at this price.",
   loves: [
     'Best-in-class noise cancellation under $400',
     '30-hour battery — top of category',
@@ -86,47 +77,9 @@ export const MOCK_RESULT: TruthLayerResult = {
     'Ear pads retain heat in warm climates',
     'Touch controls occasionally misfire',
   ],
-  platforms: [
-    {
-      name: 'Reddit',
-      icon: '💬',
-      score: 7.6,
-      label: 'Good',
-      source: 'r/headphones · r/audiophile',
-      points: ['#1 ANC pick in community rankings', 'Hinge concerns flagged in 2023–2024 threads', 'Recommended over XM4 for ANC improvement'],
-      color: '#ff6a3d',
-    },
-    {
-      name: 'Quora',
-      icon: '❓',
-      score: 7.9,
-      label: 'Good',
-      source: 'quora.com/topic/headphones',
-      points: ['Experts recommend for travel & office', 'Budget buyers directed toward XM4', 'Rated top 3 in ANC category by answers'],
-      color: '#e54040',
-    },
-    {
-      name: 'Google Reviews',
-      icon: '🔍',
-      score: 8.5,
-      label: 'Excellent',
-      source: 'The Verge · Wirecutter · RTINGS',
-      points: ['"Best ANC headphone" — Wirecutter 2024', '#1 ranked on RTINGS noise cancellation', 'Featured in The Verge Best of 2024'],
-      color: '#6c8dfa',
-    },
-    {
-      name: 'YouTube',
-      icon: '▶',
-      score: 8.1,
-      label: 'Excellent',
-      source: 'MKBHD · Linus Tech Tips · MrMobile',
-      points: ['Top pick from MKBHD & Linus', 'Build quality concerns noted in 3 reviews', 'Call quality praised as best in class'],
-      color: '#f43f5e',
-    },
-  ],
   hiddenInsights: [
     { type: 'warning',  text: 'Hinge fragility increases after 12+ months of daily use.' },
-    { type: 'warning',  text: 'Battery degrades to ~22h after 18 months — per long-term Reddit reports.' },
+    { type: 'warning',  text: 'Battery degrades to ~22h after 18 months of regular use.' },
     { type: 'positive', text: 'Sony warranty support replaces defective units quickly.' },
   ],
   competitors: [

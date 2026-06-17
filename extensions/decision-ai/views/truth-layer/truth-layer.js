@@ -20,7 +20,7 @@ function showState(s) {
 
 // ── Loading steps ─────────────────────────────────────────────────────────────
 
-const STEP_IDS = ['step1','step2','step3','step4','step5'];
+const STEP_IDS = ['step1','step2','step3'];
 
 function setStep(i) {
   STEP_IDS.forEach((id, idx) => {
@@ -120,8 +120,6 @@ function renderResults(data) {
 
   renderProduct(data.product || {});
   renderReviews(data.reviews || {});
-  renderFakeDetection(data.fakeDetection || {});
-  renderSentiment(data.sentiment || []);
   renderPriceIntel(data.priceIntel || {});
   renderCompetitors(data.competitors || []);
 }
@@ -161,43 +159,6 @@ function renderReviews(r) {
       </div>
       ${hidden.length ? `<div class="hidden-complaints"><span class="hc-label">⚠ Hidden complaints found</span>${hidden.map(h=>`<p>${esc(h)}</p>`).join('')}</div>` : ''}
     </div>`;
-}
-
-function renderFakeDetection(f) {
-  const level = f.riskLevel || 'Unknown';
-  const pct   = Math.min(100, Math.max(0, f.fakePercent ?? 0));
-  const cls   = level === 'Low' ? 'low' : level === 'Medium' ? 'med' : level === 'High' ? 'high' : 'med';
-  const signals = (f.signals || []).map(s => `
-    <div class="fake-signal">
-      <div class="fake-signal-dot signal-${s.type || 'ok'}"></div>
-      <span>${esc(s.text)}</span>
-    </div>`).join('');
-
-  $('fakeResult').innerHTML = `
-    <div class="fake-result-inner">
-      <div class="fake-score-row">
-        <span class="fake-label">Fake review risk</span>
-        <span class="fake-badge fake-badge-${cls}">${esc(level)} Risk</span>
-      </div>
-      <div class="fake-bar-track"><div class="fake-bar-fill ${cls}" style="width:${pct}%"></div></div>
-      ${f.confidence ? `<div class="fake-confidence">AI confidence: ${f.confidence}%</div>` : ''}
-      <div class="fake-signals">${signals}</div>
-    </div>`;
-}
-
-function renderSentiment(items) {
-  if (!items.length) {
-    $('sentimentItems').innerHTML = '<p class="no-data">No community sentiment data available.</p>';
-    return;
-  }
-  $('sentimentItems').innerHTML = items.map(s => `
-    <div class="sentiment-item">
-      <div class="sentiment-source">
-        <span class="source-badge source-${esc(s.source?.toLowerCase())}">${esc(s.source)}</span>
-        <span class="sentiment-mood">${esc(s.mood)}</span>
-      </div>
-      <p class="sentiment-text">${esc(s.text)}</p>
-    </div>`).join('');
 }
 
 function renderPriceIntel(p) {

@@ -6,11 +6,9 @@ type ViewState = "input" | "analyzing" | "results";
 
 const ANALYSIS_STEPS = [
   { icon: "🔎", text: "Identifying product…" },
-  { icon: "💬", text: "Scanning Reddit discussions…" },
-  { icon: "❓", text: "Analyzing Quora threads…" },
-  { icon: "🔍", text: "Processing Google expert reviews…" },
-  { icon: "▶",  text: "Summarizing YouTube reviews…" },
-  { icon: "🧠", text: "Synthesizing cross-platform report…" },
+  { icon: "🔍", text: "Processing expert reviews…" },
+  { icon: "▶",  text: "Analyzing video reviews…" },
+  { icon: "🧠", text: "Synthesizing report…" },
 ];
 
 export default function TruthLayer() {
@@ -118,7 +116,7 @@ function InputView({ onAnalyze, error }: { onAnalyze: (name: string) => void; er
         <div style={{ fontSize:44, marginBottom:14 }}>🔍</div>
         <h2 style={{ fontSize:20, fontWeight:800, color:"var(--text-primary)", marginBottom:7, letterSpacing:"-0.5px" }}>Product Intelligence</h2>
         <p style={{ fontSize:12.5, color:"var(--text-muted)", lineHeight:1.65, maxWidth:300 }}>
-          Enter any product. AI cross-checks Reddit, Quora, Google, and YouTube — delivers a professional verdict in seconds.
+          Enter any product. AI cross-checks expert reviews and YouTube — delivers a professional verdict in seconds.
         </p>
       </div>
 
@@ -177,7 +175,7 @@ function InputView({ onAnalyze, error }: { onAnalyze: (name: string) => void; er
 
       {/* Source badges */}
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"center", opacity:0.5, marginTop:4 }}>
-        {[{ icon:"💬", label:"Reddit" },{ icon:"❓", label:"Quora" },{ icon:"🔍", label:"Google" },{ icon:"▶", label:"YouTube" }].map(p => (
+        {[{ icon:"🔍", label:"Expert Reviews" },{ icon:"▶", label:"YouTube" },{ icon:"🛒", label:"Store Reviews" }].map(p => (
           <div key={p.label} style={{ display:"flex", alignItems:"center", gap:5, fontSize:10.5, color:"var(--text-muted)", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:20, padding:"4px 10px" }}>
             <span style={{ fontSize:11 }}>{p.icon}</span>{p.label}
           </div>
@@ -227,7 +225,6 @@ function ResultsDashboard({ result, onReanalyze }: { result: TruthLayerResult; o
         <StatsTicker stats={result.analysisStats} />
         <TruthScoreCard score={result.truthScore} label={result.scoreLabel} summary={result.truthSummary} />
         <LovesHates loves={result.loves} hates={result.hates} />
-        <CommunitySentiment platforms={result.platforms} />
         <KeyInsights insights={result.hiddenInsights} />
         <CompetitorComparison competitors={result.competitors} />
         <FinalVerdictCard verdict={result.verdict} />
@@ -407,79 +404,6 @@ function LovesHates({ loves, hates }: { loves: string[]; hates: string[] }) {
           ))}
         </ul>
       </GlassCard>
-    </div>
-  );
-}
-
-/* ─── Community Sentiment ─────────────────────────── */
-function CommunitySentiment({ platforms }: { platforms: TruthLayerResult["platforms"] }) {
-  return (
-    <GlassCard accent="rgba(108,141,250,0.05)">
-      <SectionHead icon="📡" title="Community Sentiment" />
-      <p style={{ fontSize:11.5, color:"var(--text-muted)", marginBottom:14, marginTop:-4 }}>
-        Aggregated from real community discussions and expert reviews.
-      </p>
-      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        {platforms.map((p, i) => <PlatformCard key={i} platform={p} delay={i * 100} />)}
-      </div>
-    </GlassCard>
-  );
-}
-
-function PlatformCard({ platform, delay }: { platform: TruthLayerResult["platforms"][0]; delay: number }) {
-  const [w, setW] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => setW(platform.score * 10), 300 + delay);
-    return () => clearTimeout(t);
-  }, [platform.score, delay]);
-
-  const col = platform.score >= 8 ? "var(--green)" : platform.score >= 6.5 ? "var(--yellow)" : "var(--red)";
-
-  return (
-    <div style={{
-      padding:"12px 14px",
-      background:"rgba(255,255,255,0.02)",
-      border:"1px solid rgba(255,255,255,0.06)",
-      borderRadius:12,
-    }}>
-      {/* Header row */}
-      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-        <span style={{ fontSize:15, flexShrink:0 }}>{platform.icon}</span>
-        <span style={{ fontSize:13, fontWeight:700, color:"var(--text-primary)", flex:1 }}>{platform.name}</span>
-
-        {/* Score pill */}
-        <div style={{
-          display:"flex", alignItems:"center", gap:4,
-          background: platform.score >= 8 ? "rgba(52,211,153,0.1)" : platform.score >= 6.5 ? "rgba(251,191,36,0.1)" : "rgba(248,113,113,0.1)",
-          border: `1px solid ${col}30`,
-          borderRadius:8, padding:"3px 10px",
-        }}>
-          <span style={{ fontSize:14, fontWeight:800, color:col, letterSpacing:"-0.5px" }}>{platform.score.toFixed(1)}</span>
-          <span style={{ fontSize:10, color:"var(--text-muted)", fontWeight:500 }}>/10</span>
-          <span style={{ fontSize:9, color:col, fontWeight:700, marginLeft:2 }}>— {platform.label}</span>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div style={{ height:3, background:"rgba(255,255,255,0.06)", borderRadius:2, marginBottom:10, overflow:"hidden" }}>
-        <div style={{ height:"100%", width:`${w}%`, background:`linear-gradient(90deg, ${platform.color}80, ${platform.color})`, borderRadius:2, transition:"width 0.9s cubic-bezier(0.16,1,0.3,1)", boxShadow:`0 0 6px ${platform.color}40` }} />
-      </div>
-
-      {/* Source tag */}
-      <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
-        <span style={{ fontSize:9, fontWeight:700, letterSpacing:"0.4px", textTransform:"uppercase", color:"var(--text-muted)" }}>Source:</span>
-        <span style={{ fontSize:10.5, color:"var(--accent)", fontWeight:500 }}>{platform.source}</span>
-      </div>
-
-      {/* Bullet points */}
-      <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-        {platform.points.map((pt, i) => (
-          <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:7 }}>
-            <span style={{ width:4, height:4, borderRadius:"50%", background:platform.color, flexShrink:0, marginTop:5 }} />
-            <span style={{ fontSize:11.5, color:"var(--text-secondary)", lineHeight:1.5 }}>{pt}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

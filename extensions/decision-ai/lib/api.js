@@ -98,20 +98,6 @@ Extract product information and provide a complete analysis. Return ONLY this JS
     "cons": ["Con 1", "Con 2", "Con 3"],
     "hiddenComplaints": ["Any common issue not shown in ratings"]
   },
-  "fakeDetection": {
-    "riskLevel": "Low",
-    "fakePercent": 12,
-    "confidence": 80,
-    "signals": [
-      { "type": "ok", "text": "Signal text" },
-      { "type": "warning", "text": "Warning signal" }
-    ]
-  },
-  "sentiment": [
-    { "source": "Reddit", "mood": "Positive", "text": "Community sentiment from Reddit" },
-    { "source": "Quora", "mood": "Mixed", "text": "Expert opinions from Quora" },
-    { "source": "YouTube", "mood": "Positive", "text": "Video reviewer consensus" }
-  ],
   "priceIntel": {
     "currentPrice": "visible price",
     "fairPrice": "estimated fair market value",

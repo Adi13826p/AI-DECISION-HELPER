@@ -68,7 +68,7 @@ export default function Popup() {
             title="Truth Layer"
             tag={{ label: "Live", color: "#34d399", dot: "#34d399" }}
             desc="Deep-dive analysis of any product. Reviews, pricing, red flags, and a final buy recommendation."
-            bullets={["Fake review detection", "Price comparison across stores", "Reddit & Quora sentiment"]}
+            bullets={["Price comparison across stores", "Red flag detection", "Buy recommendation"]}
             bulletDone
           />
 

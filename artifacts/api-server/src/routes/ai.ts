@@ -52,44 +52,6 @@ router.post("/analyze", async (req, res) => {
   "truthSummary": "2-3 sentence professional cross-platform verdict. Concise and direct.",
   "loves": ["top praised feature 1", "top praised feature 2", "top praised feature 3", "top praised feature 4", "top praised feature 5"],
   "hates": ["top criticism 1", "top criticism 2", "top criticism 3", "top criticism 4"],
-  "platforms": [
-    {
-      "name": "Reddit",
-      "icon": "💬",
-      "score": 7.6,
-      "label": "Good",
-      "source": "r/relevant_subreddit · r/another_subreddit",
-      "points": ["short finding 1", "short finding 2", "short finding 3"],
-      "color": "#ff6a3d"
-    },
-    {
-      "name": "Quora",
-      "icon": "❓",
-      "score": 7.9,
-      "label": "Good",
-      "source": "quora.com/topic/relevant-topic",
-      "points": ["short finding 1", "short finding 2", "short finding 3"],
-      "color": "#e54040"
-    },
-    {
-      "name": "Google Reviews",
-      "icon": "🔍",
-      "score": 8.5,
-      "label": "Excellent",
-      "source": "Publication1 · Publication2 · Publication3",
-      "points": ["short finding 1", "short finding 2", "short finding 3"],
-      "color": "#6c8dfa"
-    },
-    {
-      "name": "YouTube",
-      "icon": "▶",
-      "score": 8.1,
-      "label": "Excellent",
-      "source": "Reviewer1 · Reviewer2 · Reviewer3",
-      "points": ["short finding 1", "short finding 2", "short finding 3"],
-      "color": "#f43f5e"
-    }
-  ],
   "hiddenInsights": [
     { "type": "warning", "text": "a hidden concern most buyers miss — short and direct" },
     { "type": "positive", "text": "a hidden positive most buyers miss — short and direct" },
@@ -110,9 +72,6 @@ router.post("/analyze", async (req, res) => {
 Rules:
 - truthScore: 0–100 integer
 - scoreLabel: one of "Highly Recommended" / "Recommended" / "Average" / "Below Average" / "Avoid"
-- platform score: decimal out of 10, e.g. 7.6
-- platform label: one of "Exceptional" / "Excellent" / "Good" / "Average" / "Poor"
-- platform points: exactly 3 items, each under 60 characters
 - loves: exactly 5 items, each under 70 characters
 - hates: exactly 4 items, each under 70 characters
 - verdict.type: one of "recommended" / "consider" / "avoid"
