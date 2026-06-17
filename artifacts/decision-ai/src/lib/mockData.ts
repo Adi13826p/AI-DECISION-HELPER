@@ -15,14 +15,16 @@ export interface TruthLayerResult {
     dataPoints: number;
     timeTaken: string;
   };
+  sourcePlatforms: string[];
   truthScore: number;
   scoreLabel: string;
   truthSummary: string;
-  loves: string[];
-  hates: string[];
+  loves: { text: string; source: string }[];
+  hates: { text: string; source: string }[];
   hiddenInsights: {
     type: 'warning' | 'positive' | 'neutral';
     text: string;
+    source: string;
   }[];
   competitors: {
     name: string;
@@ -50,37 +52,38 @@ export const MOCK_RESULT: TruthLayerResult = {
     price: '$279.99',
     rating: '4.4',
     reviewCount: '12,847',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop&auto=format',
+    image: '',
     model: 'WH-1000XM5/B',
     store: 'amazon.com',
   },
   analysisStats: {
     reviewsAnalyzed: 12847,
-    sourcesScanned: 4,
+    sourcesScanned: 5,
     dataPoints: 38204,
     timeTaken: '2.3s',
   },
+  sourcePlatforms: ['Reddit', 'YouTube', 'Quora', 'Amazon', 'Google'],
   truthScore: 82,
   scoreLabel: 'Recommended',
   truthSummary:
-    "Expert consensus strongly favors this product. Best-in-class ANC, 30-hour battery, and consistent praise across Google and YouTube reviews. Hinge fragility is a known long-term concern — not a dealbreaker at this price.",
+    "Expert consensus strongly favors this product. Best-in-class ANC, 30-hour battery, and consistent praise across Reddit and YouTube reviews. Hinge fragility is a known long-term concern — not a dealbreaker at this price.",
   loves: [
-    'Best-in-class noise cancellation under $400',
-    '30-hour battery — top of category',
-    'AI voice isolation on calls, rated highly',
-    'Premium comfort for extended wear',
-    'Companion app with customizable EQ',
+    { text: 'Best-in-class noise cancellation under $400', source: 'Reddit' },
+    { text: '30-hour battery — top of the entire category', source: 'YouTube' },
+    { text: 'AI voice isolation on calls, rated highly', source: 'Amazon' },
+    { text: 'Premium comfort for 8+ hour sessions', source: 'Quora' },
+    { text: 'Companion app with customizable EQ', source: 'Google' },
   ],
   hates: [
-    'Non-foldable — harder to pack vs XM4',
-    'Hinge fragility reported after 12+ months',
-    'Ear pads retain heat in warm climates',
-    'Touch controls occasionally misfire',
+    { text: 'Non-foldable — harder to pack vs XM4', source: 'Reddit' },
+    { text: 'Hinge fragility reported after 12+ months', source: 'YouTube' },
+    { text: 'Ear pads retain heat in warm climates', source: 'Amazon' },
+    { text: 'Touch controls occasionally misfire', source: 'Quora' },
   ],
   hiddenInsights: [
-    { type: 'warning',  text: 'Hinge fragility increases after 12+ months of daily use.' },
-    { type: 'warning',  text: 'Battery degrades to ~22h after 18 months of regular use.' },
-    { type: 'positive', text: 'Sony warranty support replaces defective units quickly.' },
+    { type: 'warning',  text: 'Hinge fragility increases after 12+ months of daily use — not mentioned in any official review.', source: 'Reddit' },
+    { type: 'warning',  text: 'Battery life degrades to ~22h after 18 months of regular use.', source: 'YouTube' },
+    { type: 'positive', text: 'Sony warranty support replaces defective units quickly — great post-purchase experience.', source: 'Quora' },
   ],
   competitors: [
     {
@@ -92,7 +95,7 @@ export const MOCK_RESULT: TruthLayerResult = {
       badgeColor: '#34d399',
       pros: 'More comfortable. Foldable design.',
       cons: 'ANC slightly weaker than XM5.',
-      image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=80&h=80&fit=crop&auto=format',
+      image: '',
     },
     {
       name: 'Apple AirPods Max',
@@ -103,7 +106,7 @@ export const MOCK_RESULT: TruthLayerResult = {
       badgeColor: '#6c8dfa',
       pros: 'Superior audio. Seamless Apple ecosystem.',
       cons: 'Very expensive. Heavy. No foldable case.',
-      image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=80&h=80&fit=crop&auto=format',
+      image: '',
     },
     {
       name: 'Sony WH-1000XM4',
@@ -114,7 +117,7 @@ export const MOCK_RESULT: TruthLayerResult = {
       badgeColor: '#fbbf24',
       pros: '92% of XM5 performance at 30% less. Foldable.',
       cons: 'Older chipset. Slightly worse call quality.',
-      image: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=80&h=80&fit=crop&auto=format',
+      image: '',
     },
   ],
   verdict: {

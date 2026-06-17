@@ -222,7 +222,7 @@ function ResultsDashboard({ result, onReanalyze }: { result: TruthLayerResult; o
     <div style={s.dashboard}>
       <div style={s.dashScroll}>
         <ProductHero product={result.product} />
-        <StatsTicker stats={result.analysisStats} />
+        <SourcesBanner platforms={result.sourcePlatforms ?? []} stats={result.analysisStats} />
         <TruthScoreCard score={result.truthScore} label={result.scoreLabel} summary={result.truthSummary} />
         <LovesHates loves={result.loves} hates={result.hates} />
         <KeyInsights insights={result.hiddenInsights} />
@@ -252,6 +252,44 @@ function ProductHero({ product }: { product: TruthLayerResult["product"] }) {
           <span style={s.productRating}>★ {product.rating} · {product.reviewCount} reviews</span>
           <span style={s.productStore}>{product.store}</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Sources Banner ──────────────────────────────── */
+const SOURCE_META: Record<string, { label: string; color: string; bg: string; border: string; icon: string }> = {
+  Reddit:    { label: "Reddit",    icon: "🔴", color: "#FF4500", bg: "rgba(255,69,0,0.08)",    border: "rgba(255,69,0,0.22)" },
+  YouTube:   { label: "YouTube",   icon: "▶",  color: "#FF0000", bg: "rgba(255,0,0,0.07)",     border: "rgba(255,0,0,0.2)" },
+  Quora:     { label: "Quora",     icon: "Q",  color: "#B92B27", bg: "rgba(185,43,39,0.08)",   border: "rgba(185,43,39,0.22)" },
+  Amazon:    { label: "Amazon",    icon: "A",  color: "#FF9900", bg: "rgba(255,153,0,0.08)",   border: "rgba(255,153,0,0.22)" },
+  Google:    { label: "Google",    icon: "G",  color: "#4285F4", bg: "rgba(66,133,244,0.08)",  border: "rgba(66,133,244,0.22)" },
+  TechRadar: { label: "TechRadar", icon: "T",  color: "#7C3AED", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.22)" },
+  RTINGS:    { label: "RTINGS",    icon: "R",  color: "#10B981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.22)" },
+};
+
+function SourceBadge({ source, size = "sm" }: { source: string; size?: "sm" | "xs" }) {
+  const meta = SOURCE_META[source] ?? { label: source, icon: "◆", color: "#7a3358", bg: "rgba(122,51,88,0.08)", border: "rgba(122,51,88,0.22)" };
+  const pad  = size === "xs" ? "1px 6px" : "2px 8px";
+  const fs   = size === "xs" ? 9 : 10;
+  return (
+    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background:meta.bg, border:`1px solid ${meta.border}`, borderRadius:20, padding:pad, fontSize:fs, fontWeight:700, color:meta.color, letterSpacing:"0.2px", flexShrink:0 }}>
+      <span style={{ fontSize: size === "xs" ? 8 : 9 }}>{meta.icon}</span>{meta.label}
+    </span>
+  );
+}
+
+function SourcesBanner({ platforms, stats }: { platforms: string[]; stats: TruthLayerResult["analysisStats"] }) {
+  return (
+    <div style={{ padding:"13px 16px", background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:14, display:"flex", flexDirection:"column", gap:10 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+        <span style={{ fontSize:10.5, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.7px" }}>Sources Scanned</span>
+        <span style={{ fontSize:10, color:"var(--text-muted)" }}>
+          <b style={{ color:"var(--accent)" }}>{stats.reviewsAnalyzed.toLocaleString()}</b> reviews · <b style={{ color:"var(--green)" }}>{stats.dataPoints.toLocaleString()}</b> data points
+        </span>
+      </div>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+        {(platforms.length ? platforms : Object.keys(SOURCE_META)).map(p => <SourceBadge key={p} source={p} />)}
       </div>
     </div>
   );
@@ -376,31 +414,50 @@ function TruthScoreCard({ score, label, summary }: { score: number; label: strin
 }
 
 /* ─── Loves & Hates ───────────────────────────────── */
-function LovesHates({ loves, hates }: { loves: string[]; hates: string[] }) {
+function LovesHates({ loves, hates }: { loves: TruthLayerResult["loves"]; hates: TruthLayerResult["hates"] }) {
   return (
-    <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-      <GlassCard accent="rgba(52,211,153,0.06)" style={{ flex:1, minWidth:200 }}>
-        <SectionHead icon="✅" title="Loved For" titleColor="var(--green)" />
-        <ul style={s.listPoints}>
-          {loves.map((l, i) => (
-            <li key={i} style={{ display:"flex", alignItems:"flex-start", gap:7, marginBottom:7 }}>
-              <span style={{ color:"var(--green)", fontWeight:700, flexShrink:0, fontSize:11, marginTop:1 }}>✓</span>
-              <span style={{ fontSize:12, color:"var(--text-secondary)", lineHeight:1.5 }}>{l}</span>
-            </li>
-          ))}
-        </ul>
-      </GlassCard>
-      <GlassCard accent="rgba(248,113,113,0.06)" style={{ flex:1, minWidth:200 }}>
-        <SectionHead icon="⚠️" title="Watch Out For" titleColor="var(--red)" />
-        <ul style={s.listPoints}>
-          {hates.map((h, i) => (
-            <li key={i} style={{ display:"flex", alignItems:"flex-start", gap:7, marginBottom:7 }}>
-              <span style={{ color:"var(--red)", fontWeight:700, flexShrink:0, fontSize:11, marginTop:1 }}>✗</span>
-              <span style={{ fontSize:12, color:"var(--text-secondary)", lineHeight:1.5 }}>{h}</span>
-            </li>
-          ))}
-        </ul>
-      </GlassCard>
+    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+      {/* Loved For */}
+      <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:16, overflow:"hidden" }}>
+        <div style={{ padding:"12px 16px 10px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:15 }}>✅</span>
+          <span style={{ fontSize:13, fontWeight:700, color:"var(--green)" }}>Loved For</span>
+          <span style={{ marginLeft:"auto", fontSize:10, color:"var(--text-muted)", fontWeight:500 }}>{loves.length} highlights</span>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column" }}>
+          {loves.map((l, i) => {
+            const item = typeof l === "string" ? { text: l, source: "Reddit" } : l;
+            return (
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"11px 16px", borderBottom: i < loves.length-1 ? "1px solid rgba(236,72,153,0.07)" : "none", borderLeft:"3px solid var(--green)" }}>
+                <span style={{ color:"var(--green)", fontWeight:800, flexShrink:0, fontSize:13, marginTop:0.5 }}>✓</span>
+                <span style={{ fontSize:12.5, color:"var(--text-primary)", lineHeight:1.55, flex:1 }}>{item.text}</span>
+                <SourceBadge source={item.source} size="xs" />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Watch Out For */}
+      <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:16, overflow:"hidden" }}>
+        <div style={{ padding:"12px 16px 10px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:15 }}>⚠️</span>
+          <span style={{ fontSize:13, fontWeight:700, color:"var(--red)" }}>Watch Out For</span>
+          <span style={{ marginLeft:"auto", fontSize:10, color:"var(--text-muted)", fontWeight:500 }}>{hates.length} concerns</span>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column" }}>
+          {hates.map((h, i) => {
+            const item = typeof h === "string" ? { text: h, source: "Reddit" } : h;
+            return (
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"11px 16px", borderBottom: i < hates.length-1 ? "1px solid rgba(236,72,153,0.07)" : "none", borderLeft:"3px solid var(--red)" }}>
+                <span style={{ color:"var(--red)", fontWeight:800, flexShrink:0, fontSize:13, marginTop:0.5 }}>✗</span>
+                <span style={{ fontSize:12.5, color:"var(--text-primary)", lineHeight:1.55, flex:1 }}>{item.text}</span>
+                <SourceBadge source={item.source} size="xs" />
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -471,14 +528,21 @@ function CompetitorCard({ comp, rank }: { comp: TruthLayerResult["competitors"][
 /* ─── Shared Components ───────────────────────────── */
 function InsightRow({ insight }: { insight: TruthLayerResult["hiddenInsights"][0] }) {
   const cfg = {
-    warning:  { bg:"rgba(251,191,36,0.06)",  border:"#fbbf24", icon:"⚠️" },
-    positive: { bg:"rgba(52,211,153,0.06)",  border:"#34d399", icon:"💡" },
-    neutral:  { bg:"rgba(108,141,250,0.06)", border:"#6c8dfa", icon:"ℹ️" },
+    warning:  { bg:"rgba(251,191,36,0.06)",  border:"#fbbf24", icon:"⚠️", label:"Warning" },
+    positive: { bg:"rgba(52,211,153,0.06)",  border:"#34d399", icon:"💡", label:"Hidden Gem" },
+    neutral:  { bg:"rgba(108,141,250,0.06)", border:"#6c8dfa", icon:"ℹ️", label:"Note" },
   }[insight.type];
   return (
-    <div style={{ ...s.insightRow, background:cfg.bg, borderLeft:`2px solid ${cfg.border}` }}>
-      <span style={{ fontSize:14, flexShrink:0 }}>{cfg.icon}</span>
-      <p style={{ fontSize:12.5, color:"var(--text-secondary)", lineHeight:1.65, margin:0 }}>{insight.text}</p>
+    <div style={{ ...s.insightRow, background:cfg.bg, borderLeft:`3px solid ${cfg.border}` }}>
+      <span style={{ fontSize:16, flexShrink:0 }}>{cfg.icon}</span>
+      <div style={{ flex:1, minWidth:0 }}>
+        <p style={{ fontSize:12.5, color:"var(--text-primary)", lineHeight:1.65, margin:0, fontWeight:500 }}>{insight.text}</p>
+        {insight.source && (
+          <div style={{ marginTop:6 }}>
+            <SourceBadge source={insight.source} size="xs" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

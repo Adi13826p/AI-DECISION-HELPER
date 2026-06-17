@@ -50,12 +50,24 @@ router.post("/analyze", async (req, res) => {
   "truthScore": 78,
   "scoreLabel": "Recommended",
   "truthSummary": "2-3 sentence professional cross-platform verdict. Concise and direct.",
-  "loves": ["top praised feature 1", "top praised feature 2", "top praised feature 3", "top praised feature 4", "top praised feature 5"],
-  "hates": ["top criticism 1", "top criticism 2", "top criticism 3", "top criticism 4"],
+  "sourcePlatforms": ["Reddit", "YouTube", "Quora", "Amazon", "Google"],
+  "loves": [
+    { "text": "top praised feature 1", "source": "Reddit" },
+    { "text": "top praised feature 2", "source": "YouTube" },
+    { "text": "top praised feature 3", "source": "Amazon" },
+    { "text": "top praised feature 4", "source": "Quora" },
+    { "text": "top praised feature 5", "source": "Google" }
+  ],
+  "hates": [
+    { "text": "top criticism 1", "source": "Reddit" },
+    { "text": "top criticism 2", "source": "YouTube" },
+    { "text": "top criticism 3", "source": "Amazon" },
+    { "text": "top criticism 4", "source": "Quora" }
+  ],
   "hiddenInsights": [
-    { "type": "warning", "text": "a hidden concern most buyers miss — short and direct" },
-    { "type": "positive", "text": "a hidden positive most buyers miss — short and direct" },
-    { "type": "neutral", "text": "a neutral insight — short and direct" }
+    { "type": "warning",  "text": "a hidden concern most buyers miss — short and direct", "source": "Reddit" },
+    { "type": "positive", "text": "a hidden positive most buyers miss — short and direct", "source": "YouTube" },
+    { "type": "neutral",  "text": "a neutral insight — short and direct", "source": "Quora" }
   ],
   "competitors": [
     { "name": "Best competing product 1", "brand": "Brand", "price": "$249", "score": 75, "badge": "💰 Best Value", "badgeColor": "#34d399", "pros": "main advantage", "cons": "main disadvantage", "image": "" },
