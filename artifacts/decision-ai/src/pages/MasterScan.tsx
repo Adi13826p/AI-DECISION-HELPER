@@ -396,8 +396,8 @@ function SmartyBar({ onSubmit }: { onSubmit: (q: string) => void }) {
       )}
 
       <div style={s.smartyChips}>
-        {SMARTY_QUICK.map(q => (
-          <button key={q.label} style={s.smartyChip} onClick={() => onSubmit(q.val)}>
+        {SMARTY_SUGGESTIONS.map(q => (
+          <button key={q.label} style={s.smartyChip} onClick={() => setVal(q.val)}>
             <span style={{fontSize:10}}>{q.icon}</span>{q.label}
           </button>
         ))}
@@ -406,11 +406,10 @@ function SmartyBar({ onSubmit }: { onSubmit: (q: string) => void }) {
   );
 }
 
-const SMARTY_QUICK = [
-  { icon:"🎥", label:"YouTube Demo",  val:"https://youtube.com/watch?v=dQw4w9WgXcQ" },
-  { icon:"📄", label:"PDF Demo",      val:"https://arxiv.org/pdf/2303.08774.pdf" },
-  { icon:"🔬", label:"Paper Demo",    val:"https://arxiv.org/abs/1706.03762" },
-  { icon:"💬", label:"Ask a question",val:"What are the key differences between supervised and unsupervised learning?" },
+const SMARTY_SUGGESTIONS = [
+  { icon:"🎥", label:"YouTube video",  val:"https://www.youtube.com/watch?v=" },
+  { icon:"🔬", label:"arXiv paper",    val:"https://arxiv.org/abs/" },
+  { icon:"💬", label:"Ask anything",   val:"" },
 ];
 
 function detectSmartyType(val: string): { icon:string; label:string; color:string; type:string } {
@@ -1404,41 +1403,48 @@ function pickSmartyData(query: string): SmartyResult {
 function SmartyView({ query, onBack }: { query: string; onBack: () => void }) {
   const [loading, setLoading]       = useState(true);
   const [progress, setProgress]     = useState(0);
+  const [data, setData]             = useState<SmartyResult | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [savedSections, setSaved]   = useState<Set<string>>(new Set());
   const [flashMode, setFlashMode]   = useState(false);
   const [flashIdx, setFlashIdx]     = useState(0);
   const [flashFlipped, setFlashFlp] = useState(false);
-  const data = pickSmartyData(query);
 
   useEffect(() => {
+    setLoading(true);
+    setProgress(0);
+    setData(null);
+    setFetchError(null);
     let p = 0;
     const iv = setInterval(() => {
-      p += Math.random() * 18 + 8;
-      if (p >= 100) { p = 100; clearInterval(iv); setTimeout(() => setLoading(false), 300); }
-      setProgress(Math.min(p, 100));
-    }, 150);
+      p += Math.random() * 4 + 1;
+      if (p >= 88) { p = 88; clearInterval(iv); }
+      setProgress(Math.min(p, 88));
+    }, 200);
+
+    fetch("/api/ai/smarty", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    })
+      .then(r => r.json())
+      .then((result: SmartyResult) => {
+        clearInterval(iv);
+        setProgress(100);
+        setTimeout(() => { setData(result); setLoading(false); }, 300);
+      })
+      .catch((err: unknown) => {
+        clearInterval(iv);
+        setFetchError(String(err));
+        setLoading(false);
+      });
+
     return () => clearInterval(iv);
   }, [query]);
-
-  const allText = data.sections.map(sec =>
-    `${sec.icon} ${sec.label}\n${sec.content.map(c=>`• ${c}`).join("\n")}`
-  ).join("\n\n");
-
-  function downloadNotes() {
-    const blob = new Blob([`${data.title}\n${"─".repeat(50)}\n\n${allText}`], { type:"text/plain" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `smarty-notes-${data.type}.txt`;
-    a.click();
-  }
 
   function toggleSave(id: string) {
     setSaved(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
-
-  const flashCards = data.sections.flatMap(sec =>
-    sec.content.map(c => ({ q: `${sec.icon} ${sec.label}`, a: c }))
-  );
 
   if (loading) return (
     <div style={s.smartyLoading}>
@@ -1450,12 +1456,37 @@ function SmartyView({ query, onBack }: { query: string; onBack: () => void }) {
         <span style={{fontSize:22}}>✨</span>
       </div>
       <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>Smarty is analyzing…</div>
-      <div style={{fontSize:11,color:"var(--text-muted)",marginBottom:18}}>{data.sourceLabel} · {data.title.length > 40 ? data.title.slice(0,40)+"…" : data.title}</div>
+      <div style={{fontSize:11,color:"var(--text-muted)",marginBottom:18}}>Processing your request with AI…</div>
       <div style={{width:220,height:4,background:"rgba(255,255,255,0.07)",borderRadius:10,overflow:"hidden"}}>
         <div style={{height:"100%",width:`${progress}%`,background:"linear-gradient(90deg,#a374ff,#6c8dfa)",borderRadius:10,transition:"width 0.15s"}}/>
       </div>
       <div style={{fontSize:11,color:"var(--text-muted)",marginTop:8}}>{Math.round(progress)}% complete</div>
     </div>
+  );
+
+  if (fetchError || !data) return (
+    <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 20px",gap:12,textAlign:"center"}}>
+      <div style={{fontSize:40,marginBottom:4}}>⚠️</div>
+      <div style={{fontSize:14,fontWeight:700,color:"var(--text-primary)"}}>Analysis failed</div>
+      <div style={{fontSize:12,color:"var(--text-muted)",maxWidth:280,lineHeight:1.6}}>{fetchError ?? "Unexpected error. Please try again."}</div>
+      <button style={{marginTop:8,padding:"10px 22px",background:"linear-gradient(135deg,#a374ff,#6c8dfa)",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}} onClick={onBack}>Try again</button>
+    </div>
+  );
+
+  const allText = data.sections.map(sec =>
+    `${sec.icon} ${sec.label}\n${sec.content.map(c=>`• ${c}`).join("\n")}`
+  ).join("\n\n");
+
+  function downloadNotes() {
+    const blob = new Blob([`${data!.title}\n${"─".repeat(50)}\n\n${allText}`], { type:"text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `smarty-notes-${data!.type}.txt`;
+    a.click();
+  }
+
+  const flashCards = data.sections.flatMap(sec =>
+    sec.content.map(c => ({ q: `${sec.icon} ${sec.label}`, a: c }))
   );
 
   if (flashMode) return (

@@ -55,7 +55,7 @@ export default function Popup() {
         <main style={s.features}>
           <FeatureCard
             onClick={() => navigate("/truth-layer")}
-            accentColor="#6c8dfa"
+            accentColor="#FF4FD8"
             accentScan={false}
             icon={
               <svg style={s.featureIconSvg} viewBox="0 0 24 24" fill="none">
@@ -205,14 +205,14 @@ const s: Record<string, React.CSSProperties> = {
   blob1: {
     position: "fixed", top: "-5%", left: "5%",
     width: 500, height: 500, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(108,141,250,0.14) 0%, transparent 65%)",
+    background: "radial-gradient(circle, rgba(255,79,216,0.15) 0%, transparent 65%)",
     animation: "orb-drift 20s ease-in-out infinite",
     pointerEvents: "none", zIndex: 0,
   },
   blob2: {
     position: "fixed", bottom: "5%", right: "5%",
     width: 480, height: 480, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(163,116,255,0.13) 0%, transparent 65%)",
+    background: "radial-gradient(circle, rgba(138,92,255,0.15) 0%, transparent 65%)",
     animation: "orb-drift-2 24s ease-in-out infinite",
     pointerEvents: "none", zIndex: 0,
   },
@@ -220,7 +220,7 @@ const s: Record<string, React.CSSProperties> = {
     position: "fixed", top: "50%", left: "50%",
     width: 600, height: 300,
     transform: "translate(-50%, -50%)",
-    background: "radial-gradient(ellipse, rgba(52,211,153,0.04) 0%, transparent 70%)",
+    background: "radial-gradient(ellipse, rgba(255,128,223,0.06) 0%, transparent 70%)",
     pointerEvents: "none", zIndex: 0,
   },
   dotGrid: {
@@ -241,15 +241,15 @@ const s: Record<string, React.CSSProperties> = {
     border: "1px solid rgba(255,255,255,0.09)",
     borderRadius: 26,
     overflow: "hidden",
-    boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05), 0 0 80px rgba(108,141,250,0.06), inset 0 1px 0 rgba(255,255,255,0.07)",
+    boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,79,216,0.08), 0 0 80px rgba(255,79,216,0.08), inset 0 1px 0 rgba(255,255,255,0.07)",
     animation: "slide-up 0.5s cubic-bezier(0.16,1,0.3,1)",
     position: "relative",
     zIndex: 1,
   },
   topBorder: {
     height: 2,
-    background: "linear-gradient(90deg, transparent 0%, rgba(108,141,250,0.7) 30%, rgba(163,116,255,0.8) 60%, rgba(52,211,153,0.4) 85%, transparent 100%)",
-    opacity: 0.9,
+    background: "linear-gradient(90deg, transparent 0%, rgba(255,79,216,0.8) 25%, rgba(255,128,223,0.9) 45%, rgba(138,92,255,0.9) 70%, rgba(107,61,255,0.6) 90%, transparent 100%)",
+    opacity: 1,
   },
 
   // Header
@@ -262,16 +262,16 @@ const s: Record<string, React.CSSProperties> = {
   logo: { display: "flex", alignItems: "center", gap: 10 },
   logoIconWrap: {
     width: 32, height: 32,
-    background: "linear-gradient(135deg, rgba(108,141,250,0.25), rgba(163,116,255,0.18))",
-    border: "1px solid rgba(108,141,250,0.3)",
+    background: "linear-gradient(135deg, rgba(255,79,216,0.28), rgba(138,92,255,0.2))",
+    border: "1px solid rgba(255,79,216,0.35)",
     borderRadius: 10,
     display: "flex", alignItems: "center", justifyContent: "center",
-    boxShadow: "0 0 20px rgba(108,141,250,0.2), inset 0 1px 0 rgba(255,255,255,0.12)",
+    boxShadow: "0 0 20px rgba(255,79,216,0.25), inset 0 1px 0 rgba(255,255,255,0.12)",
   },
-  logoIcon: { width: 15, height: 15, color: "#8faafc" },
+  logoIcon: { width: 15, height: 15, color: "#FF80DF" },
   logoText: { fontSize: 17, fontWeight: 800, letterSpacing: "-0.6px", color: "#f0f2ff" },
   logoAccent: {
-    background: "linear-gradient(135deg, #7fa3ff, #c084fc)",
+    background: "linear-gradient(135deg, #FF4FD8, #8A5CFF)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",
@@ -307,7 +307,7 @@ const s: Record<string, React.CSSProperties> = {
     letterSpacing: "-0.8px", color: "#eef0ff", marginBottom: 10,
   },
   heroGrad: {
-    background: "linear-gradient(135deg, #7fa3ff 0%, #c084fc 50%, #34d399 100%)",
+    background: "linear-gradient(135deg, #FF4FD8 0%, #FF80DF 40%, #8A5CFF 100%)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
     backgroundClip: "text",

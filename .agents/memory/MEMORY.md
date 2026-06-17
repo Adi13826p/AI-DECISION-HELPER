@@ -1,0 +1,1 @@
+- [DecisionAI Architecture](decision-ai-arch.md) — Groq routes, vite proxy pattern, and no-mock policy for this project.

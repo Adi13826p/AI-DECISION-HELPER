@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { MOCK_RESULT, type TruthLayerResult } from "@/lib/mockData";
+import { type TruthLayerResult } from "@/lib/mockData";
 
-type ViewState = "idle" | "capturing" | "analyzing" | "results";
+type ViewState = "input" | "analyzing" | "results";
 
 const ANALYSIS_STEPS = [
-  { icon: "🔎", text: "Identifying product from capture…" },
+  { icon: "🔎", text: "Identifying product from input…" },
   { icon: "🛒", text: "Scanning Amazon & Flipkart reviews…" },
   { icon: "🤖", text: "Running fake review detection…" },
   { icon: "💬", text: "Searching Reddit discussions…" },
@@ -19,20 +19,46 @@ const ANALYSIS_STEPS = [
 
 export default function TruthLayer() {
   const [, navigate] = useLocation();
-  const [state, setState] = useState<ViewState>("capturing");
+  const [state, setState] = useState<ViewState>("input");
   const [stepIdx, setStepIdx] = useState(0);
   const [result, setResult] = useState<TruthLayerResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function runAnalysis() {
+  async function runAnalysis(productName: string) {
+    setError(null);
+    setStepIdx(0);
     setState("analyzing");
-    const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
-    for (let i = 0; i < ANALYSIS_STEPS.length; i++) {
-      setStepIdx(i);
-      await delay(420);
+
+    let p = 0;
+    const iv = setInterval(() => {
+      p = Math.min(p + 1, ANALYSIS_STEPS.length - 1);
+      setStepIdx(p);
+    }, 600);
+
+    try {
+      const response = await fetch("/api/ai/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productName }),
+      });
+
+      clearInterval(iv);
+
+      if (!response.ok) {
+        const err = await response.json() as { error?: string };
+        throw new Error(err.error ?? "Analysis failed");
+      }
+
+      const data = await response.json() as TruthLayerResult;
+      setStepIdx(ANALYSIS_STEPS.length - 1);
+      await new Promise(r => setTimeout(r, 500));
+      setResult(data);
+      setState("results");
+    } catch (err) {
+      clearInterval(iv);
+      setError(String(err).replace("Error: ", ""));
+      setState("input");
     }
-    await delay(300);
-    setResult(MOCK_RESULT);
-    setState("results");
   }
 
   return (
@@ -41,15 +67,107 @@ export default function TruthLayer() {
       <div style={s.dotGrid} />
       <div style={s.page}>
         <Header onBack={() => {
-          if (state === "results") setState("capturing");
+          if (state === "results") setState("input");
           else navigate("/");
         }} />
-        {state === "capturing" && <CapturingView product={MOCK_RESULT.product} onAnalyze={runAnalysis} />}
+        {state === "input"     && <InputView onAnalyze={runAnalysis} error={error} />}
         {state === "analyzing" && <AnalyzingView stepIdx={stepIdx} />}
         {state === "results"   && result && (
-          <ResultsDashboard result={result} onReanalyze={() => setState("capturing")} />
+          <ResultsDashboard result={result} onReanalyze={() => setState("input")} />
         )}
       </div>
+    </div>
+  );
+}
+
+/* ─── Input ───────────────────────────────────────── */
+function InputView({ onAnalyze, error }: { onAnalyze: (name: string) => void; error: string | null }) {
+  const [value, setValue] = useState("");
+  const examples = ["AirPods Pro 2", "Samsung 65\" OLED TV", "Dyson V15 Vacuum", "iPhone 16 Pro"];
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const t = value.trim();
+    if (t) onAnalyze(t);
+  }
+
+  return (
+    <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", gap:24 }}>
+      <div style={{ textAlign:"center", marginBottom:4 }}>
+        <div style={{ fontSize:46, marginBottom:14 }}>🔍</div>
+        <h2 style={{ fontSize:20, fontWeight:800, color:"var(--text-primary)", marginBottom:7, letterSpacing:"-0.5px" }}>Product Truth Analysis</h2>
+        <p style={{ fontSize:12.5, color:"var(--text-muted)", lineHeight:1.65, maxWidth:300 }}>
+          Enter a product name. Our AI cross-checks 5+ sources for fake reviews, price trends, and real opinions.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ width:"100%", maxWidth:380, display:"flex", flexDirection:"column", gap:12 }}>
+        <input
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          placeholder="e.g. Sony WH-1000XM5 headphones"
+          autoFocus
+          style={{
+            width:"100%", padding:"14px 18px",
+            background:"rgba(255,255,255,0.04)",
+            border:"1px solid rgba(255,255,255,0.1)",
+            borderRadius:14, color:"var(--text-primary)",
+            fontSize:13.5, outline:"none", boxSizing:"border-box",
+            transition:"border-color 0.2s, box-shadow 0.2s",
+          }}
+          onFocus={e => { e.currentTarget.style.borderColor="rgba(108,141,250,0.5)"; e.currentTarget.style.boxShadow="0 0 0 3px rgba(108,141,250,0.1)"; }}
+          onBlur={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; e.currentTarget.style.boxShadow="none"; }}
+        />
+
+        <button
+          type="submit"
+          disabled={!value.trim()}
+          style={{
+            padding:"14px",
+            background: value.trim() ? "linear-gradient(135deg, #6c8dfa, #a374ff)" : "rgba(255,255,255,0.06)",
+            border:"none", borderRadius:14,
+            color: value.trim() ? "#fff" : "var(--text-muted)",
+            fontSize:14, fontWeight:700,
+            cursor: value.trim() ? "pointer" : "not-allowed",
+            transition:"all 0.2s", letterSpacing:"-0.2px",
+          }}
+        >
+          🔍 Analyze Product
+        </button>
+
+        {error && (
+          <div style={{
+            padding:"10px 14px",
+            background:"rgba(239,68,68,0.08)",
+            border:"1px solid rgba(239,68,68,0.2)",
+            borderRadius:10, fontSize:12, color:"#f87171", lineHeight:1.5,
+          }}>
+            ⚠️ {error}. Please try again.
+          </div>
+        )}
+
+        <div style={{ marginTop:4 }}>
+          <div style={{ fontSize:10.5, color:"var(--text-muted)", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.5px", fontWeight:600 }}>Try these examples</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+            {examples.map(ex => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => setValue(ex)}
+                style={{
+                  padding:"5px 12px",
+                  background:"rgba(255,255,255,0.04)",
+                  border:"1px solid rgba(255,255,255,0.08)",
+                  borderRadius:20, color:"var(--text-secondary)",
+                  fontSize:11, cursor:"pointer", transition:"all 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(108,141,250,0.4)"; e.currentTarget.style.color="#a374ff"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.08)"; e.currentTarget.style.color="var(--text-secondary)"; }}
+              >{ex}</button>
+            ))}
+          </div>
+        </div>
+      </form>
     </div>
   );
 }
