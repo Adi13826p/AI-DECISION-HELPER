@@ -647,10 +647,10 @@
 
     const titleWrap = document.createElement('div');
     sp(titleWrap, { flex:'1', 'min-width':'0' });
-    titleWrap.innerHTML = '<div style="display:flex;align-items:center;gap:7px"><span style="font-size:13px;font-weight:700;color:#f0eeff;letter-spacing:-0.3px">Decision<span style="color:' + accent + '">AI</span></span><span style="color:rgba(240,238,255,0.3);font-size:12px">·</span><span style="font-size:12px;font-weight:600;color:rgba(240,238,255,0.8)">' + label + '</span><span style="font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:100px;padding:2px 7px;margin-left:2px">LIVE</span></div>';
+    titleWrap.innerHTML = '<div style="display:flex;align-items:center;gap:7px"><span style="font-size:13px;font-weight:700;color:#0c1a24;letter-spacing:-0.3px">Decision<span style="color:' + accent + '">AI</span></span><span style="color:rgba(12,26,36,0.3);font-size:12px">·</span><span style="font-size:12px;font-weight:600;color:rgba(12,26,36,0.8)">' + label + '</span><span style="font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:100px;padding:2px 7px;margin-left:2px">LIVE</span></div>';
 
     const closeBtn = document.createElement('button');
-    sp(closeBtn, { width:'28px', height:'28px', 'border-radius':'8px', border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.06)', color:'rgba(240,238,255,0.6)', cursor:'pointer', display:'flex', 'align-items':'center', 'justify-content':'center', 'flex-shrink':'0' });
+    sp(closeBtn, { width:'28px', height:'28px', 'border-radius':'8px', border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.06)', color:'rgba(12,26,36,0.6)', cursor:'pointer', display:'flex', 'align-items':'center', 'justify-content':'center', 'flex-shrink':'0' });
     closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
     closeBtn.addEventListener('mouseenter', () => sp(closeBtn, { background:'rgba(255,255,255,0.12)' }));
     closeBtn.addEventListener('mouseleave', () => sp(closeBtn, { background:'rgba(255,255,255,0.06)' }));
@@ -702,7 +702,7 @@
     return '<div style="padding:28px 20px;display:flex;flex-direction:column;gap:20px;animation:__dai-fadein 0.25s ease both">' +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0">' +
       '<div style="position:relative;width:52px;height:52px"><svg style="animation:__dai-spin 1s linear infinite" width="52" height="52" viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="22" stroke="rgba(255,255,255,0.07)" stroke-width="3"/><circle cx="26" cy="26" r="22" stroke="' + accent + '" stroke-width="3" stroke-linecap="round" stroke-dasharray="35 104"/></svg><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:' + accent + '"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div></div>' +
-      '<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#f0eeff;margin-bottom:5px">Analyzing with AI…</div><div id="__dai-loading-desc" style="font-size:12px;color:rgba(240,238,255,0.45)">Running ' + label + ' on your selection</div></div>' +
+      '<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#0c1a24;margin-bottom:5px">Analyzing with AI…</div><div id="__dai-loading-desc" style="font-size:12px;color:rgba(12,26,36,0.45)">Running ' + label + ' on your selection</div></div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:280px">' +
       loadingStep(1, 'Capturing your selection', accent) +
       loadingStep(2, 'Processing with vision AI', accent) +
@@ -711,7 +711,7 @@
   }
 
   function loadingStep(n, text, accent) {
-    return '<div style="display:flex;align-items:center;gap:10px;animation:__dai-fadein 0.3s ease ' + (0.3*(n-1)) + 's both"><div style="width:22px;height:22px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '44;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700;color:' + accent + '">' + n + '</div><span style="font-size:12px;color:rgba(240,238,255,0.6)">' + text + '</span></div>';
+    return '<div style="display:flex;align-items:center;gap:10px;animation:__dai-fadein 0.3s ease ' + (0.3*(n-1)) + 's both"><div style="width:22px;height:22px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '44;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700;color:' + accent + '">' + n + '</div><span style="font-size:12px;color:rgba(12,26,36,0.6)">' + text + '</span></div>';
   }
 
   // ── Results ───────────────────────────────────────────────────────────────
@@ -744,7 +744,7 @@
       title = 'Invalid API key';
       desc  = 'Your Groq API key is invalid. Please check it in extension Settings (⚙).';
     }
-    content.innerHTML = '<div style="padding:32px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;animation:__dai-fadein 0.25s ease both"><div style="width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8v4M12 16h.01" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="1.5"/></svg></div><div><div style="font-size:15px;font-weight:700;color:#f0eeff;margin-bottom:6px">' + esc(title) + '</div><div style="font-size:12px;color:rgba(240,238,255,0.5);line-height:1.6;max-width:340px">' + esc(desc) + '</div></div></div>';
+    content.innerHTML = '<div style="padding:32px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;animation:__dai-fadein 0.25s ease both"><div style="width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8v4M12 16h.01" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="1.5"/></svg></div><div><div style="font-size:15px;font-weight:700;color:#0c1a24;margin-bottom:6px">' + esc(title) + '</div><div style="font-size:12px;color:rgba(12,26,36,0.5);line-height:1.6;max-width:340px">' + esc(desc) + '</div></div></div>';
   }
 
   // ── Truth Layer results HTML ──────────────────────────────────────────────
@@ -762,9 +762,9 @@
 
     const prosHTML   = (r.pros||[]).map(x => li(x,'#10b981')).join('');
     const consHTML   = (r.cons||[]).map(x => li(x,'#ef4444')).join('');
-    const hiddenHTML = (r.hiddenComplaints||[]).map(x => '<div style="font-size:11.5px;color:rgba(240,238,255,0.6);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">' + esc(x) + '</div>').join('');
-    const altsHTML   = (pi.alternatives||[]).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="font-size:12px;color:rgba(240,238,255,0.7)">' + esc(a.store) + '</span><div style="display:flex;align-items:center;gap:8px">' + (a.note ? '<span style="font-size:11px;color:rgba(240,238,255,0.4)">' + esc(a.note) + '</span>' : '') + '<span style="font-size:13px;font-weight:700;color:#f0eeff">' + esc(a.estimatedPrice) + '</span></div></div>').join('');
-    const compsHTML  = comps.map(c => '<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:12.5px;font-weight:600;color:#f0eeff;margin-bottom:3px">' + esc(c.name) + '</div><div style="font-size:11.5px;color:rgba(240,238,255,0.5)">' + esc(c.why) + (c.betterFor ? ' · Better for: ' + esc(c.betterFor) : '') + '</div></div>').join('');
+    const hiddenHTML = (r.hiddenComplaints||[]).map(x => '<div style="font-size:11.5px;color:rgba(12,26,36,0.6);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">' + esc(x) + '</div>').join('');
+    const altsHTML   = (pi.alternatives||[]).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="font-size:12px;color:rgba(12,26,36,0.7)">' + esc(a.store) + '</span><div style="display:flex;align-items:center;gap:8px">' + (a.note ? '<span style="font-size:11px;color:rgba(12,26,36,0.4)">' + esc(a.note) + '</span>' : '') + '<span style="font-size:13px;font-weight:700;color:#0c1a24">' + esc(a.estimatedPrice) + '</span></div></div>').join('');
+    const compsHTML  = comps.map(c => '<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)"><div style="font-size:12.5px;font-weight:600;color:#0c1a24;margin-bottom:3px">' + esc(c.name) + '</div><div style="font-size:11.5px;color:rgba(12,26,36,0.5)">' + esc(c.why) + (c.betterFor ? ' · Better for: ' + esc(c.betterFor) : '') + '</div></div>').join('');
 
     return '<div style="padding:16px 16px 20px;display:flex;flex-direction:column;gap:14px">' +
 
@@ -773,35 +773,35 @@
         '<div style="display:flex;flex-direction:column;align-items:center;padding:12px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;flex-shrink:0;min-width:80px">' +
           '<div style="font-size:36px;font-weight:800;color:' + scColor + ';line-height:1">' + sc + '</div>' +
           '<div style="font-size:10px;font-weight:600;color:' + scColor + ';letter-spacing:0.5px;margin-top:3px;text-transform:uppercase">' + esc(d.scoreLabel||'') + '</div>' +
-          '<div style="font-size:9.5px;color:rgba(240,238,255,0.35);margin-top:2px">Truth Score</div>' +
+          '<div style="font-size:9.5px;color:rgba(12,26,36,0.35);margin-top:2px">Truth Score</div>' +
         '</div>' +
         '<div style="flex:1;background:' + vc.bg + ';border:1px solid ' + vc.border + ';border-radius:14px;padding:12px 14px">' +
           '<div style="font-size:18px;margin-bottom:4px">' + esc(v.emoji||'') + '</div>' +
           '<div style="font-size:13px;font-weight:700;color:' + vc.text + ';margin-bottom:5px">' + esc(v.label||'See below') + '</div>' +
-          '<div style="font-size:11.5px;color:rgba(240,238,255,0.55);line-height:1.55">' + esc(v.reasoning||'') + '</div>' +
+          '<div style="font-size:11.5px;color:rgba(12,26,36,0.55);line-height:1.55">' + esc(v.reasoning||'') + '</div>' +
         '</div>' +
       '</div>' +
 
       // Product info
-      (p.name ? sec('Product', accent, '<div style="font-size:14px;font-weight:700;color:#f0eeff;margin-bottom:6px">' + esc(p.name) + '</div><div style="display:flex;flex-wrap:wrap;gap:6px">' + (p.price ? badge(p.price, accent) : '') + (p.brand ? badge(p.brand, 'rgba(255,255,255,0.2)') : '') + (p.store ? badge(p.store, 'rgba(255,255,255,0.15)') : '') + (p.rating ? badge('★ '+p.rating+(p.reviewCount?' · '+p.reviewCount+' reviews':''), '#f59e0b') : '') + '</div>') : '') +
+      (p.name ? sec('Product', accent, '<div style="font-size:14px;font-weight:700;color:#0c1a24;margin-bottom:6px">' + esc(p.name) + '</div><div style="display:flex;flex-wrap:wrap;gap:6px">' + (p.price ? badge(p.price, accent) : '') + (p.brand ? badge(p.brand, 'rgba(255,255,255,0.2)') : '') + (p.store ? badge(p.store, 'rgba(255,255,255,0.15)') : '') + (p.rating ? badge('★ '+p.rating+(p.reviewCount?' · '+p.reviewCount+' reviews':''), '#f59e0b') : '') + '</div>') : '') +
 
       // Pros & Cons
       ((r.pros&&r.pros.length)||(r.cons&&r.cons.length) ? sec('Pros & Cons', accent,
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-          '<div><div style="font-size:10px;font-weight:700;color:#10b981;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px">Pros</div><ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + (prosHTML||'<li style="font-size:11.5px;color:rgba(240,238,255,0.35)">—</li>') + '</ul></div>' +
-          '<div><div style="font-size:10px;font-weight:700;color:#ef4444;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px">Cons</div><ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + (consHTML||'<li style="font-size:11.5px;color:rgba(240,238,255,0.35)">—</li>') + '</ul></div>' +
+          '<div><div style="font-size:10px;font-weight:700;color:#10b981;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px">Pros</div><ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + (prosHTML||'<li style="font-size:11.5px;color:rgba(12,26,36,0.35)">—</li>') + '</ul></div>' +
+          '<div><div style="font-size:10px;font-weight:700;color:#ef4444;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px">Cons</div><ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + (consHTML||'<li style="font-size:11.5px;color:rgba(12,26,36,0.35)">—</li>') + '</ul></div>' +
         '</div>' +
-        (r.summary ? '<p style="font-size:11.5px;color:rgba(240,238,255,0.5);line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)">' + esc(r.summary) + '</p>' : '') +
+        (r.summary ? '<p style="font-size:11.5px;color:rgba(12,26,36,0.5);line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)">' + esc(r.summary) + '</p>' : '') +
         (hiddenHTML ? '<div style="margin-top:10px;padding:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px"><div style="font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">⚠ Hidden Complaints</div>' + hiddenHTML + '</div>' : '')
       ) : '') +
 
       // Price intel
       ((pi.currentPrice||altsHTML) ? sec('Price Intelligence', accent,
         '<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.07)">' +
-          '<div><div style="font-size:10.5px;color:rgba(240,238,255,0.4);text-transform:uppercase;letter-spacing:0.5px">Current Price</div><div style="font-size:20px;font-weight:800;color:#f0eeff">' + esc(pi.currentPrice||'—') + '</div>' + (pi.fairPrice ? '<div style="font-size:11px;color:rgba(240,238,255,0.4)">Fair value: ' + esc(pi.fairPrice) + '</div>' : '') + '</div>' +
+          '<div><div style="font-size:10.5px;color:rgba(12,26,36,0.4);text-transform:uppercase;letter-spacing:0.5px">Current Price</div><div style="font-size:20px;font-weight:800;color:#0c1a24">' + esc(pi.currentPrice||'—') + '</div>' + (pi.fairPrice ? '<div style="font-size:11px;color:rgba(12,26,36,0.4)">Fair value: ' + esc(pi.fairPrice) + '</div>' : '') + '</div>' +
           (pi.dealRating ? '<div style="padding:5px 12px;background:' + (pi.dealRating==='Great Deal'?'rgba(16,185,129,0.15)':pi.dealRating==='Overpriced'?'rgba(239,68,68,0.15)':'rgba(245,158,11,0.15)') + ';border:1px solid ' + (pi.dealRating==='Great Deal'?'rgba(16,185,129,0.3)':pi.dealRating==='Overpriced'?'rgba(239,68,68,0.3)':'rgba(245,158,11,0.3)') + ';border-radius:100px;font-size:11.5px;font-weight:700;color:' + (pi.dealRating==='Great Deal'?'#10b981':pi.dealRating==='Overpriced'?'#ef4444':'#f59e0b') + '">' + esc(pi.dealRating) + '</div>' : '') +
         '</div>' + altsHTML +
-        (d.buyTiming ? '<div style="margin-top:8px;font-size:11.5px;color:rgba(240,238,255,0.5)"><span style="color:rgba(240,238,255,0.7);font-weight:600">Buy timing:</span> ' + esc(d.buyTiming.reason) + '</div>' : '')
+        (d.buyTiming ? '<div style="margin-top:8px;font-size:11.5px;color:rgba(12,26,36,0.5)"><span style="color:rgba(12,26,36,0.7);font-weight:600">Buy timing:</span> ' + esc(d.buyTiming.reason) + '</div>' : '')
       ) : '') +
 
       // Competitors
@@ -818,7 +818,7 @@
     // ── Header block: type badge + title + topics + quick overview ────────
     const topicsHTML = (d.topics && d.topics.length)
       ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:12px">' +
-          d.topics.map(t => '<span style="font-size:11px;font-weight:600;color:rgba(240,238,255,0.6);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:4px 11px">' + esc(t) + '</span>').join('') +
+          d.topics.map(t => '<span style="font-size:11px;font-weight:600;color:rgba(12,26,36,0.6);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:4px 11px">' + esc(t) + '</span>').join('') +
         '</div>'
       : '';
 
@@ -826,7 +826,7 @@
       ? '<div style="margin:14px 0 0;padding:15px 18px;background:linear-gradient(135deg,' + accent + '1a,' + accent + '08,rgba(255,255,255,0.02));border:1px solid ' + accent + '40;border-radius:14px;position:relative;overflow:hidden">' +
           '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,' + accent + ',' + accent + '44,transparent)"></div>' +
           '<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:' + accent + ';margin-bottom:8px">⚡ Quick Overview</div>' +
-          '<p style="font-size:14px;color:rgba(240,238,255,0.92);line-height:1.7;margin:0;font-weight:400">' + esc(d.quickOverview) + '</p>' +
+          '<p style="font-size:14px;color:rgba(12,26,36,0.92);line-height:1.7;margin:0;font-weight:400">' + esc(d.quickOverview) + '</p>' +
         '</div>'
       : '';
 
@@ -834,7 +834,7 @@
       '<div style="padding:18px 18px 0">' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">' +
           '<span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:' + accent + ';background:linear-gradient(135deg,' + accent + '22,' + accent + '0f);border:1px solid ' + accent + '45;border-radius:100px;padding:4px 13px">' + esc(d.contentLabel || 'Analysis') + '</span>' +
-          (d.confidence ? '<span style="font-size:10.5px;color:rgba(240,238,255,0.35);font-weight:500">' + d.confidence + '% confidence</span>' : '') +
+          (d.confidence ? '<span style="font-size:10.5px;color:rgba(12,26,36,0.35);font-weight:500">' + d.confidence + '% confidence</span>' : '') +
         '</div>' +
         (d.title ? '<div style="font-size:18px;font-weight:900;color:#ffffff;line-height:1.3;letter-spacing:-0.5px;text-shadow:0 0 40px ' + accent + '33">' + esc(d.title) + '</div>' : '') +
         topicsHTML +
@@ -850,7 +850,7 @@
 
       bodyHTML =
         (a.mainIdea ? sec('💡 Main Idea', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(a.mainIdea) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.82);line-height:1.72">' + esc(a.mainIdea) + '</p>'
         ) : '') +
 
         ((a.importantHighlights && a.importantHighlights.length) ? sec('⭐ Important Highlights', accent,
@@ -858,7 +858,7 @@
           a.importantHighlights.map((x, i) =>
             '<li style="display:flex;align-items:flex-start;gap:9px">' +
               '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
-              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
             '</li>'
           ).join('') + '</ol>'
         ) : '') +
@@ -873,7 +873,7 @@
           a.importantData.map(x =>
             '<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 11px;background:rgba(6,182,212,0.07);border:1px solid rgba(6,182,212,0.2);border-radius:9px">' +
               '<span style="color:#06b6d4;font-size:14px;font-weight:800;flex-shrink:0;line-height:1">›</span>' +
-              '<span style="font-size:12px;color:rgba(240,238,255,0.75);line-height:1.5">' + esc(x) + '</span>' +
+              '<span style="font-size:12px;color:rgba(12,26,36,0.75);line-height:1.5">' + esc(x) + '</span>' +
             '</div>'
           ).join('') + '</div>'
         ) : '') +
@@ -882,17 +882,17 @@
           ? '<div style="padding:12px 16px 0"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
               ((a.pros && a.pros.length && a.pros[0]) ?
                 '<div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:10px 12px"><div style="font-size:9.5px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px">✓ Pros</div>' +
-                '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + a.pros.map(x => '<li style="display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">+</span><span style="font-size:11.5px;color:rgba(240,238,255,0.72);line-height:1.4">' + esc(x) + '</span></li>').join('') + '</ul></div>'
+                '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + a.pros.map(x => '<li style="display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">+</span><span style="font-size:11.5px;color:rgba(12,26,36,0.72);line-height:1.4">' + esc(x) + '</span></li>').join('') + '</ul></div>'
               : '<div></div>') +
               ((a.cons && a.cons.length && a.cons[0]) ?
                 '<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 12px"><div style="font-size:9.5px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px">✗ Cons</div>' +
-                '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + a.cons.map(x => '<li style="display:flex;gap:6px"><span style="color:#ef4444;flex-shrink:0">–</span><span style="font-size:11.5px;color:rgba(240,238,255,0.72);line-height:1.4">' + esc(x) + '</span></li>').join('') + '</ul></div>'
+                '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + a.cons.map(x => '<li style="display:flex;gap:6px"><span style="color:#ef4444;flex-shrink:0">–</span><span style="font-size:11.5px;color:rgba(12,26,36,0.72);line-height:1.4">' + esc(x) + '</span></li>').join('') + '</ul></div>'
               : '<div></div>') +
             '</div></div>'
           : '') +
 
         (a.finalSummary ? sec('📝 Final Summary', '#f59e0b',
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(a.finalSummary) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.82);line-height:1.72">' + esc(a.finalSummary) + '</p>'
         ) : '');
 
     // ── MODE 3: Problem Solver ────────────────────────────────────────────
@@ -901,7 +901,7 @@
 
       bodyHTML =
         (p.understanding ? sec('🔍 Understanding the Problem', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(p.understanding) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.82);line-height:1.72">' + esc(p.understanding) + '</p>'
         ) : '') +
 
         ((p.solution && p.solution.length) ? sec('⚙️ Step-by-Step Solution', accent,
@@ -910,35 +910,35 @@
             '<div style="background:rgba(255,255,255,0.03);border:1px solid ' + accent + '22;border-radius:11px;overflow:hidden">' +
               '<div style="display:flex;align-items:center;gap:9px;padding:8px 13px;background:linear-gradient(90deg,' + accent + '15,transparent)">' +
                 '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + accent + '25;border:1px solid ' + accent + '45;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
-                '<span style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(s.title || ('Step ' + (i+1))) + '</span>' +
+                '<span style="font-size:12px;font-weight:700;color:#0c1a24">' + esc(s.title || ('Step ' + (i+1))) + '</span>' +
               '</div>' +
               '<div style="padding:9px 13px">' +
-                '<p style="font-size:12.5px;color:rgba(240,238,255,0.76);line-height:1.68;margin:0">' + esc(s.explanation) + '</p>' +
+                '<p style="font-size:12.5px;color:rgba(12,26,36,0.76);line-height:1.68;margin:0">' + esc(s.explanation) + '</p>' +
               '</div>' +
             '</div>'
           ).join('') + '</div>'
         ) : '') +
 
         (p.reasoning ? sec('🧠 Why This Works', '#10b981',
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(p.reasoning) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(p.reasoning) + '</p>'
         ) : '') +
 
         (p.example ? sec('📌 Example', '#f59e0b',
           '<div style="padding:11px 14px;border-left:3px solid #f59e0b50;background:rgba(245,158,11,0.06);border-radius:0 10px 10px 0">' +
-            '<p style="font-size:12.5px;color:rgba(240,238,255,0.76);line-height:1.65;margin:0">' + esc(p.example) + '</p>' +
+            '<p style="font-size:12.5px;color:rgba(12,26,36,0.76);line-height:1.65;margin:0">' + esc(p.example) + '</p>' +
           '</div>'
         ) : '') +
 
         (p.finalAnswer ? '<div style="padding:12px 16px 0">' +
           '<div style="padding:13px 16px;background:linear-gradient(135deg,' + accent + '18,' + accent + '08);border:1.5px solid ' + accent + '40;border-radius:13px">' +
             '<div style="font-size:9.5px;font-weight:800;color:' + accent + ';text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">✅ Final Answer</div>' +
-            '<p style="font-size:13px;font-weight:500;color:#f0eeff;line-height:1.65;margin:0">' + esc(p.finalAnswer) + '</p>' +
+            '<p style="font-size:13px;font-weight:500;color:#0c1a24;line-height:1.65;margin:0">' + esc(p.finalAnswer) + '</p>' +
           '</div>' +
         '</div>' : '') +
 
         ((p.relatedConcepts && p.relatedConcepts.length) ? sec('🔗 Related Concepts', 'rgba(255,255,255,0.25)',
           '<div style="display:flex;flex-wrap:wrap;gap:5px">' +
-          p.relatedConcepts.map(c => '<span style="font-size:11px;color:rgba(240,238,255,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:3px 10px">' + esc(c) + '</span>').join('') +
+          p.relatedConcepts.map(c => '<span style="font-size:11px;color:rgba(12,26,36,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:3px 10px">' + esc(c) + '</span>').join('') +
           '</div>'
         ) : '');
 
@@ -950,7 +950,7 @@
 
       bodyHTML =
         (r.startupGoal ? sec('🚀 Startup Goal', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(r.startupGoal) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.82);line-height:1.72">' + esc(r.startupGoal) + '</p>'
         ) : '') +
 
         ((r.phases && r.phases.length) ? sec('🗺️ Roadmap Phases', accent,
@@ -959,12 +959,12 @@
             const pc = phaseColors[idx] || accent;
             return '<div style="border:1px solid ' + pc + '30;border-radius:12px;overflow:hidden">' +
               '<div style="padding:9px 14px;background:linear-gradient(90deg,' + pc + '20,transparent);display:flex;align-items:center;justify-content:space-between">' +
-                '<div style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(ph.name) + '</div>' +
-                (ph.duration ? '<div style="font-size:10px;color:rgba(240,238,255,0.4);background:rgba(255,255,255,0.06);border-radius:100px;padding:2px 9px">' + esc(ph.duration) + '</div>' : '') +
+                '<div style="font-size:12px;font-weight:700;color:#0c1a24">' + esc(ph.name) + '</div>' +
+                (ph.duration ? '<div style="font-size:10px;color:rgba(12,26,36,0.4);background:rgba(255,255,255,0.06);border-radius:100px;padding:2px 9px">' + esc(ph.duration) + '</div>' : '') +
               '</div>' +
               '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:6px">' +
                 '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' +
-                  ph.tasks.map(t => '<li style="display:flex;gap:7px;font-size:12px;color:rgba(240,238,255,0.72)"><span style="color:' + pc + ';flex-shrink:0;font-weight:700">›</span>' + esc(t) + '</li>').join('') +
+                  ph.tasks.map(t => '<li style="display:flex;gap:7px;font-size:12px;color:rgba(12,26,36,0.72)"><span style="color:' + pc + ';flex-shrink:0;font-weight:700">›</span>' + esc(t) + '</li>').join('') +
                 '</ul>' +
                 (ph.milestone ? '<div style="margin-top:4px;font-size:11px;color:' + pc + ';background:' + pc + '12;border:1px solid ' + pc + '25;border-radius:7px;padding:5px 9px">🎯 ' + esc(ph.milestone) + '</div>' : '') +
               '</div>' +
@@ -974,7 +974,7 @@
 
         ((r.skillsNeeded && r.skillsNeeded.length) ? sec('🧩 Skills Needed', '#f59e0b',
           '<div style="display:flex;flex-wrap:wrap;gap:5px">' +
-          r.skillsNeeded.map(s => '<span style="font-size:11.5px;color:rgba(240,238,255,0.7);background:rgba(245,158,11,0.09);border:1px solid rgba(245,158,11,0.25);border-radius:100px;padding:3px 10px">' + esc(s) + '</span>').join('') +
+          r.skillsNeeded.map(s => '<span style="font-size:11.5px;color:rgba(12,26,36,0.7);background:rgba(245,158,11,0.09);border:1px solid rgba(245,158,11,0.25);border-radius:100px;padding:3px 10px">' + esc(s) + '</span>').join('') +
           '</div>'
         ) : '') +
 
@@ -986,7 +986,7 @@
         ((r.weeklySchedule && r.weeklySchedule.length) ? sec('📅 Weekly Schedule', '#10b981',
           '<div style="display:flex;flex-direction:column;gap:4px">' +
           r.weeklySchedule.map(s =>
-            '<div style="font-size:12px;color:rgba(240,238,255,0.72);padding:5px 9px;background:rgba(16,185,129,0.06);border-radius:7px">' + esc(s) + '</div>'
+            '<div style="font-size:12px;color:rgba(12,26,36,0.72);padding:5px 9px;background:rgba(16,185,129,0.06);border-radius:7px">' + esc(s) + '</div>'
           ).join('') + '</div>'
         ) : '') +
 
@@ -998,7 +998,7 @@
         (r.nextAction ? '<div style="padding:12px 16px 0">' +
           '<div style="padding:13px 16px;background:linear-gradient(135deg,rgba(124,58,237,0.18),rgba(124,58,237,0.06));border:1.5px solid rgba(124,58,237,0.4);border-radius:13px">' +
             '<div style="font-size:9.5px;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">⚡ Next Immediate Action</div>' +
-            '<p style="font-size:13px;font-weight:500;color:#f0eeff;line-height:1.6;margin:0">' + esc(r.nextAction) + '</p>' +
+            '<p style="font-size:13px;font-weight:500;color:#0c1a24;line-height:1.6;margin:0">' + esc(r.nextAction) + '</p>' +
           '</div>' +
         '</div>' : '');
 
@@ -1009,13 +1009,13 @@
       const levelBadge = (label, val, color) => val
         ? '<div style="flex:1;padding:9px 11px;background:' + color + '0a;border:1px solid ' + color + '30;border-radius:10px;text-align:center">' +
             '<div style="font-size:9px;font-weight:700;color:' + color + ';text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">' + label + '</div>' +
-            '<div style="font-size:12px;font-weight:600;color:rgba(240,238,255,0.8)">' + esc(val) + '</div>' +
+            '<div style="font-size:12px;font-weight:600;color:rgba(12,26,36,0.8)">' + esc(val) + '</div>' +
           '</div>'
         : '';
 
       bodyHTML =
         (sp.goal ? sec('🎯 Learning Goal', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(sp.goal) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.82);line-height:1.72">' + esc(sp.goal) + '</p>'
         ) : '') +
 
         ((sp.currentLevel || sp.targetLevel || sp.totalDuration) ?
@@ -1032,17 +1032,17 @@
             const pc = ['#7c3aed','#2563eb','#0891b2','#059669','#d97706'][idx % 5];
             return '<div style="border:1px solid ' + pc + '30;border-radius:12px;overflow:hidden">' +
               '<div style="padding:8px 14px;background:linear-gradient(90deg,' + pc + '1a,transparent);display:flex;align-items:center;justify-content:space-between">' +
-                '<div style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(phase.phase) + (phase.title ? ' — ' + esc(phase.title) : '') + '</div>' +
-                (phase.dailyHours ? '<div style="font-size:10px;color:rgba(240,238,255,0.4);background:rgba(255,255,255,0.06);border-radius:100px;padding:2px 9px">⏱ ' + esc(phase.dailyHours) + '</div>' : '') +
+                '<div style="font-size:12px;font-weight:700;color:#0c1a24">' + esc(phase.phase) + (phase.title ? ' — ' + esc(phase.title) : '') + '</div>' +
+                (phase.dailyHours ? '<div style="font-size:10px;color:rgba(12,26,36,0.4);background:rgba(255,255,255,0.06);border-radius:100px;padding:2px 9px">⏱ ' + esc(phase.dailyHours) + '</div>' : '') +
               '</div>' +
               '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:7px">' +
-                (phase.focus ? '<p style="font-size:12px;color:rgba(240,238,255,0.72);margin:0;line-height:1.5">' + esc(phase.focus) + '</p>' : '') +
+                (phase.focus ? '<p style="font-size:12px;color:rgba(12,26,36,0.72);margin:0;line-height:1.5">' + esc(phase.focus) + '</p>' : '') +
                 ((phase.topics && phase.topics.length) ?
-                  '<div style="display:flex;flex-wrap:wrap;gap:5px">' + phase.topics.map(t => '<span style="font-size:11px;color:rgba(240,238,255,0.65);background:' + pc + '0f;border:1px solid ' + pc + '28;border-radius:6px;padding:2px 8px">' + esc(t) + '</span>').join('') + '</div>'
+                  '<div style="display:flex;flex-wrap:wrap;gap:5px">' + phase.topics.map(t => '<span style="font-size:11px;color:rgba(12,26,36,0.65);background:' + pc + '0f;border:1px solid ' + pc + '28;border-radius:6px;padding:2px 8px">' + esc(t) + '</span>').join('') + '</div>'
                 : '') +
                 ((phase.resources && phase.resources.length) ?
                   '<div style="display:flex;flex-direction:column;gap:3px">' + phase.resources.map(res =>
-                    '<div style="display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:rgba(240,238,255,0.65)">' +
+                    '<div style="display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:rgba(12,26,36,0.65)">' +
                       '<span style="color:' + pc + ';flex-shrink:0;font-weight:700;font-size:10px;margin-top:2px">▶</span>' +
                       '<span>' + esc(typeof res === 'string' ? res : (res.name + (res.type ? ' [' + res.type + ']' : '') + (res.note ? ' — ' + res.note : ''))) + '</span>' +
                     '</div>'
@@ -1057,12 +1057,12 @@
         ((sp.dailySchedule && sp.dailySchedule.length) ? sec('⏰ Daily Schedule', '#06b6d4',
           '<div style="display:flex;flex-direction:column;gap:4px">' +
           sp.dailySchedule.map(s =>
-            '<div style="font-size:12px;color:rgba(240,238,255,0.72);padding:5px 9px;background:rgba(6,182,212,0.07);border-radius:7px">' + esc(s) + '</div>'
+            '<div style="font-size:12px;color:rgba(12,26,36,0.72);padding:5px 9px;background:rgba(6,182,212,0.07);border-radius:7px">' + esc(s) + '</div>'
           ).join('') + '</div>'
         ) : '') +
 
         (sp.practicePlan ? sec('💪 Practice Plan', '#10b981',
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(sp.practicePlan) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(sp.practicePlan) + '</p>'
         ) : '') +
 
         ((sp.tips && sp.tips.length) ? sec('💡 Pro Tips', '#f59e0b',
@@ -1073,7 +1073,7 @@
         (sp.nextAction ? '<div style="padding:12px 16px 0">' +
           '<div style="padding:13px 16px;background:linear-gradient(135deg,' + accent + '18,' + accent + '08);border:1.5px solid ' + accent + '40;border-radius:13px">' +
             '<div style="font-size:9.5px;font-weight:800;color:' + accent + ';text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">⚡ Start Here Today</div>' +
-            '<p style="font-size:13px;font-weight:500;color:#f0eeff;line-height:1.6;margin:0">' + esc(sp.nextAction) + '</p>' +
+            '<p style="font-size:13px;font-weight:500;color:#0c1a24;line-height:1.6;margin:0">' + esc(sp.nextAction) + '</p>' +
           '</div>' +
         '</div>' : '');
 
@@ -1081,7 +1081,7 @@
       const a = d.article;
       bodyHTML =
         (a.executiveSummary ? sec('Executive Summary', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(a.executiveSummary) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(a.executiveSummary) + '</p>'
         ) : '') +
 
         ((a.keyTakeaways && a.keyTakeaways.length) ? sec('Key Takeaways', accent,
@@ -1089,7 +1089,7 @@
           a.keyTakeaways.map((x, i) =>
             '<li style="display:flex;align-items:flex-start;gap:9px">' +
               '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
-              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
             '</li>'
           ).join('') + '</ol>'
         ) : '') +
@@ -1099,7 +1099,7 @@
           a.coreConcepts.map(c =>
             '<div style="padding:9px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.07)">' +
               '<div style="font-size:12px;font-weight:700;color:' + accent + ';margin-bottom:3px">' + esc(c.term) + '</div>' +
-              '<div style="font-size:11.5px;color:rgba(240,238,255,0.6);line-height:1.5">' + esc(c.definition) + '</div>' +
+              '<div style="font-size:11.5px;color:rgba(12,26,36,0.6);line-height:1.5">' + esc(c.definition) + '</div>' +
             '</div>'
           ).join('') + '</div>'
         ) : '') +
@@ -1107,7 +1107,7 @@
         (a.expertPerspective ? sec('Expert Perspective', '#f59e0b',
           '<div style="display:flex;gap:10px;align-items:flex-start">' +
             '<div style="flex-shrink:0;font-size:20px;margin-top:-2px">🎓</div>' +
-            '<p style="font-size:12.5px;color:rgba(240,238,255,0.75);line-height:1.65;font-style:italic;margin:0">' + esc(a.expertPerspective) + '</p>' +
+            '<p style="font-size:12.5px;color:rgba(12,26,36,0.75);line-height:1.65;font-style:italic;margin:0">' + esc(a.expertPerspective) + '</p>' +
           '</div>'
         ) : '') +
 
@@ -1124,13 +1124,13 @@
       const r = d.research;
       bodyHTML =
         (r.abstract ? sec('Abstract', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(r.abstract) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(r.abstract) + '</p>'
         ) : '') +
 
         (r.simplifiedExplanation ? sec('Plain English', '#10b981',
           '<div style="display:flex;gap:10px;align-items:flex-start">' +
             '<div style="flex-shrink:0;font-size:18px">💡</div>' +
-            '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65;margin:0">' + esc(r.simplifiedExplanation) + '</p>' +
+            '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.65;margin:0">' + esc(r.simplifiedExplanation) + '</p>' +
           '</div>'
         ) : '') +
 
@@ -1139,21 +1139,21 @@
           r.keyFindings.map((x, i) =>
             '<li style="display:flex;align-items:flex-start;gap:9px">' +
               '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
-              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
             '</li>'
           ).join('') + '</ol>'
         ) : '') +
 
         (r.methodology ? sec('Methodology', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.7);line-height:1.6">' + esc(r.methodology) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.7);line-height:1.6">' + esc(r.methodology) + '</p>'
         ) : '') +
 
         (r.conclusions ? sec('Conclusions', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65">' + esc(r.conclusions) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.65">' + esc(r.conclusions) + '</p>'
         ) : '') +
 
         (r.limitations ? sec('Limitations', '#f59e0b',
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.65);line-height:1.6">' + esc(r.limitations) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.65);line-height:1.6">' + esc(r.limitations) + '</p>'
         ) : '') +
 
         ((r.flashcards && r.flashcards.length) ? sec('Study Flashcards', accent,
@@ -1165,12 +1165,12 @@
       const diffColor = { Easy:'#10b981', Medium:'#f59e0b', Hard:'#f97316', Expert:'#ef4444' }[m.difficulty] || accent;
       bodyHTML =
         (m.problem ? sec('Problem', accent,
-          '<p style="font-size:13px;color:rgba(240,238,255,0.85);font-family:ui-monospace,monospace;line-height:1.6;background:rgba(255,255,255,0.04);padding:10px;border-radius:8px">' + esc(m.problem) + '</p>'
+          '<p style="font-size:13px;color:rgba(12,26,36,0.85);font-family:ui-monospace,monospace;line-height:1.6;background:rgba(255,255,255,0.04);padding:10px;border-radius:8px">' + esc(m.problem) + '</p>'
         ) : '') +
 
         (m.solution ? '<div style="margin:0 16px;padding:16px;background:linear-gradient(135deg,' + accent + '20,' + accent + '08);border:1.5px solid ' + accent + '40;border-radius:14px;text-align:center">' +
           '<div style="font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:' + accent + ';opacity:0.7;margin-bottom:6px">Final Answer</div>' +
-          '<div style="font-size:26px;font-weight:900;color:#f0eeff;letter-spacing:-0.5px">' + esc(m.solution) + '</div>' +
+          '<div style="font-size:26px;font-weight:900;color:#0c1a24;letter-spacing:-0.5px">' + esc(m.solution) + '</div>' +
         '</div>' : '') +
 
         ((m.steps && m.steps.length) ? sec('Step-by-Step Solution', accent,
@@ -1179,7 +1179,7 @@
             '<div style="display:flex;gap:10px;align-items:flex-start">' +
               '<div style="width:24px;height:24px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '44;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:' + accent + ';flex-shrink:0;margin-top:1px">' + s.step + '</div>' +
               '<div style="flex:1">' +
-                '<div style="font-size:12.5px;color:rgba(240,238,255,0.8);line-height:1.5">' + esc(s.description) + '</div>' +
+                '<div style="font-size:12.5px;color:rgba(12,26,36,0.8);line-height:1.5">' + esc(s.description) + '</div>' +
                 (s.result ? '<div style="font-size:12px;font-weight:700;color:' + accent + ';margin-top:3px;font-family:ui-monospace,monospace">= ' + esc(s.result) + '</div>' : '') +
               '</div>' +
             '</div>'
@@ -1192,7 +1192,7 @@
         ) : '') +
 
         (m.difficulty ? '<div style="margin:0 16px 4px;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:10px">' +
-          '<span style="font-size:11.5px;color:rgba(240,238,255,0.4)">Difficulty</span>' +
+          '<span style="font-size:11.5px;color:rgba(12,26,36,0.4)">Difficulty</span>' +
           '<span style="font-size:12px;font-weight:700;color:' + diffColor + '">' + esc(m.difficulty) + '</span>' +
         '</div>' : '');
 
@@ -1208,7 +1208,7 @@
         '</div>' +
 
         (j.overview ? sec('Role Overview', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65">' + esc(j.overview) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.65">' + esc(j.overview) + '</p>'
         ) : '') +
 
         ((j.requirements && j.requirements.length) ? sec('Requirements', accent,
@@ -1249,18 +1249,18 @@
             '<div style="background:rgba(255,255,255,0.03);border:1px solid ' + accent + '25;border-radius:12px;overflow:hidden">' +
               '<div style="padding:9px 14px;background:linear-gradient(90deg,' + accent + '18,transparent);border-bottom:1px solid ' + accent + '20;display:flex;align-items:center;gap:8px">' +
                 '<span style="font-size:9.5px;font-weight:800;color:' + accent + ';background:' + accent + '25;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">' + (idx+1) + '</span>' +
-                '<span style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(ch.title) + '</span>' +
+                '<span style="font-size:12px;font-weight:700;color:#0c1a24">' + esc(ch.title) + '</span>' +
               '</div>' +
               '<div style="padding:11px 14px;display:flex;flex-direction:column;gap:9px">' +
-                (ch.explanation ? '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7;margin:0">' + esc(ch.explanation) + '</p>' : '') +
+                (ch.explanation ? '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7;margin:0">' + esc(ch.explanation) + '</p>' : '') +
                 ((ch.concepts && ch.concepts.length) ?
                   '<div><div style="font-size:9.5px;font-weight:700;color:' + accent + ';text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px">Key Concepts</div>' +
-                  '<div style="display:flex;flex-wrap:wrap;gap:5px">' + ch.concepts.map(c => '<span style="font-size:11px;color:rgba(240,238,255,0.7);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:3px 9px">' + esc(c) + '</span>').join('') + '</div></div>'
+                  '<div style="display:flex;flex-wrap:wrap;gap:5px">' + ch.concepts.map(c => '<span style="font-size:11px;color:rgba(12,26,36,0.7);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:3px 9px">' + esc(c) + '</span>').join('') + '</div></div>'
                 : '') +
                 ((ch.definitions && ch.definitions.filter(d=>d.term).length) ?
                   '<div><div style="font-size:9.5px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px">Definitions</div>' +
                   '<div style="display:flex;flex-direction:column;gap:4px">' + ch.definitions.filter(d=>d.term).map(d =>
-                    '<div style="display:flex;gap:6px"><span style="font-size:11.5px;font-weight:700;color:#f59e0b;white-space:nowrap">' + esc(d.term) + ':</span><span style="font-size:11.5px;color:rgba(240,238,255,0.65);line-height:1.5">' + esc(d.definition) + '</span></div>'
+                    '<div style="display:flex;gap:6px"><span style="font-size:11.5px;font-weight:700;color:#f59e0b;white-space:nowrap">' + esc(d.term) + ':</span><span style="font-size:11.5px;color:rgba(12,26,36,0.65);line-height:1.5">' + esc(d.definition) + '</span></div>'
                   ).join('') + '</div></div>'
                 : '') +
                 ((ch.examples && ch.examples.length) ?
@@ -1279,7 +1279,7 @@
       bodyHTML = metaBar +
 
         (y.introduction ? sec('📝 Introduction', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(y.introduction) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(y.introduction) + '</p>'
         ) : '') +
 
         (chaptersHTML ? '<div style="display:flex;flex-direction:column;gap:8px">' + chaptersHTML + '</div>' : '') +
@@ -1289,7 +1289,7 @@
           y.importantPoints.map((x, i) =>
             '<li style="display:flex;align-items:flex-start;gap:9px">' +
               '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.35);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:#f59e0b">' + (i+1) + '</span>' +
-              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
             '</li>'
           ).join('') + '</ol>'
         ) : '') +
@@ -1299,13 +1299,13 @@
           y.quickRevision.map(x =>
             '<div style="display:flex;align-items:flex-start;gap:6px;padding:6px 8px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.15);border-radius:8px">' +
               '<span style="color:#06b6d4;font-size:10px;font-weight:800;flex-shrink:0;margin-top:2px">›</span>' +
-              '<span style="font-size:11.5px;color:rgba(240,238,255,0.7);line-height:1.4">' + esc(x) + '</span>' +
+              '<span style="font-size:11.5px;color:rgba(12,26,36,0.7);line-height:1.4">' + esc(x) + '</span>' +
             '</div>'
           ).join('') + '</div>'
         ) : '') +
 
         (y.conclusion ? sec('📚 Final Conclusion', '#10b981',
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(y.conclusion) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(y.conclusion) + '</p>'
         ) : '');
 
     } else if (ct === 'video' && d.video) {
@@ -1316,7 +1316,7 @@
         '</div>' +
 
         (v.summary ? sec('Video Summary', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(v.summary) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(v.summary) + '</p>'
         ) : '') +
 
         ((v.keyTopics && v.keyTopics.length) ? sec('Key Topics Covered', accent,
@@ -1324,7 +1324,7 @@
           v.keyTopics.map((x, i) =>
             '<li style="display:flex;align-items:flex-start;gap:9px">' +
               '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
-              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
             '</li>'
           ).join('') + '</ol>'
         ) : '') +
@@ -1338,7 +1338,7 @@
           '<div style="display:flex;flex-direction:column;gap:8px">' +
           v.quotableInsights.map(q =>
             '<div style="padding:10px 13px;border-left:3px solid #f59e0b40;background:rgba(245,158,11,0.06);border-radius:0 10px 10px 0">' +
-              '<p style="font-size:12px;color:rgba(240,238,255,0.7);font-style:italic;line-height:1.55;margin:0">"' + esc(q) + '"</p>' +
+              '<p style="font-size:12px;color:rgba(12,26,36,0.7);font-style:italic;line-height:1.55;margin:0">"' + esc(q) + '"</p>' +
             '</div>'
           ).join('') + '</div>'
         ) : '');
@@ -1352,7 +1352,7 @@
         '</div>' +
 
         (c.explanation ? sec('What It Does', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65">' + esc(c.explanation) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.65">' + esc(c.explanation) + '</p>'
         ) : '') +
 
         ((c.improvements && c.improvements.length) ? sec('Suggested Improvements', '#10b981',
@@ -1374,7 +1374,7 @@
       const g = d.general || {};
       bodyHTML =
         ((g.executiveSummary || g.summary) ? sec('Executive Summary', accent,
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(g.executiveSummary || g.summary) + '</p>'
+          '<p style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.7">' + esc(g.executiveSummary || g.summary) + '</p>'
         ) : '') +
 
         ((g.keyInsights && g.keyInsights.length) ? sec('Key Insights', accent,
@@ -1382,7 +1382,7 @@
           g.keyInsights.map((x, i) =>
             '<li style="display:flex;align-items:flex-start;gap:9px">' +
               '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
-              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(12,26,36,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
             '</li>'
           ).join('') + '</ol>'
         ) : '') +
@@ -1402,21 +1402,21 @@
     return '<div style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden">' +
       '<div style="padding:11px 16px 10px;background:linear-gradient(90deg,' + accent + '18 0%,rgba(255,255,255,0.015) 70%);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:9px">' +
         '<div style="width:4px;height:18px;background:linear-gradient(180deg,' + accent + ',' + accent + '55);border-radius:4px;flex-shrink:0"></div>' +
-        '<span style="font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:rgba(240,238,255,0.9)">' + esc(title) + '</span>' +
+        '<span style="font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:rgba(12,26,36,0.9)">' + esc(title) + '</span>' +
       '</div>' +
       '<div style="padding:14px 16px">' + inner + '</div>' +
     '</div>';
   }
 
   function li(text, color) {
-    return '<li style="display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(240,238,255,0.85);line-height:1.6;padding:3px 0">' +
+    return '<li style="display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(12,26,36,0.85);line-height:1.6;padding:3px 0">' +
       '<div style="flex-shrink:0;margin-top:5px;width:6px;height:6px;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + '80"></div>' +
       '<span>' + esc(text) + '</span>' +
     '</li>';
   }
 
   function liAction(text) {
-    return '<li style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(240,238,255,0.85);line-height:1.6;padding:4px 0">' +
+    return '<li style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(12,26,36,0.85);line-height:1.6;padding:4px 0">' +
       '<div style="flex-shrink:0;margin-top:4px;width:18px;height:18px;border-radius:6px;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.35);display:flex;align-items:center;justify-content:center">' +
         '<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
       '</div>' +
@@ -1426,15 +1426,15 @@
 
   function badge(text, color) {
     const isWhite = color.includes('255,255,255');
-    return '<span style="font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:100px;background:' + color + '22;border:1px solid ' + color + '45;color:' + (isWhite ? 'rgba(240,238,255,0.75)' : color) + ';letter-spacing:0.1px">' + esc(text) + '</span>';
+    return '<span style="font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:100px;background:' + color + '22;border:1px solid ' + color + '45;color:' + (isWhite ? 'rgba(12,26,36,0.75)' : color) + ';letter-spacing:0.1px">' + esc(text) + '</span>';
   }
 
   function infoRow(label, value) {
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)"><span style="font-size:11.5px;color:rgba(240,238,255,0.4)">' + esc(label) + '</span><span style="font-size:12px;font-weight:600;color:rgba(240,238,255,0.8)">' + esc(value) + '</span></div>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)"><span style="font-size:11.5px;color:rgba(12,26,36,0.4)">' + esc(label) + '</span><span style="font-size:12px;font-weight:600;color:rgba(12,26,36,0.8)">' + esc(value) + '</span></div>';
   }
 
   function flashcardsHTML(cards, accent) {
-    return '<div style="display:flex;flex-direction:column;gap:7px">' + (cards||[]).map(c => '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden"><div style="padding:7px 11px;background:' + accent + '12;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11.5px;font-weight:600;color:' + accent + '">' + esc(c.q) + '</div><div style="padding:7px 11px;font-size:12px;color:rgba(240,238,255,0.65);line-height:1.5">' + esc(c.a) + '</div></div>').join('') + '</div>';
+    return '<div style="display:flex;flex-direction:column;gap:7px">' + (cards||[]).map(c => '<div style="border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden"><div style="padding:7px 11px;background:' + accent + '12;border-bottom:1px solid rgba(255,255,255,0.06);font-size:11.5px;font-weight:600;color:' + accent + '">' + esc(c.q) + '</div><div style="padding:7px 11px;font-size:12px;color:rgba(12,26,36,0.65);line-height:1.5">' + esc(c.a) + '</div></div>').join('') + '</div>';
   }
 
   // ── Bottom bar ────────────────────────────────────────────────────────────
@@ -1442,9 +1442,9 @@
   function buildBottomBarHTML(accent) {
     const b = 'display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity 0.15s';
     return '<button id="__dai-copy" style="' + b + ';background:' + accent + '18;border-color:' + accent + '44;color:' + accent + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.8"/></svg>Copy</button>' +
-      '<button id="__dai-rescan" style="' + b + ';background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.12);color:rgba(240,238,255,0.6)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan again</button>' +
+      '<button id="__dai-rescan" style="' + b + ';background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.12);color:rgba(12,26,36,0.6)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan again</button>' +
       '<div style="flex:1"></div>' +
-      '<button id="__dai-close2" style="' + b + ';background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(240,238,255,0.4)">Close</button>';
+      '<button id="__dai-close2" style="' + b + ';background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(12,26,36,0.4)">Close</button>';
   }
 
   function wireBottomBar(bar, result, mode) {
@@ -1779,10 +1779,10 @@
       '<div style="display:flex;align-items:flex-start;gap:12px">' +
         '<div style="width:34px;height:34px;border-radius:50%;background:' + iconBg + ';border:1px solid ' + iconColor + '44;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + iconSvg + '</div>' +
         '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:13.5px;font-weight:700;color:#f0eeff;margin-bottom:4px">' + title + '</div>' +
-          '<div style="font-size:12px;color:rgba(240,238,255,0.55);line-height:1.5;word-break:break-word">' + esc(desc) + '</div>' +
+          '<div style="font-size:13.5px;font-weight:700;color:#0c1a24;margin-bottom:4px">' + title + '</div>' +
+          '<div style="font-size:12px;color:rgba(12,26,36,0.55);line-height:1.5;word-break:break-word">' + esc(desc) + '</div>' +
         '</div>' +
-        '<button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:rgba(240,238,255,0.35);flex-shrink:0;padding:2px;line-height:1">✕</button>' +
+        '<button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:rgba(12,26,36,0.35);flex-shrink:0;padding:2px;line-height:1">✕</button>' +
       '</div>';
 
     document.documentElement.appendChild(toast);
@@ -1914,7 +1914,7 @@
     });
 
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'font-size:10px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:rgba(240,238,255,0.45);padding:2px 6px 9px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:8px';
+    hdr.style.cssText = 'font-size:10px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:rgba(12,26,36,0.45);padding:2px 6px 9px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:8px';
     hdr.textContent = 'Select target language';
 
     const grid = document.createElement('div');
@@ -1925,8 +1925,8 @@
       btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);cursor:pointer;text-align:left;transition:all 0.12s;outline:none';
       btn.innerHTML =
         '<span style="font-size:18px;line-height:1">' + lang.flag + '</span>' +
-        '<div><div style="font-size:12px;font-weight:700;color:rgba(240,238,255,0.88)">' + lang.label + '</div>' +
-        '<div style="font-size:10px;color:rgba(240,238,255,0.38)">' + lang.native + '</div></div>';
+        '<div><div style="font-size:12px;font-weight:700;color:rgba(12,26,36,0.88)">' + lang.label + '</div>' +
+        '<div style="font-size:10px;color:rgba(12,26,36,0.38)">' + lang.native + '</div></div>';
       btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(6,182,212,0.12)'; btn.style.borderColor = 'rgba(6,182,212,0.35)'; });
       btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(255,255,255,0.03)'; btn.style.borderColor = 'rgba(255,255,255,0.07)'; });
       btn.addEventListener('click', () => { removeSelectionUI(); handleTranslateText(text, lang); });
@@ -2169,14 +2169,14 @@
         '</div>' +
         '<div style="padding:16px 18px;background:linear-gradient(135deg,' + a + '18,' + a + '06);border:1.5px solid ' + a + '40;border-radius:14px;position:relative;overflow:hidden">' +
           '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,' + a + ',' + a + '44,transparent)"></div>' +
-          '<p style="font-size:14px;color:rgba(240,238,255,0.92);line-height:1.75;margin:0">' + esc(result.summary || '') + '</p>' +
+          '<p style="font-size:14px;color:rgba(12,26,36,0.92);line-height:1.75;margin:0">' + esc(result.summary || '') + '</p>' +
         '</div>' +
         ((result.keyPoints && result.keyPoints.length) ? sec('Key Points', a,
           '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' +
           result.keyPoints.map(p => li(p, a)).join('') + '</ul>'
         ) : '') +
         '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-          '<span style="font-size:10.5px;font-weight:700;color:rgba(240,238,255,0.4);text-transform:uppercase;letter-spacing:0.6px">Level:</span>' +
+          '<span style="font-size:10.5px;font-weight:700;color:rgba(12,26,36,0.4);text-transform:uppercase;letter-spacing:0.6px">Level:</span>' +
           '<span style="font-size:12px;font-weight:700;padding:3px 11px;border-radius:100px;background:' + a + '18;border:1px solid ' + a + '35;color:' + a + '">' + esc(result.difficulty || 'General') + '</span>' +
           ((result.relatedTerms && result.relatedTerms.length)
             ? result.relatedTerms.map(t => badge(t, 'rgba(255,255,255,0.3)')).join(' ')
@@ -2210,25 +2210,25 @@
         '<span style="font-size:22px">' + d.lang.flag + '</span>' +
         '<div>' +
           '<div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.4px">' + d.lang.label + ' Translation</div>' +
-          (d.detectedLanguage ? '<div style="font-size:11px;color:rgba(240,238,255,0.4);margin-top:2px">Detected: ' + esc(d.detectedLanguage) + '</div>' : '') +
+          (d.detectedLanguage ? '<div style="font-size:11px;color:rgba(12,26,36,0.4);margin-top:2px">Detected: ' + esc(d.detectedLanguage) + '</div>' : '') +
         '</div>' +
       '</div>' +
 
       '<div>' +
-        '<div style="font-size:10px;font-weight:800;color:rgba(240,238,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Original</div>' +
-        '<div style="padding:12px 15px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px;font-size:13px;color:rgba(240,238,255,0.6);line-height:1.65;font-style:italic">' + esc(d.originalText) + '</div>' +
+        '<div style="font-size:10px;font-weight:800;color:rgba(12,26,36,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Original</div>' +
+        '<div style="padding:12px 15px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px;font-size:13px;color:rgba(12,26,36,0.6);line-height:1.65;font-style:italic">' + esc(d.originalText) + '</div>' +
       '</div>' +
 
       '<div>' +
         '<div style="font-size:10px;font-weight:800;color:' + accent + ';text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Translation</div>' +
         '<div style="padding:16px 18px;background:linear-gradient(135deg,' + accent + '1c,' + accent + '08);border:1.5px solid ' + accent + '45;border-radius:14px;position:relative;overflow:hidden">' +
           '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,' + accent + ',' + accent + '55,transparent)"></div>' +
-          '<p style="font-size:15px;color:rgba(240,238,255,0.95);line-height:1.8;margin:0;font-weight:400">' + esc(String(d.translation)) + '</p>' +
+          '<p style="font-size:15px;color:rgba(12,26,36,0.95);line-height:1.8;margin:0;font-weight:400">' + esc(String(d.translation)) + '</p>' +
         '</div>' +
       '</div>' +
 
       (d.notes ? sec('Translator Note', '#f59e0b',
-        '<p style="font-size:13px;color:rgba(240,238,255,0.78);line-height:1.65;margin:0">' + esc(d.notes) + '</p>'
+        '<p style="font-size:13px;color:rgba(12,26,36,0.78);line-height:1.65;margin:0">' + esc(d.notes) + '</p>'
       ) : '') +
 
       '</div>';
