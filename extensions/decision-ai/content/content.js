@@ -2252,7 +2252,7 @@
       '<div style="display:flex;align-items:center;gap:8px">' +
         '<span style="font-size:22px">' + d.lang.flag + '</span>' +
         '<div>' +
-          '<div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.4px">' + d.lang.label + ' Translation</div>' +
+          '<div style="font-size:17px;font-weight:900;color:#1a0810;letter-spacing:-0.4px">' + d.lang.label + ' Translation</div>' +
           (d.detectedLanguage ? '<div style="font-size:11px;color:rgba(26,8,16,0.4);margin-top:2px">Detected: ' + esc(d.detectedLanguage) + '</div>' : '') +
         '</div>' +
       '</div>' +
