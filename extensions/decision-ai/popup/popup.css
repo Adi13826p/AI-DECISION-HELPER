@@ -1,5 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html { color-scheme: light; }
+
 :root {
   --bg-base: #fff0f7; --bg-surface: #ffffff; --bg-elevated: #fce7f3; --bg-hover: #fbd5ea;
   --border: rgba(236,72,153,0.15); --border-hover: rgba(236,72,153,0.3);
