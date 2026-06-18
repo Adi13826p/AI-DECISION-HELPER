@@ -18,13 +18,16 @@ export async function groqCall(messages, model, json = true, maxTokens = 4096) {
   const apiKey = await getApiKey();
   if (!apiKey) throw new Error('NO_API_KEY');
 
+  const isVision = model === VISION_MODEL;
+
   const body = {
     model,
     messages,
     temperature: 0.3,
     max_tokens: maxTokens
   };
-  if (json) body.response_format = { type: 'json_object' };
+  // Vision models do not support response_format — text models only
+  if (json && !isVision) body.response_format = { type: 'json_object' };
 
   const resp = await fetch(GROQ_ENDPOINT, {
     method: 'POST',
@@ -152,7 +155,7 @@ Extract product information and provide a complete analysis. Return ONLY this JS
     }
   ];
 
-  return groqCall(messages, VISION_MODEL, true);
+  return groqCall(messages, VISION_MODEL, true, 6000);
 }
 
 // ── Master Scan ───────────────────────────────────────────────────────────────
