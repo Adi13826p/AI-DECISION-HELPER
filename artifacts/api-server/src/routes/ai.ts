@@ -9,14 +9,33 @@ function getGroq() {
   return new Groq({ apiKey });
 }
 
+function sanitizeJSON(raw: string): string {
+  // Escape bare control characters (newlines, tabs, etc.) inside JSON string values
+  let result = "";
+  let inStr = false, escape = false;
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (escape) { escape = false; result += c; continue; }
+    if (c === "\\" && inStr) { escape = true; result += c; continue; }
+    if (c === '"') { inStr = !inStr; result += c; continue; }
+    if (inStr) {
+      if (c === "\n") { result += "\\n"; continue; }
+      if (c === "\r") { result += "\\r"; continue; }
+      if (c === "\t") { result += "\\t"; continue; }
+    }
+    result += c;
+  }
+  return result;
+}
+
 function extractJSON(text: string): unknown {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("No JSON found in response");
   try {
-    return JSON.parse(jsonMatch[0]);
+    return JSON.parse(sanitizeJSON(jsonMatch[0]));
   } catch {
     // Try to repair truncated JSON by closing open brackets
-    let partial = jsonMatch[0];
+    let partial = sanitizeJSON(jsonMatch[0]);
     let inStr = false, escape = false;
     const stack: string[] = [];
     for (let i = 0; i < partial.length; i++) {
