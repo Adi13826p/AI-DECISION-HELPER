@@ -34,7 +34,7 @@
       model,
       messages,
       temperature: 0.3,
-      max_tokens: maxTokens || (isVision ? 2048 : 3500),
+      max_tokens: maxTokens || (isVision ? 2048 : 7000),
     };
     // Vision models do NOT support response_format — text models do
     if (!isVision) {
@@ -57,25 +57,64 @@
     }
 
     const data = await resp.json();
-    const rawText = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    const choice = data.choices && data.choices[0];
+    const rawText = choice && choice.message && choice.message.content;
     if (!rawText) throw new Error('Empty response from AI');
+
+    // If the model was cut off due to token limit, attempt auto-repair before giving up
+    const wasTruncated = choice.finish_reason === 'length';
 
     // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
     const stripped = rawText.trim();
     const fenceMatch = stripped.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/);
-    const jsonStr = fenceMatch ? fenceMatch[1].trim() : stripped;
+    let jsonStr = fenceMatch ? fenceMatch[1].trim() : stripped;
 
+    // Try direct parse first
     try { return JSON.parse(jsonStr); }
-    catch (_) {
-      // Last resort: find the outermost JSON object
-      const objStart = jsonStr.indexOf('{');
-      const objEnd   = jsonStr.lastIndexOf('}');
-      if (objStart !== -1 && objEnd > objStart) {
-        try { return JSON.parse(jsonStr.slice(objStart, objEnd + 1)); }
-        catch (_2) {}
-      }
-      throw new Error('AI returned invalid JSON. Please try again.');
+    catch (_) {}
+
+    // Extract the outermost { … } block
+    const objStart = jsonStr.indexOf('{');
+    const objEnd   = jsonStr.lastIndexOf('}');
+    if (objStart !== -1 && objEnd > objStart) {
+      try { return JSON.parse(jsonStr.slice(objStart, objEnd + 1)); }
+      catch (_) {}
     }
+
+    // If truncated, try to auto-close open brackets/braces so we still get usable data
+    if (wasTruncated && objStart !== -1) {
+      try {
+        let partial = jsonStr.slice(objStart);
+        // Count unmatched open brackets
+        let depth = 0, inStr = false, escape = false;
+        for (let i = 0; i < partial.length; i++) {
+          const c = partial[i];
+          if (escape) { escape = false; continue; }
+          if (c === '\\' && inStr) { escape = true; continue; }
+          if (c === '"') { inStr = !inStr; continue; }
+          if (inStr) continue;
+          if (c === '{' || c === '[') depth++;
+          else if (c === '}' || c === ']') depth--;
+        }
+        // Strip trailing incomplete token (comma, colon, partial string)
+        partial = partial.replace(/,\s*$/, '').replace(/:\s*$/, ':null');
+        // Close any open string
+        if (inStr) partial += '"';
+        // Close open arrays/objects in reverse order
+        // We do a second pass to close correctly
+        let depth2 = 0; const stack = [];
+        for (let i = 0; i < partial.length; i++) {
+          const c = partial[i];
+          if (c === '{') stack.push('}');
+          else if (c === '[') stack.push(']');
+          else if (c === '}' || c === ']') stack.pop();
+        }
+        partial += stack.reverse().join('');
+        return JSON.parse(partial);
+      } catch (_) {}
+    }
+
+    throw new Error('AI returned invalid JSON. Please try again.');
   }
 
   function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
@@ -108,7 +147,7 @@
           '"general":{"executiveSummary":"4-6 analytical sentences covering what this is, why it matters, and key context","keyInsights":["Specific substantive insight","Another insight","Another insight"],"actionItems":["Concrete action","Another action"]}}'
         }
       ]}
-    ], VISION_MODEL, 4096);
+    ], VISION_MODEL, 6000);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -310,7 +349,7 @@
         '"quickRevision":["Short bullet 1","Short bullet 2","Short bullet 3","Short bullet 4","Short bullet 5","Short bullet 6"],' +
         '"conclusion":"3-4 sentence final conclusion covering the key lesson and takeaway"}}'
       }
-    ], 'llama-3.3-70b-versatile', 4096);
+    ], 'llama-3.3-70b-versatile', 7000);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -836,7 +875,7 @@
           '<span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:' + accent + ';background:linear-gradient(135deg,' + accent + '22,' + accent + '0f);border:1px solid ' + accent + '45;border-radius:100px;padding:4px 13px">' + esc(d.contentLabel || 'Analysis') + '</span>' +
           (d.confidence ? '<span style="font-size:10.5px;color:rgba(26,8,16,0.35);font-weight:500">' + d.confidence + '% confidence</span>' : '') +
         '</div>' +
-        (d.title ? '<div style="font-size:18px;font-weight:900;color:#ffffff;line-height:1.3;letter-spacing:-0.5px;text-shadow:0 0 40px ' + accent + '33">' + esc(d.title) + '</div>' : '') +
+        (d.title ? '<div style="font-size:18px;font-weight:900;color:#1a0810;line-height:1.3;letter-spacing:-0.5px">' + esc(d.title) + '</div>' : '') +
         topicsHTML +
         overviewHTML +
       '</div>';
@@ -1425,6 +1464,10 @@
   }
 
   function badge(text, color) {
+    // rgba() colors already have full opacity spec — can't append hex alpha codes to them
+    if (/^rgba?\(/.test(color)) {
+      return '<span style="font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:100px;background:' + color + ';border:1px solid rgba(236,72,153,0.3);color:rgba(26,8,16,0.65);letter-spacing:0.1px">' + esc(text) + '</span>';
+    }
     const isWhite = color.includes('255,255,255');
     return '<span style="font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:100px;background:' + color + '22;border:1px solid ' + color + '45;color:' + (isWhite ? 'rgba(26,8,16,0.75)' : color) + ';letter-spacing:0.1px">' + esc(text) + '</span>';
   }

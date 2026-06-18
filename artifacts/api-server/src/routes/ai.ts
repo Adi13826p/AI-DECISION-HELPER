@@ -11,8 +11,29 @@ function getGroq() {
 
 function extractJSON(text: string): unknown {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (jsonMatch) return JSON.parse(jsonMatch[0]);
-  throw new Error("No JSON found in response");
+  if (!jsonMatch) throw new Error("No JSON found in response");
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    // Try to repair truncated JSON by closing open brackets
+    let partial = jsonMatch[0];
+    let inStr = false, escape = false;
+    const stack: string[] = [];
+    for (let i = 0; i < partial.length; i++) {
+      const c = partial[i];
+      if (escape) { escape = false; continue; }
+      if (c === "\\" && inStr) { escape = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (c === "{") stack.push("}");
+      else if (c === "[") stack.push("]");
+      else if (c === "}" || c === "]") stack.pop();
+    }
+    partial = partial.replace(/,\s*$/, "").replace(/:\s*$/, ":null");
+    if (inStr) partial += '"';
+    partial += stack.reverse().join("");
+    return JSON.parse(partial);
+  }
 }
 
 async function fetchUrlContent(url: string): Promise<{ text: string; title: string }> {
@@ -178,7 +199,7 @@ RULES (follow strictly):
         }
       ],
       temperature: 0.4,
-      max_tokens: 3000,
+      max_tokens: 5000,
     });
 
     const text = completion.choices[0]?.message?.content ?? "{}";
@@ -330,7 +351,7 @@ IMPORTANT: Replace every placeholder above with real, specific content from the 
         { role: "user", content: userPrompt }
       ],
       temperature: 0.65,
-      max_tokens: 3000,
+      max_tokens: 5000,
     });
 
     const text = completion.choices[0]?.message?.content ?? "{}";
@@ -441,7 +462,7 @@ Rules:
         }
       ],
       temperature: 0.7,
-      max_tokens: 2500,
+      max_tokens: 4000,
     });
 
     const text = completion.choices[0]?.message?.content ?? "{}";
