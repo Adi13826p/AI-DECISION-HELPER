@@ -598,9 +598,16 @@
         '@keyframes __dai-slidein{from{opacity:0;transform:translateX(40px) scale(0.97)}to{opacity:1;transform:translateX(0) scale(1)}}',
         '@keyframes __dai-spin{to{transform:rotate(360deg)}}',
         '@keyframes __dai-fadein{from{opacity:0}to{opacity:1}}',
+        '@keyframes __dai-popin{from{opacity:0;transform:scale(0.92) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}',
+        '@keyframes __dai-shimmer{0%{background-position:200% center}100%{background-position:-200% center}}',
+        '@keyframes __dai-pulse-dot{0%,100%{opacity:0.5;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}',
         '#__dai-overlay-panel::-webkit-scrollbar{width:4px}',
         '#__dai-overlay-panel::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}',
-        '#__dai-overlay-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px}'
+        '#__dai-overlay-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:4px}',
+        '#__dai-inline-trans::-webkit-scrollbar{width:3px}',
+        '#__dai-inline-trans::-webkit-scrollbar-thumb{background:rgba(6,182,212,0.25);border-radius:4px}',
+        '#__dai-trans-copy:hover,#__dai-trans-replace:hover{opacity:0.82}',
+        '#__dai-trans-close:hover{background:rgba(6,182,212,0.16)!important}',
       ].join('');
       document.head.appendChild(style);
     }
@@ -1879,6 +1886,9 @@
     if (!e.target.closest('#__dai-sel-toolbar') && !e.target.closest('#__dai-sel-picker')) {
       removeSelectionUI();
     }
+    if (!e.target.closest('#__dai-inline-trans')) {
+      removeInlineTrans();
+    }
   }, true);
 
   function showLangPicker(text) {
@@ -1927,24 +1937,218 @@
     document.documentElement.appendChild(__selPicker);
   }
 
+  // ── Inline Translation Popup ─────────────────────────────────────────────
+
+  let __inlineTransEl    = null;   // the floating popup element
+  let __inlineReplacedSpan = null; // <span> we inserted into the page (if any)
+
+  function removeInlineTrans() {
+    if (__inlineTransEl) { __inlineTransEl.remove(); __inlineTransEl = null; }
+  }
+
+  function positionInlineTrans(popup, rect) {
+    const W = 400, MARGIN = 12;
+    let left = rect.left + rect.width / 2 - W / 2;
+    left = Math.max(MARGIN, Math.min(window.innerWidth - W - MARGIN, left));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const useBelow   = spaceBelow >= 200 || rect.top < 200;
+    sp(popup, {
+      position:'fixed', left:left+'px', width:W+'px',
+      top:    useBelow ? (rect.bottom + 10)+'px' : 'auto',
+      bottom: useBelow ? 'auto' : (window.innerHeight - rect.top + 10)+'px',
+      'z-index':'2147483647',
+      background:'#ffffff',
+      border:'1px solid rgba(6,182,212,0.18)',
+      'border-radius':'18px',
+      'box-shadow':'0 24px 64px rgba(0,0,0,0.14),0 4px 16px rgba(6,182,212,0.12),0 0 0 1px rgba(6,182,212,0.08)',
+      'font-family':'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+      overflow:'hidden',
+      'max-height':'80vh',
+      'overflow-y':'auto',
+      animation:'__dai-popin 0.22s cubic-bezier(0.16,1,0.3,1) both',
+    });
+  }
+
+  function inlineTransAccentBar() {
+    return '<div style="height:3px;background:linear-gradient(90deg,#06b6d4,#a855f7,#ec4899,#06b6d4);background-size:200% 100%;animation:__dai-shimmer 3s linear infinite"></div>';
+  }
+
+  function inlineTransHeader(flag, label, detectedLang) {
+    return '<div style="padding:14px 16px 12px;background:linear-gradient(135deg,#0c1a2e 0%,#0a2233 50%,#0d1f35 100%);display:flex;align-items:center;justify-content:space-between">' +
+      '<div style="display:flex;align-items:center;gap:11px">' +
+        '<div style="position:relative;width:40px;height:40px;flex-shrink:0">' +
+          '<div style="position:absolute;inset:0;border-radius:12px;background:linear-gradient(135deg,rgba(6,182,212,0.3),rgba(168,85,247,0.2));border:1px solid rgba(6,182,212,0.4)"></div>' +
+          '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px">' + flag + '</span>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:14px;font-weight:800;color:#f0f9ff;letter-spacing:-0.3px">' + esc(label) + ' Translation</div>' +
+          (detectedLang ? '<div style="font-size:10.5px;color:rgba(6,182,212,0.7);margin-top:2px;display:flex;align-items:center;gap:4px"><span style="width:4px;height:4px;border-radius:50%;background:#06b6d4;flex-shrink:0"></span>from ' + esc(detectedLang) + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+      '<button id="__dai-trans-close" style="width:28px;height:28px;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.07);cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);flex-shrink:0;transition:all 0.15s">' +
+        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>' +
+      '</button>' +
+    '</div>';
+  }
+
+  function buildTransLoadingHTML(lang) {
+    return inlineTransAccentBar() +
+    '<div style="padding:20px 18px;display:flex;align-items:center;gap:15px">' +
+      '<div style="position:relative;width:48px;height:48px;flex-shrink:0">' +
+        '<div style="position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,rgba(6,182,212,0.12),rgba(168,85,247,0.06));border:1.5px solid rgba(6,182,212,0.2)"></div>' +
+        '<svg style="animation:__dai-spin 1.1s linear infinite;position:absolute;inset:0" width="48" height="48" viewBox="0 0 48 48" fill="none">' +
+          '<circle cx="24" cy="24" r="20" stroke="rgba(6,182,212,0.12)" stroke-width="2.5"/>' +
+          '<circle cx="24" cy="24" r="20" stroke="url(#tg)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="32 94"/>' +
+          '<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>' +
+        '</svg>' +
+        '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px">' + lang.flag + '</span>' +
+      '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:14px;font-weight:700;color:#0c1a24;letter-spacing:-0.2px">Translating to ' + esc(lang.label) + '…</div>' +
+        '<div style="font-size:11.5px;color:#94a3b8;margin-top:5px;display:flex;align-items:center;gap:6px">' +
+          '<span style="width:5px;height:5px;border-radius:50%;background:#06b6d4;display:inline-block;animation:__dai-pulse-dot 1.4s ease-in-out infinite"></span>' +
+          'Powered by Groq AI · llama-3.3-70b' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function buildTransResultHTML(lang, originalText, translation, detectedLang, notes) {
+    const orig = esc(originalText.slice(0, 240) + (originalText.length > 240 ? '…' : ''));
+    const copyIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.8"/></svg>';
+    const swapIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    return inlineTransAccentBar() +
+      inlineTransHeader(lang.flag, lang.label, detectedLang) +
+      // Original text card
+      '<div style="margin:12px 14px 0;padding:11px 13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px">' +
+        '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:6px">Original</div>' +
+        '<div style="font-size:12.5px;color:#64748b;line-height:1.65;font-style:italic">' + orig + '</div>' +
+      '</div>' +
+      // Translation card — featured
+      '<div style="margin:10px 14px;padding:14px 15px;background:linear-gradient(135deg,rgba(6,182,212,0.05) 0%,rgba(168,85,247,0.03) 100%);border:1.5px solid rgba(6,182,212,0.18);border-radius:13px;position:relative;overflow:hidden">' +
+        '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#06b6d4,#a855f7,transparent)"></div>' +
+        '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#06b6d4;margin-bottom:9px">Translation</div>' +
+        '<div style="font-size:15px;color:#0c1a24;line-height:1.8;font-weight:400;user-select:text;-webkit-user-select:text">' + esc(translation) + '</div>' +
+      '</div>' +
+      // Translator note
+      (notes ?
+        '<div style="margin:0 14px 10px;padding:9px 12px;background:linear-gradient(135deg,rgba(245,158,11,0.06),rgba(251,191,36,0.04));border:1px solid rgba(245,158,11,0.2);border-radius:10px;display:flex;gap:8px;align-items:flex-start">' +
+          '<span style="font-size:15px;line-height:1;flex-shrink:0;margin-top:1px">💡</span>' +
+          '<div style="font-size:11.5px;color:#92400e;line-height:1.55">' + esc(notes) + '</div>' +
+        '</div>'
+      : '') +
+      // Footer buttons
+      '<div style="margin:0 14px 13px;display:flex;gap:8px">' +
+        '<button id="__dai-trans-copy" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;background:linear-gradient(135deg,rgba(6,182,212,0.1),rgba(6,182,212,0.06));border:1px solid rgba(6,182,212,0.28);border-radius:10px;font-size:12px;font-weight:700;color:#0891b2;cursor:pointer;letter-spacing:0.1px">' +
+          copyIcon + 'Copy' +
+        '</button>' +
+        '<button id="__dai-trans-replace" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(236,72,153,0.06));border:1px solid rgba(168,85,247,0.28);border-radius:10px;font-size:12px;font-weight:700;color:#7c3aed;cursor:pointer;letter-spacing:0.1px">' +
+          swapIcon + 'Replace on page' +
+        '</button>' +
+      '</div>';
+  }
+
+  function buildTransErrorHTML(msg) {
+    const isNoKey = msg === 'NO_API_KEY';
+    return inlineTransAccentBar() +
+    '<div style="padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">' +
+      '<div style="width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,rgba(239,68,68,0.15),rgba(239,68,68,0.05));border:1.5px solid rgba(239,68,68,0.3);display:flex;align-items:center;justify-content:center">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v4M12 16h.01" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="1.5"/></svg>' +
+      '</div>' +
+      '<div>' +
+        '<div style="font-size:14px;font-weight:800;color:#0c1a24;margin-bottom:5px">Translation failed</div>' +
+        '<div style="font-size:12px;color:#64748b;line-height:1.55;max-width:280px">' + (isNoKey ? 'Add a Groq API key in extension Settings (⚙) to start translating.' : esc(msg || 'Something went wrong. Please try again.')) + '</div>' +
+      '</div>' +
+      '<button id="__dai-trans-close-err" style="padding:8px 20px;background:rgba(239,68,68,0.08);border:1.5px solid rgba(239,68,68,0.22);border-radius:10px;font-size:12.5px;font-weight:700;color:#dc2626;cursor:pointer;letter-spacing:0.1px">Dismiss</button>' +
+    '</div>';
+  }
+
+  function wireInlineTransButtons(savedRange, originalText, translation) {
+    const popup = __inlineTransEl;
+    if (!popup) return;
+
+    const copyBtn    = popup.querySelector('#__dai-trans-copy');
+    const replaceBtn = popup.querySelector('#__dai-trans-replace');
+    const closeBtn   = popup.querySelector('#__dai-trans-close');
+
+    if (closeBtn) closeBtn.addEventListener('click', removeInlineTrans);
+
+    if (copyBtn) copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(translation).catch(() => {});
+      copyBtn.textContent = '✓ Copied!';
+      setTimeout(() => { if (copyBtn.isConnected) copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.8"/></svg>Copy'; }, 1800);
+    });
+
+    if (replaceBtn) replaceBtn.addEventListener('click', () => {
+      if (__inlineReplacedSpan) {
+        // Undo: restore original text
+        if (__inlineReplacedSpan.parentNode) {
+          const orig = __inlineReplacedSpan.getAttribute('data-dai-original') || '';
+          __inlineReplacedSpan.parentNode.replaceChild(document.createTextNode(orig), __inlineReplacedSpan);
+        }
+        __inlineReplacedSpan = null;
+        replaceBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Replace on page';
+        replaceBtn.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;background:rgba(236,72,153,0.07);border:1px solid rgba(236,72,153,0.22);border-radius:8px;font-size:11.5px;font-weight:600;color:#be185d;cursor:pointer;transition:all 0.12s';
+      } else if (savedRange) {
+        // Replace selected text with translation
+        try {
+          __inlineReplacedSpan = document.createElement('span');
+          __inlineReplacedSpan.setAttribute('data-dai-original', originalText);
+          __inlineReplacedSpan.setAttribute('data-dai-trans', 'true');
+          __inlineReplacedSpan.style.cssText = 'border-bottom:2px solid rgba(6,182,212,0.5);background:rgba(6,182,212,0.07);border-radius:2px;padding:0 1px';
+          __inlineReplacedSpan.textContent = translation;
+          savedRange.deleteContents();
+          savedRange.insertNode(__inlineReplacedSpan);
+          window.getSelection()?.removeAllRanges();
+          replaceBtn.innerHTML = '↩ Restore original';
+          replaceBtn.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;font-size:11.5px;font-weight:600;color:#b45309;cursor:pointer;transition:all 0.12s';
+        } catch (e) { /* read-only page node */ }
+      }
+    });
+  }
+
   async function handleTranslateText(text, lang) {
-    showOverlay('masterscan', null);
-    updateOverlayLoadingText('Translating to ' + lang.label + '…');
+    // Capture selection position BEFORE async (user may scroll / deselect)
+    const sel = window.getSelection();
+    let savedRange  = null;
+    let anchorRect  = { top:100, bottom:140, left:window.innerWidth/2-195, width:390 };
+    if (sel && sel.rangeCount > 0) {
+      savedRange = sel.getRangeAt(0).cloneRange();
+      const r = savedRange.getBoundingClientRect();
+      if (r.width > 0 || r.height > 0) anchorRect = r;
+    }
+
+    // Build loading popup
+    removeInlineTrans();
+    __inlineReplacedSpan = null;
+    const popup = document.createElement('div');
+    popup.id = '__dai-inline-trans';
+    popup.innerHTML = buildTransLoadingHTML(lang);
+    positionInlineTrans(popup, anchorRect);
+    document.documentElement.appendChild(popup);
+    __inlineTransEl = popup;
+
     try {
       const result = await groqCall([
-        { role:'system', content:'You are an expert professional translator. Translate the given text to ' + lang.label + ' (' + lang.native + '). Return ONLY a valid JSON object with this exact structure (no markdown): {"translation":"the full translated text","detectedLanguage":"the detected source language name","notes":"brief cultural or linguistic note if useful, or empty string"}' },
+        { role:'system', content:'You are an expert professional translator. Translate the given text to ' + lang.label + ' (' + lang.native + '). Return ONLY valid JSON (no markdown, no explanation): {"translation":"the full translated text","detectedLanguage":"name of the source language","notes":"one brief cultural or linguistic note if interesting, else empty string"}' },
         { role:'user',   content:'Translate this to ' + lang.label + ':\n\n' + text }
       ], 'llama-3.3-70b-versatile');
 
-      overlayShowTranslation({
-        lang,
-        originalText: text.slice(0, 300) + (text.length > 300 ? '…' : ''),
-        translation: (typeof result === 'object' ? result.translation : result) || '',
-        detectedLanguage: result.detectedLanguage || '',
-        notes: result.notes || '',
-      }, '#06b6d4');
+      if (!__inlineTransEl) return; // popup closed while waiting
+
+      const translation  = (typeof result === 'object' ? result.translation : String(result)) || '';
+      const detectedLang = result.detectedLanguage || '';
+      const notes        = result.notes || '';
+
+      __inlineTransEl.innerHTML = buildTransResultHTML(lang, text, translation, detectedLang, notes);
+      positionInlineTrans(__inlineTransEl, anchorRect);
+      wireInlineTransButtons(savedRange, text, translation);
+
     } catch (err) {
-      overlayShowError(err.message === 'NO_API_KEY' ? 'NO_API_KEY' : err.message);
+      if (!__inlineTransEl) return;
+      __inlineTransEl.innerHTML = buildTransErrorHTML(err.message);
+      const errClose = __inlineTransEl.querySelector('#__dai-trans-close-err');
+      if (errClose) errClose.addEventListener('click', removeInlineTrans);
     }
   }
 
