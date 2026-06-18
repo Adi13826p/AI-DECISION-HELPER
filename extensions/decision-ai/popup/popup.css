@@ -390,7 +390,7 @@ html, body {
 
 
 /* Action buttons */
-.ms-actions { display: flex; flex-direction: column; gap: 9px; }
+.ms-actions { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
 
 .ms-btn {
   display: flex; align-items: center; gap: 12px;
