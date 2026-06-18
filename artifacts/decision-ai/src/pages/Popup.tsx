@@ -329,16 +329,16 @@ function FeatureCard({
   const handleEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     const el = e.currentTarget;
     el.style.background = `linear-gradient(135deg, ${accentColor}0a 0%, #fff 100%)`;
-    el.style.borderColor = accentColor + "55";
+    el.style.borderColor = accentColor + "44";
     el.style.transform = "translateY(-2px)";
-    el.style.boxShadow = `0 8px 32px ${accentColor}22, 0 0 0 1px ${accentColor}22`;
+    el.style.boxShadow = `0 10px 36px ${accentColor}28`;
   };
   const handleLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
     const el = e.currentTarget;
     el.style.background = "#ffffff";
     el.style.borderColor = "rgba(236,72,153,0.14)";
     el.style.transform = "translateY(0)";
-    el.style.boxShadow = "0 2px 12px rgba(236,72,153,0.08)";
+    el.style.boxShadow = "0 2px 16px rgba(236,72,153,0.07)";
   };
 
   return (
@@ -445,10 +445,10 @@ const s: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     backdropFilter: "blur(40px)",
     WebkitBackdropFilter: "blur(40px)",
-    border: "1px solid rgba(236,72,153,0.18)",
+    border: "1px solid rgba(236,72,153,0.14)",
     borderRadius: 26,
     overflow: "hidden",
-    boxShadow: "0 20px 60px rgba(236,72,153,0.12), 0 4px 20px rgba(236,72,153,0.08)",
+    boxShadow: "0 32px 80px rgba(236,72,153,0.10), 0 8px 28px rgba(0,0,0,0.04)",
     animation: "slide-up 0.5s cubic-bezier(0.16,1,0.3,1)",
     position: "relative",
     zIndex: 1,
@@ -581,7 +581,7 @@ const s: Record<string, React.CSSProperties> = {
     width: "100%",
     position: "relative",
     overflow: "hidden",
-    boxShadow: "0 4px 20px rgba(236,72,153,0.10), 0 1px 4px rgba(236,72,153,0.06)",
+    boxShadow: "0 2px 16px rgba(236,72,153,0.07)",
     cursor: "pointer",
   },
   featureIconWrap: {
