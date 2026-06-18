@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { type TruthLayerResult } from "@/lib/mockData";
 
@@ -282,9 +282,9 @@ function RatingBreakdown({ breakdown }: { breakdown: NonNullable<TruthLayerResul
 }
 
 /* ── Customer Reviews2 ───────────────────────────────── */
-function CustomerReviewsCard({ reviews }: { reviews: NonNullable<TruthLayerResult["customerReviews"]> }) {
+function CustomerReviewsCard({ reviews, sourceUrlMap }: { reviews: NonNullable<TruthLayerResult["customerReviews"]>; sourceUrlMap: Record<string, string> }) {
   return (
-    <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"hidden" }}>
+    <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"visible" }}>
       <SectionHead2 icon="💬" title="Customer Reviews" badge="AI-curated from real buyers" />
       <div style={{ display:"flex", flexDirection:"column" }}>
         {reviews.map((rev, i) => (
@@ -294,7 +294,7 @@ function CustomerReviewsCard({ reviews }: { reviews: NonNullable<TruthLayerResul
                 <div style={{ display:"flex", alignItems:"center", gap:5, flexWrap:"wrap", marginBottom:3 }}>
                   <span style={{ fontSize:11.5, fontWeight:700, color:"var(--text-primary)" }}>{rev.reviewer}</span>
                   {rev.verified && <span style={{ fontSize:8.5, fontWeight:700, color:"#34d399", background:"rgba(52,211,153,0.1)", border:"1px solid rgba(52,211,153,0.25)", borderRadius:4, padding:"1px 5px" }}>✓ Verified</span>}
-                  <SourceBadge source={rev.source} size="xs" />
+                  <SourceIcon source={rev.source} url={sourceUrlMap[rev.source]} size={18} />
                 </div>
                 <div style={{ fontSize:12.5, fontWeight:700, color:"var(--text-primary)", lineHeight:1.35 }}>{rev.title}</div>
               </div>
@@ -441,6 +441,29 @@ function downloadReport(result: TruthLayerResult) {
 function ResultsDashboard({ result, onReanalyze }: { result: TruthLayerResult; onReanalyze: () => void }) {
   const [downloaded, setDownloaded] = useState(false);
 
+  /* Build a source → URL map so inline icons are clickable */
+  const sourceUrlMap = useMemo<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    const pName = encodeURIComponent(result.product.name);
+    for (const si of (result.sourceInsights ?? [])) {
+      if (si.searchUrl) map[si.source] = si.searchUrl;
+    }
+    const fallbacks: Record<string, string> = {
+      Reddit:    `https://www.reddit.com/search/?q=${pName}`,
+      Amazon:    `https://www.amazon.com/s?k=${pName}`,
+      YouTube:   `https://www.youtube.com/results?search_query=${pName}+review`,
+      Google:    `https://www.google.com/search?q=${pName}+review`,
+      Quora:     `https://www.quora.com/search?q=${pName}`,
+      Flipkart:  `https://www.flipkart.com/search?q=${pName}`,
+      TechRadar: `https://www.google.com/search?q=TechRadar+${pName}+review`,
+      RTINGS:    `https://www.rtings.com/search#query=${pName}`,
+    };
+    for (const [k, v] of Object.entries(fallbacks)) {
+      if (!map[k]) map[k] = v;
+    }
+    return map;
+  }, [result.product.name, result.sourceInsights]);
+
   function handleDownload() {
     downloadReport(result);
     setDownloaded(true);
@@ -467,10 +490,10 @@ function ResultsDashboard({ result, onReanalyze }: { result: TruthLayerResult; o
         <SourceIntelligence insights={result.sourceInsights ?? []} platforms={result.sourcePlatforms ?? []} />
 
         {/* 6. Pros & Cons */}
-        <ProsConsCard loves={result.loves} hates={result.hates} />
+        <ProsConsCard loves={result.loves} hates={result.hates} sourceUrlMap={sourceUrlMap} />
 
         {/* 7. Customer reviews */}
-        {(result.customerReviews ?? []).length > 0 && <CustomerReviewsCard reviews={result.customerReviews!} />}
+        {(result.customerReviews ?? []).length > 0 && <CustomerReviewsCard reviews={result.customerReviews!} sourceUrlMap={sourceUrlMap} />}
 
         {/* 8. Who should buy / who should skip */}
         {((result.whoShouldBuy ?? []).length > 0 || (result.whoShouldSkip ?? []).length > 0) && (
@@ -478,7 +501,7 @@ function ResultsDashboard({ result, onReanalyze }: { result: TruthLayerResult; o
         )}
 
         {/* 9. Hidden insights */}
-        {(result.hiddenInsights ?? []).length > 0 && <WatchOutCard insights={result.hiddenInsights} />}
+        {(result.hiddenInsights ?? []).length > 0 && <WatchOutCard insights={result.hiddenInsights} sourceUrlMap={sourceUrlMap} />}
 
         {/* 10. Better alternatives with buy links */}
         {(result.alternatives ?? []).length > 0 && <AlternativesCard alternatives={result.alternatives!} />}
@@ -592,23 +615,85 @@ function KeyFactsGrid({ facts }: { facts: NonNullable<TruthLayerResult["keyFacts
 }
 
 /* ── 4. Source Intelligence ─────────────────────────── */
-const SOURCE_CFG: Record<string, { icon: string; color: string; bg: string; border: string; label: string }> = {
-  Reddit:    { icon:"🔴", color:"#FF4500", bg:"rgba(255,69,0,0.07)",    border:"rgba(255,69,0,0.2)",    label:"Reddit" },
-  Amazon:    { icon:"🛒", color:"#FF9900", bg:"rgba(255,153,0,0.07)",   border:"rgba(255,153,0,0.2)",   label:"Amazon" },
-  YouTube:   { icon:"▶",  color:"#FF0000", bg:"rgba(255,0,0,0.06)",     border:"rgba(255,0,0,0.18)",    label:"YouTube" },
-  TechRadar: { icon:"📰", color:"#7C3AED", bg:"rgba(124,58,237,0.07)",  border:"rgba(124,58,237,0.2)", label:"TechRadar" },
-  Google:    { icon:"🔍", color:"#4285F4", bg:"rgba(66,133,244,0.07)",  border:"rgba(66,133,244,0.2)", label:"Google" },
-  Quora:     { icon:"Q",  color:"#B92B27", bg:"rgba(185,43,39,0.07)",   border:"rgba(185,43,39,0.2)",  label:"Quora" },
-  RTINGS:    { icon:"R",  color:"#10B981", bg:"rgba(16,185,129,0.07)",  border:"rgba(16,185,129,0.2)", label:"RTINGS" },
+const SOURCE_CFG: Record<string, { icon: string; letter: string; color: string; bg: string; border: string; label: string }> = {
+  Reddit:    { icon:"🔴", letter:"R", color:"#FF4500", bg:"rgba(255,69,0,0.08)",    border:"rgba(255,69,0,0.22)",    label:"Reddit" },
+  Amazon:    { icon:"🛒", letter:"A", color:"#FF9900", bg:"rgba(255,153,0,0.08)",   border:"rgba(255,153,0,0.22)",   label:"Amazon" },
+  YouTube:   { icon:"▶",  letter:"▶", color:"#FF0000", bg:"rgba(255,0,0,0.07)",     border:"rgba(255,0,0,0.2)",     label:"YouTube" },
+  TechRadar: { icon:"📰", letter:"T", color:"#7C3AED", bg:"rgba(124,58,237,0.08)",  border:"rgba(124,58,237,0.22)", label:"TechRadar" },
+  Google:    { icon:"G",  letter:"G", color:"#4285F4", bg:"rgba(66,133,244,0.08)",  border:"rgba(66,133,244,0.22)", label:"Google" },
+  Quora:     { icon:"Q",  letter:"Q", color:"#B92B27", bg:"rgba(185,43,39,0.08)",   border:"rgba(185,43,39,0.22)",  label:"Quora" },
+  Flipkart:  { icon:"F",  letter:"F", color:"#2874F0", bg:"rgba(40,116,240,0.08)",  border:"rgba(40,116,240,0.22)", label:"Flipkart" },
+  RTINGS:    { icon:"R",  letter:"R", color:"#10B981", bg:"rgba(16,185,129,0.08)",  border:"rgba(16,185,129,0.22)", label:"RTINGS" },
 };
 
+/* plain text badge — kept for SourceIntelligence cards */
 function SourceBadge({ source, size="sm" }: { source: string; size?: "sm"|"xs" }) {
-  const m = SOURCE_CFG[source] ?? { icon:"◆", color:"#7a3358", bg:"rgba(122,51,88,0.07)", border:"rgba(122,51,88,0.2)", label:source };
+  const m = SOURCE_CFG[source] ?? { icon:"◆", letter:"?", color:"#7a3358", bg:"rgba(122,51,88,0.07)", border:"rgba(122,51,88,0.2)", label:source };
   return (
     <span style={{ display:"inline-flex", alignItems:"center", gap:4, background:m.bg, border:`1px solid ${m.border}`, borderRadius:20, padding: size==="xs"?"1px 6px":"2px 8px", fontSize: size==="xs"?9:10, fontWeight:700, color:m.color, flexShrink:0 }}>
       <span style={{ fontSize: size==="xs"?8:9 }}>{m.icon}</span>{m.label}
     </span>
   );
+}
+
+/* small clickable icon with tooltip — used inline next to insights */
+function SourceIcon({ source, url, size = 20 }: { source: string; url?: string; size?: number }) {
+  const [hovered, setHovered] = useState(false);
+  const cfg = SOURCE_CFG[source] ?? { letter:(source[0]??"?").toUpperCase(), color:"#7a3358", bg:"rgba(122,51,88,0.08)", border:"rgba(122,51,88,0.22)", label:source, icon:"◆" };
+
+  const circleStyle: React.CSSProperties = {
+    display:"inline-flex", alignItems:"center", justifyContent:"center",
+    width:size, height:size, borderRadius:"50%",
+    background: hovered ? cfg.color + "28" : cfg.bg,
+    border:`1.5px solid ${hovered ? cfg.color + "66" : cfg.border}`,
+    fontSize:Math.round(size * 0.46), fontWeight:800, color:cfg.color,
+    flexShrink:0, cursor: url ? "pointer" : "default",
+    transition:"transform 0.14s ease, border-color 0.14s, background 0.14s, box-shadow 0.14s",
+    transform: hovered ? "scale(1.22)" : "scale(1)",
+    boxShadow: hovered ? `0 2px 8px ${cfg.color}35` : "none",
+    lineHeight:1, letterSpacing:"-0.01em", userSelect:"none",
+  };
+
+  const iconEl = (
+    <span style={{ position:"relative", display:"inline-flex" }}>
+      <span
+        style={circleStyle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        title={url ? `View source: ${cfg.label}` : cfg.label}
+      >
+        {cfg.letter}
+      </span>
+      {hovered && (
+        <span style={{
+          position:"absolute", bottom:`${size + 6}px`, left:"50%",
+          transform:"translateX(-50%)", zIndex:9999,
+          background:"rgba(20,6,12,0.90)", color:"#fff",
+          fontSize:9.5, fontWeight:600, whiteSpace:"nowrap",
+          padding:"3px 8px", borderRadius:6, pointerEvents:"none",
+          letterSpacing:"0.01em",
+        }}>
+          {url ? `${cfg.label} ↗` : cfg.label}
+          <span style={{
+            position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)",
+            width:0, height:0,
+            borderLeft:"4px solid transparent", borderRight:"4px solid transparent",
+            borderTop:"4px solid rgba(20,6,12,0.90)",
+          }}/>
+        </span>
+      )}
+    </span>
+  );
+
+  if (url) {
+    return (
+      <a href={url} target="_blank" rel="noreferrer"
+         style={{ textDecoration:"none", display:"inline-flex" }}>
+        {iconEl}
+      </a>
+    );
+  }
+  return iconEl;
 }
 
 function SourceIntelligence({ insights, platforms }: { insights: NonNullable<TruthLayerResult["sourceInsights"]>; platforms: string[] }) {
@@ -650,12 +735,12 @@ function SourceIntelligence({ insights, platforms }: { insights: NonNullable<Tru
 }
 
 /* ── 5. Pros & Cons ─────────────────────────────────── */
-function ProsConsCard({ loves, hates }: { loves: TruthLayerResult["loves"]; hates: TruthLayerResult["hates"] }) {
+function ProsConsCard({ loves, hates, sourceUrlMap }: { loves: TruthLayerResult["loves"]; hates: TruthLayerResult["hates"]; sourceUrlMap: Record<string, string> }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
       {/* Pros */}
-      <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"hidden" }}>
-        <div style={{ padding:"10px 14px 9px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:7 }}>
+      <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"visible" }}>
+        <div style={{ padding:"10px 14px 9px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:7, borderRadius:"13px 13px 0 0", overflow:"hidden" }}>
           <span style={{ fontSize:13 }}>✅</span>
           <span style={{ fontSize:11, fontWeight:700, color:"#34d399" }}>What Users Love</span>
           <span style={{ marginLeft:"auto", fontSize:9.5, color:"var(--text-muted)" }}>{loves.length} points</span>
@@ -663,17 +748,17 @@ function ProsConsCard({ loves, hates }: { loves: TruthLayerResult["loves"]; hate
         {loves.map((l, i) => {
           const item = typeof l === "string" ? { text:l, source:"Reddit" } : l;
           return (
-            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:9, padding:"9px 14px", borderBottom: i<loves.length-1?"1px solid rgba(52,211,153,0.07)":"none", borderLeft:"3px solid #34d399" }}>
-              <span style={{ color:"#34d399", fontWeight:800, flexShrink:0, fontSize:12, marginTop:1 }}>✓</span>
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 14px", borderBottom: i<loves.length-1?"1px solid rgba(52,211,153,0.07)":"none", borderLeft:"3px solid #34d399" }}>
+              <span style={{ color:"#34d399", fontWeight:800, flexShrink:0, fontSize:12 }}>✓</span>
               <span style={{ fontSize:12, color:"var(--text-primary)", lineHeight:1.55, flex:1 }}>{item.text}</span>
-              <SourceBadge source={item.source} size="xs" />
+              <SourceIcon source={item.source} url={sourceUrlMap[item.source]} size={19} />
             </div>
           );
         })}
       </div>
       {/* Cons */}
-      <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"hidden" }}>
-        <div style={{ padding:"10px 14px 9px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:7 }}>
+      <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"visible" }}>
+        <div style={{ padding:"10px 14px 9px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:7, borderRadius:"13px 13px 0 0", overflow:"hidden" }}>
           <span style={{ fontSize:13 }}>⚠️</span>
           <span style={{ fontSize:11, fontWeight:700, color:"#f87171" }}>Common Complaints</span>
           <span style={{ marginLeft:"auto", fontSize:9.5, color:"var(--text-muted)" }}>{hates.length} points</span>
@@ -681,10 +766,10 @@ function ProsConsCard({ loves, hates }: { loves: TruthLayerResult["loves"]; hate
         {hates.map((h, i) => {
           const item = typeof h === "string" ? { text:h, source:"Reddit" } : h;
           return (
-            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:9, padding:"9px 14px", borderBottom: i<hates.length-1?"1px solid rgba(248,113,113,0.07)":"none", borderLeft:"3px solid #f87171" }}>
-              <span style={{ color:"#f87171", fontWeight:800, flexShrink:0, fontSize:12, marginTop:1 }}>✗</span>
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 14px", borderBottom: i<hates.length-1?"1px solid rgba(248,113,113,0.07)":"none", borderLeft:"3px solid #f87171" }}>
+              <span style={{ color:"#f87171", fontWeight:800, flexShrink:0, fontSize:12 }}>✗</span>
               <span style={{ fontSize:12, color:"var(--text-primary)", lineHeight:1.55, flex:1 }}>{item.text}</span>
-              <SourceBadge source={item.source} size="xs" />
+              <SourceIcon source={item.source} url={sourceUrlMap[item.source]} size={19} />
             </div>
           );
         })}
@@ -694,15 +779,15 @@ function ProsConsCard({ loves, hates }: { loves: TruthLayerResult["loves"]; hate
 }
 
 /* ── 6. Watch Out ───────────────────────────────────── */
-function WatchOutCard({ insights }: { insights: TruthLayerResult["hiddenInsights"] }) {
+function WatchOutCard({ insights, sourceUrlMap }: { insights: TruthLayerResult["hiddenInsights"]; sourceUrlMap: Record<string, string> }) {
   const cfg = {
     warning:  { bg:"rgba(251,191,36,0.07)",  border:"#fbbf24", icon:"⚠️", label:"Warning",    color:"#fbbf24" },
     positive: { bg:"rgba(52,211,153,0.06)",  border:"#34d399", icon:"💡", label:"Hidden Gem", color:"#34d399" },
     neutral:  { bg:"rgba(108,141,250,0.06)", border:"#6c8dfa", icon:"ℹ️", label:"Note",       color:"#6c8dfa" },
   };
   return (
-    <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"hidden" }}>
-      <div style={{ padding:"10px 14px 9px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:7 }}>
+    <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:13, overflow:"visible" }}>
+      <div style={{ padding:"10px 14px 9px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:7, borderRadius:"13px 13px 0 0", overflow:"hidden" }}>
         <span style={{ fontSize:13 }}>🔦</span>
         <span style={{ fontSize:11, fontWeight:700, color:"var(--text-primary)" }}>Things Most Buyers Miss</span>
         <span style={{ marginLeft:"auto", fontSize:9, fontWeight:600, color:"#fbbf24", background:"rgba(245,158,11,0.1)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:5, padding:"2px 7px" }}>Not in ratings</span>
@@ -716,7 +801,12 @@ function WatchOutCard({ insights }: { insights: TruthLayerResult["hiddenInsights
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ fontSize:9.5, fontWeight:700, color:c.color, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:3 }}>{c.label}</div>
                 <p style={{ fontSize:12, color:"var(--text-primary)", lineHeight:1.6, margin:0, fontWeight:500 }}>{ins.text}</p>
-                {ins.source && <div style={{ marginTop:6 }}><SourceBadge source={ins.source} size="xs" /></div>}
+                {ins.source && (
+                  <div style={{ marginTop:7, display:"flex", alignItems:"center", gap:6 }}>
+                    <SourceIcon source={ins.source} url={sourceUrlMap[ins.source]} size={18} />
+                    <span style={{ fontSize:9.5, color:"var(--text-muted)", fontWeight:600 }}>{ins.source}</span>
+                  </div>
+                )}
               </div>
             </div>
           );
