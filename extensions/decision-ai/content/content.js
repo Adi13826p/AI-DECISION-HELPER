@@ -70,10 +70,23 @@
 
   function analyzeMasterScan(imageDataUrl, pageUrl, pageTitle) {
     return groqCall([
-      { role: 'system', content: 'You are MasterScan — a universal AI content analyzer. Analyze any type of web content from screenshots. Always return valid JSON only, no markdown.' },
+      { role: 'system', content: 'You are MasterScan — a premium AI analyst by DecisionAI. Your output is used by professionals who need deep, substantive analysis. Every field must be thorough, analytical, and written in a confident expert voice. No fluff, no vague statements. Always return valid JSON only, no markdown.' },
       { role: 'user', content: [
         { type: 'image_url', image_url: { url: imageDataUrl } },
-        { type: 'text', text: 'Analyze this screenshot from: ' + (pageUrl || 'unknown') + '\nTitle: ' + (pageTitle || 'unknown') + '\n\nDetect content type, then analyze. Return ONLY this JSON:\n{"contentType":"article|research_paper|math|job_posting|video|product|code|social_post|recipe|study_material|other","contentLabel":"Human-readable label","title":"Detected title","language":"en","confidence":90,"article":{"summary":"3-4 sentence summary","keyPoints":["Point 1","Point 2","Point 3"],"sentiment":"Positive|Neutral|Negative|Mixed","readingTime":"3 min","flashcards":[{"q":"Question?","a":"Answer"}]},"research":{"abstract":"brief summary","methodology":"method","findings":["Finding 1","Finding 2"],"conclusions":"main conclusion","simplifiedExplanation":"plain English explanation","flashcards":[{"q":"concept?","a":"definition"}]},"math":{"problem":"the problem","solution":"final answer","steps":[{"step":1,"description":"step desc","result":"result"}],"difficulty":"Easy|Medium|Hard"},"job":{"company":"company","role":"title","location":"location","salary":"salary","requirements":["req 1"],"skills":["skill1"],"applicationTips":["tip 1"],"redFlags":["red flag"]},"video":{"title":"title","channel":"channel","summary":"summary","keyTopics":["topic 1"],"studyNotes":["note 1"]},"code":{"language":"lang","explanation":"what it does","improvements":["improvement 1"],"bugs":["bug if any"]},"social_post":{"platform":"platform","content":"post content","sentiment":"sentiment","keyTakeaway":"main point"},"general":{"summary":"what this is about","keyInsights":["insight 1","insight 2"],"actionItems":["action 1"]}}' }
+        { type: 'text', text:
+          'Analyze this screenshot from: ' + (pageUrl || 'unknown') + '\nTitle: ' + (pageTitle || 'unknown') + '\n\n' +
+          'Detect content type then return ONLY this JSON (fill ALL fields thoroughly — summaries must be 4-6 analytical sentences minimum):\n' +
+          '{"contentType":"article|research_paper|math|job_posting|video|product|code|social_post|other",' +
+          '"contentLabel":"Human-readable type label","title":"Full detected title","confidence":90,"topics":["topic1","topic2","topic3"],' +
+          '"quickOverview":"2-sentence executive teaser — the most important thing to know right now",' +
+          '"article":{"executiveSummary":"4-6 sentence analytical expert summary covering the core argument, evidence presented, and implications — no vague language","keyTakeaways":["Specific actionable takeaway with concrete detail","Another precise insight","Another precise insight","Another precise insight","Another precise insight"],"coreConcepts":[{"term":"Key concept","definition":"Precise definition in context"}],"expertPerspective":"What a domain expert would observe or critique about this piece — 2-3 sentences","actionItems":["What the reader should specifically do with this info","Another concrete next step"],"flashcards":[{"q":"Precise conceptual question?","a":"Thorough answer with context"},{"q":"Another question?","a":"Answer"}]},' +
+          '"research":{"abstract":"4-5 sentence summary of the study","methodology":"Research method and sample/data used","keyFindings":["Specific quantitative or qualitative finding","Another specific finding","Another finding"],"conclusions":"2-3 sentence synthesis of what this research means","simplifiedExplanation":"Plain-English explanation for a non-expert — 3-4 sentences","limitations":"1-2 sentences on study limitations","flashcards":[{"q":"What did this study find about X?","a":"Specific answer"},{"q":"How was this studied?","a":"Method answer"}]},' +
+          '"math":{"problem":"The exact problem as stated","solution":"Final answer with units","steps":[{"step":1,"description":"What was done","result":"Intermediate result"}],"difficulty":"Easy|Medium|Hard|Expert","concepts":["Concept used"]},' +
+          '"job":{"company":"Company name","role":"Exact job title","location":"Location or Remote","salary":"Salary range if shown","overview":"2-3 sentence role overview","requirements":["Specific requirement"],"skills":["Skill"],"applicationTips":["Specific strategic tip to stand out","Another tip"],"redFlags":["Specific concern if any"],"fitScore":"Strong|Moderate|Niche"},' +
+          '"video":{"channel":"Channel name","summary":"4-5 sentence overview of content","keyTopics":["Topic with brief detail"],"studyNotes":["Important note to remember"],"quotableInsights":["Memorable or important statement from the content"]},' +
+          '"code":{"language":"Language","explanation":"3-4 sentence explanation of what this code does and why","timeComplexity":"If applicable","improvements":["Specific improvement with reason"],"bugs":["Specific bug or risk"],"bestPractices":["Best practice being used or violated"]},' +
+          '"general":{"executiveSummary":"4-6 analytical sentences covering what this is, why it matters, and key context","keyInsights":["Specific substantive insight","Another insight","Another insight"],"actionItems":["Concrete action","Another action"]}}'
+        }
       ]}
     ], VISION_MODEL);
   }
@@ -159,7 +172,7 @@
           'Page title: ' + (pageTitle || 'unknown') + '\n\n' +
           'Determine the intent and respond with this JSON:\n' +
           '{"contentType":"article|research_paper|math|job_posting|video|product|code|social_post|question|other","contentLabel":"Human-readable label","title":"Detected or inferred title","confidence":90,' +
-          '"article":{"summary":"","keyPoints":[],"sentiment":"","readingTime":"","flashcards":[{"q":"","a":""}]},' +
+          '"article":{"executiveSummary":"","keyTakeaways":[],"coreConcepts":[{"term":"","definition":""}],"expertPerspective":"","actionItems":[],"flashcards":[{"q":"","a":""}]},' +
           '"research":{"abstract":"","methodology":"","findings":[],"conclusions":"","simplifiedExplanation":"","flashcards":[]},' +
           '"math":{"problem":"","solution":"","steps":[{"step":1,"description":"","result":""}],"difficulty":""},' +
           '"job":{"company":"","role":"","location":"","salary":"","requirements":[],"skills":[],"applicationTips":[],"redFlags":[]},' +
@@ -456,48 +469,275 @@
 
   function buildMasterScanHTML(d, accent) {
     const ct = d.contentType || 'general';
+
+    // ── Header block: type badge + title + topics + quick overview ────────
+    const topicsHTML = (d.topics && d.topics.length)
+      ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">' +
+          d.topics.map(t => '<span style="font-size:10.5px;font-weight:500;color:rgba(240,238,255,0.55);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:3px 9px">' + esc(t) + '</span>').join('') +
+        '</div>'
+      : '';
+
+    const overviewHTML = d.quickOverview
+      ? '<div style="margin:12px 16px 0;padding:11px 14px;background:linear-gradient(135deg,' + accent + '14,' + accent + '06);border:1px solid ' + accent + '30;border-radius:12px">' +
+          '<div style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:' + accent + ';margin-bottom:5px;opacity:0.8">⚡ Quick Overview</div>' +
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.85);line-height:1.65;margin:0">' + esc(d.quickOverview) + '</p>' +
+        '</div>'
+      : '';
+
+    const header =
+      '<div style="padding:14px 16px 0">' +
+        '<div style="display:flex;align-items:center;gap:7px">' +
+          '<span style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:' + accent + ';background:' + accent + '18;border:1px solid ' + accent + '35;border-radius:100px;padding:3px 10px">' + esc(d.contentLabel || 'Content') + '</span>' +
+          (d.confidence ? '<span style="font-size:10px;color:rgba(240,238,255,0.3)">' + d.confidence + '% match</span>' : '') +
+        '</div>' +
+        (d.title ? '<div style="font-size:15px;font-weight:800;color:#f0eeff;line-height:1.3;margin-top:7px;letter-spacing:-0.3px">' + esc(d.title) + '</div>' : '') +
+        topicsHTML +
+      '</div>' +
+      overviewHTML;
+
+    // ── Per-content-type body ─────────────────────────────────────────────
     let bodyHTML = '';
 
     if (ct === 'article' && d.article) {
       const a = d.article;
-      bodyHTML = (a.summary ? sec('Summary', accent, '<p style="font-size:12.5px;color:rgba(240,238,255,0.7);line-height:1.65">' + esc(a.summary) + '</p>') : '') +
-        ((a.keyPoints&&a.keyPoints.length) ? sec('Key Points', accent, '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (a.keyPoints||[]).map(x=>li(x,accent)).join('') + '</ul>') : '') +
-        ((a.flashcards&&a.flashcards.length) ? sec('Flashcards', accent, flashcardsHTML(a.flashcards, accent)) : '') +
-        (a.sentiment ? infoRow('Sentiment', a.sentiment) : '') + (a.readingTime ? infoRow('Reading time', a.readingTime) : '');
+      bodyHTML =
+        (a.executiveSummary ? sec('Executive Summary', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(a.executiveSummary) + '</p>'
+        ) : '') +
+
+        ((a.keyTakeaways && a.keyTakeaways.length) ? sec('Key Takeaways', accent,
+          '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px">' +
+          a.keyTakeaways.map((x, i) =>
+            '<li style="display:flex;align-items:flex-start;gap:9px">' +
+              '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+            '</li>'
+          ).join('') + '</ol>'
+        ) : '') +
+
+        ((a.coreConcepts && a.coreConcepts.length) ? sec('Core Concepts', accent,
+          '<div style="display:flex;flex-direction:column;gap:7px">' +
+          a.coreConcepts.map(c =>
+            '<div style="padding:9px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.07)">' +
+              '<div style="font-size:12px;font-weight:700;color:' + accent + ';margin-bottom:3px">' + esc(c.term) + '</div>' +
+              '<div style="font-size:11.5px;color:rgba(240,238,255,0.6);line-height:1.5">' + esc(c.definition) + '</div>' +
+            '</div>'
+          ).join('') + '</div>'
+        ) : '') +
+
+        (a.expertPerspective ? sec('Expert Perspective', '#f59e0b',
+          '<div style="display:flex;gap:10px;align-items:flex-start">' +
+            '<div style="flex-shrink:0;font-size:20px;margin-top:-2px">🎓</div>' +
+            '<p style="font-size:12.5px;color:rgba(240,238,255,0.75);line-height:1.65;font-style:italic;margin:0">' + esc(a.expertPerspective) + '</p>' +
+          '</div>'
+        ) : '') +
+
+        ((a.actionItems && a.actionItems.length) ? sec('Action Items', '#10b981',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          a.actionItems.map(x => liAction(x)).join('') + '</ul>'
+        ) : '') +
+
+        ((a.flashcards && a.flashcards.length) ? sec('Study Flashcards', accent,
+          flashcardsHTML(a.flashcards, accent)
+        ) : '');
+
     } else if (ct === 'research_paper' && d.research) {
       const r = d.research;
-      bodyHTML = (r.abstract ? sec('Abstract', accent, '<p style="font-size:12.5px;color:rgba(240,238,255,0.7);line-height:1.65">' + esc(r.abstract) + '</p>') : '') +
-        (r.simplifiedExplanation ? sec('Plain English', accent, '<p style="font-size:12.5px;color:rgba(240,238,255,0.7);line-height:1.65">' + esc(r.simplifiedExplanation) + '</p>') : '') +
-        ((r.findings&&r.findings.length) ? sec('Key Findings', accent, '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (r.findings||[]).map(x=>li(x,accent)).join('') + '</ul>') : '') +
-        (r.methodology ? infoRow('Methodology', r.methodology) : '') +
-        ((r.flashcards&&r.flashcards.length) ? sec('Flashcards', accent, flashcardsHTML(r.flashcards, accent)) : '');
+      bodyHTML =
+        (r.abstract ? sec('Abstract', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(r.abstract) + '</p>'
+        ) : '') +
+
+        (r.simplifiedExplanation ? sec('Plain English', '#10b981',
+          '<div style="display:flex;gap:10px;align-items:flex-start">' +
+            '<div style="flex-shrink:0;font-size:18px">💡</div>' +
+            '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65;margin:0">' + esc(r.simplifiedExplanation) + '</p>' +
+          '</div>'
+        ) : '') +
+
+        ((r.keyFindings && r.keyFindings.length) ? sec('Key Findings', accent,
+          '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px">' +
+          r.keyFindings.map((x, i) =>
+            '<li style="display:flex;align-items:flex-start;gap:9px">' +
+              '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+            '</li>'
+          ).join('') + '</ol>'
+        ) : '') +
+
+        (r.methodology ? sec('Methodology', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.7);line-height:1.6">' + esc(r.methodology) + '</p>'
+        ) : '') +
+
+        (r.conclusions ? sec('Conclusions', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65">' + esc(r.conclusions) + '</p>'
+        ) : '') +
+
+        (r.limitations ? sec('Limitations', '#f59e0b',
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.65);line-height:1.6">' + esc(r.limitations) + '</p>'
+        ) : '') +
+
+        ((r.flashcards && r.flashcards.length) ? sec('Study Flashcards', accent,
+          flashcardsHTML(r.flashcards, accent)
+        ) : '');
+
     } else if (ct === 'math' && d.math) {
       const m = d.math;
-      bodyHTML = (m.problem ? sec('Problem', accent, '<p style="font-size:13px;color:rgba(240,238,255,0.8);font-family:monospace;line-height:1.6">' + esc(m.problem) + '</p>') : '') +
-        (m.solution ? sec('Answer', accent, '<div style="font-size:22px;font-weight:800;color:' + accent + ';text-align:center;padding:8px 0">' + esc(m.solution) + '</div>') : '') +
-        ((m.steps&&m.steps.length) ? sec('Steps', accent, '<div style="display:flex;flex-direction:column;gap:8px">' + (m.steps||[]).map(s=>'<div style="display:flex;gap:10px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '44;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:' + accent + ';flex-shrink:0">' + s.step + '</div><div><div style="font-size:12.5px;color:rgba(240,238,255,0.8)">' + esc(s.description) + '</div>' + (s.result ? '<div style="font-size:11.5px;color:' + accent + ';margin-top:2px">= ' + esc(s.result) + '</div>' : '') + '</div></div>').join('') + '</div>') : '') +
-        (m.difficulty ? infoRow('Difficulty', m.difficulty) : '');
+      const diffColor = { Easy:'#10b981', Medium:'#f59e0b', Hard:'#f97316', Expert:'#ef4444' }[m.difficulty] || accent;
+      bodyHTML =
+        (m.problem ? sec('Problem', accent,
+          '<p style="font-size:13px;color:rgba(240,238,255,0.85);font-family:ui-monospace,monospace;line-height:1.6;background:rgba(255,255,255,0.04);padding:10px;border-radius:8px">' + esc(m.problem) + '</p>'
+        ) : '') +
+
+        (m.solution ? '<div style="margin:0 16px;padding:16px;background:linear-gradient(135deg,' + accent + '20,' + accent + '08);border:1.5px solid ' + accent + '40;border-radius:14px;text-align:center">' +
+          '<div style="font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:' + accent + ';opacity:0.7;margin-bottom:6px">Final Answer</div>' +
+          '<div style="font-size:26px;font-weight:900;color:#f0eeff;letter-spacing:-0.5px">' + esc(m.solution) + '</div>' +
+        '</div>' : '') +
+
+        ((m.steps && m.steps.length) ? sec('Step-by-Step Solution', accent,
+          '<div style="display:flex;flex-direction:column;gap:10px">' +
+          m.steps.map(s =>
+            '<div style="display:flex;gap:10px;align-items:flex-start">' +
+              '<div style="width:24px;height:24px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '44;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:' + accent + ';flex-shrink:0;margin-top:1px">' + s.step + '</div>' +
+              '<div style="flex:1">' +
+                '<div style="font-size:12.5px;color:rgba(240,238,255,0.8);line-height:1.5">' + esc(s.description) + '</div>' +
+                (s.result ? '<div style="font-size:12px;font-weight:700;color:' + accent + ';margin-top:3px;font-family:ui-monospace,monospace">= ' + esc(s.result) + '</div>' : '') +
+              '</div>' +
+            '</div>'
+          ).join('') + '</div>'
+        ) : '') +
+
+        ((m.concepts && m.concepts.length) ? sec('Concepts Used', accent,
+          '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+          m.concepts.map(c => '<span style="font-size:11px;font-weight:600;color:' + accent + ';background:' + accent + '15;border:1px solid ' + accent + '30;border-radius:100px;padding:3px 10px">' + esc(c) + '</span>').join('') + '</div>'
+        ) : '') +
+
+        (m.difficulty ? '<div style="margin:0 16px 4px;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:10px">' +
+          '<span style="font-size:11.5px;color:rgba(240,238,255,0.4)">Difficulty</span>' +
+          '<span style="font-size:12px;font-weight:700;color:' + diffColor + '">' + esc(m.difficulty) + '</span>' +
+        '</div>' : '');
+
     } else if (ct === 'job_posting' && d.job) {
       const j = d.job;
-      bodyHTML = '<div style="padding:14px 16px 0"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">' + (j.company ? badge(j.company, accent) : '') + (j.role ? badge(j.role, 'rgba(255,255,255,0.15)') : '') + (j.location ? badge('📍 '+j.location,'rgba(255,255,255,0.1)') : '') + (j.salary ? badge('💰 '+j.salary,'rgba(16,185,129,0.2)') : '') + '</div></div>' +
-        ((j.requirements&&j.requirements.length) ? sec('Requirements', accent, '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (j.requirements||[]).map(x=>li(x,accent)).join('') + '</ul>') : '') +
-        ((j.skills&&j.skills.length) ? sec('Key Skills', accent, '<div style="display:flex;flex-wrap:wrap;gap:6px">' + (j.skills||[]).map(s=>'<span style="font-size:11px;font-weight:600;color:' + accent + ';background:' + accent + '15;border:1px solid ' + accent + '30;border-radius:100px;padding:3px 10px">' + esc(s) + '</span>').join('') + '</div>') : '') +
-        ((j.applicationTips&&j.applicationTips.length) ? sec('Apply Tips', accent, '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (j.applicationTips||[]).map(x=>li(x,'#10b981')).join('') + '</ul>') : '') +
-        ((j.redFlags&&j.redFlags.length) ? sec('⚠ Red Flags', '#ef4444', '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (j.redFlags||[]).map(x=>li(x,'#ef4444')).join('') + '</ul>') : '');
+      const fitColor = { Strong:'#10b981', Moderate:'#f59e0b', Niche:'#f97316' }[j.fitScore] || accent;
+      bodyHTML =
+        '<div style="padding:14px 16px 0;display:flex;flex-wrap:wrap;gap:6px">' +
+          (j.company ? badge(j.company, accent) : '') +
+          (j.location ? badge('📍 ' + j.location, 'rgba(255,255,255,0.12)') : '') +
+          (j.salary ? badge('💰 ' + j.salary, '#10b981') : '') +
+          (j.fitScore ? badge('Fit: ' + j.fitScore, fitColor) : '') +
+        '</div>' +
+
+        (j.overview ? sec('Role Overview', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65">' + esc(j.overview) + '</p>'
+        ) : '') +
+
+        ((j.requirements && j.requirements.length) ? sec('Requirements', accent,
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          j.requirements.map(x => li(x, accent)).join('') + '</ul>'
+        ) : '') +
+
+        ((j.skills && j.skills.length) ? sec('Key Skills', accent,
+          '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+          j.skills.map(s => '<span style="font-size:11px;font-weight:600;color:' + accent + ';background:' + accent + '15;border:1px solid ' + accent + '30;border-radius:100px;padding:3px 10px">' + esc(s) + '</span>').join('') + '</div>'
+        ) : '') +
+
+        ((j.applicationTips && j.applicationTips.length) ? sec('How to Stand Out', '#10b981',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px">' +
+          j.applicationTips.map(x => liAction(x)).join('') + '</ul>'
+        ) : '') +
+
+        ((j.redFlags && j.redFlags.length) ? sec('⚠ Red Flags', '#ef4444',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          j.redFlags.map(x => li(x, '#ef4444')).join('') + '</ul>'
+        ) : '');
+
+    } else if (ct === 'video' && d.video) {
+      const v = d.video;
+      bodyHTML =
+        '<div style="padding:14px 16px 0;display:flex;flex-wrap:wrap;gap:6px">' +
+          (v.channel ? badge('📺 ' + v.channel, accent) : '') +
+        '</div>' +
+
+        (v.summary ? sec('Video Summary', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(v.summary) + '</p>'
+        ) : '') +
+
+        ((v.keyTopics && v.keyTopics.length) ? sec('Key Topics Covered', accent,
+          '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px">' +
+          v.keyTopics.map((x, i) =>
+            '<li style="display:flex;align-items:flex-start;gap:9px">' +
+              '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+            '</li>'
+          ).join('') + '</ol>'
+        ) : '') +
+
+        ((v.studyNotes && v.studyNotes.length) ? sec('Study Notes', '#10b981',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          v.studyNotes.map(x => liAction(x)).join('') + '</ul>'
+        ) : '') +
+
+        ((v.quotableInsights && v.quotableInsights.length) ? sec('Quotable Insights', '#f59e0b',
+          '<div style="display:flex;flex-direction:column;gap:8px">' +
+          v.quotableInsights.map(q =>
+            '<div style="padding:10px 13px;border-left:3px solid #f59e0b40;background:rgba(245,158,11,0.06);border-radius:0 10px 10px 0">' +
+              '<p style="font-size:12px;color:rgba(240,238,255,0.7);font-style:italic;line-height:1.55;margin:0">"' + esc(q) + '"</p>' +
+            '</div>'
+          ).join('') + '</div>'
+        ) : '');
+
     } else if (ct === 'code' && d.code) {
       const c = d.code;
-      bodyHTML = (c.explanation ? sec('What it does', accent, '<p style="font-size:12.5px;color:rgba(240,238,255,0.7);line-height:1.65">' + esc(c.explanation) + '</p>') : '') +
-        (c.codeSnippet ? sec('Code', accent, '<pre style="font-size:11px;color:rgba(240,238,255,0.75);background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;border:1px solid rgba(255,255,255,0.08)">' + esc(c.codeSnippet) + '</pre>') : '') +
-        ((c.improvements&&c.improvements.length) ? sec('Improvements', accent, '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (c.improvements||[]).map(x=>li(x,accent)).join('') + '</ul>') : '') +
-        (c.language ? infoRow('Language', c.language) : '');
+      bodyHTML =
+        '<div style="padding:14px 16px 0;display:flex;flex-wrap:wrap;gap:6px">' +
+          (c.language ? badge(c.language, accent) : '') +
+          (c.timeComplexity ? badge('⏱ ' + c.timeComplexity, 'rgba(255,255,255,0.12)') : '') +
+        '</div>' +
+
+        (c.explanation ? sec('What It Does', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.65">' + esc(c.explanation) + '</p>'
+        ) : '') +
+
+        ((c.improvements && c.improvements.length) ? sec('Suggested Improvements', '#10b981',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          c.improvements.map(x => liAction(x)).join('') + '</ul>'
+        ) : '') +
+
+        ((c.bugs && c.bugs.length) ? sec('Potential Bugs / Risks', '#ef4444',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          c.bugs.map(x => li(x, '#ef4444')).join('') + '</ul>'
+        ) : '') +
+
+        ((c.bestPractices && c.bestPractices.length) ? sec('Best Practices', accent,
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          c.bestPractices.map(x => li(x, accent)).join('') + '</ul>'
+        ) : '');
+
     } else {
       const g = d.general || {};
-      bodyHTML = (g.summary ? sec('Summary', accent, '<p style="font-size:12.5px;color:rgba(240,238,255,0.7);line-height:1.65">' + esc(g.summary) + '</p>') : '') +
-        ((g.keyInsights&&g.keyInsights.length) ? sec('Key Insights', accent, '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (g.keyInsights||[]).map(x=>li(x,accent)).join('') + '</ul>') : '') +
-        ((g.actionItems&&g.actionItems.length) ? sec('Action Items', accent, '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' + (g.actionItems||[]).map(x=>li(x,'#10b981')).join('') + '</ul>') : '');
+      bodyHTML =
+        ((g.executiveSummary || g.summary) ? sec('Executive Summary', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(g.executiveSummary || g.summary) + '</p>'
+        ) : '') +
+
+        ((g.keyInsights && g.keyInsights.length) ? sec('Key Insights', accent,
+          '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px">' +
+          g.keyInsights.map((x, i) =>
+            '<li style="display:flex;align-items:flex-start;gap:9px">' +
+              '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+            '</li>'
+          ).join('') + '</ol>'
+        ) : '') +
+
+        ((g.actionItems && g.actionItems.length) ? sec('Action Items', '#10b981',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          g.actionItems.map(x => liAction(x)).join('') + '</ul>'
+        ) : '');
     }
 
-    return '<div style="padding:14px 16px 4px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:10px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:' + accent + ';background:' + accent + '18;border:1px solid ' + accent + '30;border-radius:100px;padding:3px 9px">' + esc(d.contentLabel||'Content') + '</span>' + (d.confidence ? '<span style="font-size:10px;color:rgba(240,238,255,0.4)">' + d.confidence + '% confident</span>' : '') + '</div>' + (d.title ? '<div style="font-size:14px;font-weight:700;color:#f0eeff;line-height:1.35;margin-top:6px">' + esc(d.title) + '</div>' : '') + '</div>' + bodyHTML + '<div style="height:12px"></div>';
+    return header + '<div style="display:flex;flex-direction:column;gap:10px;padding:12px 16px 20px">' + bodyHTML + '</div>';
   }
 
   // ── Shared helpers ────────────────────────────────────────────────────────
@@ -507,7 +747,11 @@
   }
 
   function li(text, color) {
-    return '<li style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:rgba(240,238,255,0.7);line-height:1.4"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M3 8l3 3 7-7" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' + esc(text) + '</li>';
+    return '<li style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:rgba(240,238,255,0.7);line-height:1.5"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M3 8l3 3 7-7" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>' + esc(text) + '</span></li>';
+  }
+
+  function liAction(text) {
+    return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:rgba(240,238,255,0.75);line-height:1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M13 7l5 5-5 5M6 7l5 5-5 5" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>' + esc(text) + '</span></li>';
   }
 
   function badge(text, color) {
