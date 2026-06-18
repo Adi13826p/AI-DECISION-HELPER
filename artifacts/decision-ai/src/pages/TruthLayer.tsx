@@ -294,7 +294,7 @@ function CustomerReviewsCard({ reviews, sourceUrlMap }: { reviews: NonNullable<T
                 <div style={{ display:"flex", alignItems:"center", gap:5, flexWrap:"wrap", marginBottom:3 }}>
                   <span style={{ fontSize:11.5, fontWeight:700, color:"var(--text-primary)" }}>{rev.reviewer}</span>
                   {rev.verified && <span style={{ fontSize:8.5, fontWeight:700, color:"#34d399", background:"rgba(52,211,153,0.1)", border:"1px solid rgba(52,211,153,0.25)", borderRadius:4, padding:"1px 5px" }}>✓ Verified</span>}
-                  <SourceIcon source={rev.source} url={sourceUrlMap[rev.source]} size={18} />
+                  <SourceChip source={rev.source} url={sourceUrlMap[rev.source]} size="sm" />
                 </div>
                 <div style={{ fontSize:12.5, fontWeight:700, color:"var(--text-primary)", lineHeight:1.35 }}>{rev.title}</div>
               </div>
@@ -615,85 +615,80 @@ function KeyFactsGrid({ facts }: { facts: NonNullable<TruthLayerResult["keyFacts
 }
 
 /* ── 4. Source Intelligence ─────────────────────────── */
-const SOURCE_CFG: Record<string, { icon: string; letter: string; color: string; bg: string; border: string; label: string }> = {
-  Reddit:    { icon:"🔴", letter:"R", color:"#FF4500", bg:"rgba(255,69,0,0.08)",    border:"rgba(255,69,0,0.22)",    label:"Reddit" },
-  Amazon:    { icon:"🛒", letter:"A", color:"#FF9900", bg:"rgba(255,153,0,0.08)",   border:"rgba(255,153,0,0.22)",   label:"Amazon" },
-  YouTube:   { icon:"▶",  letter:"▶", color:"#FF0000", bg:"rgba(255,0,0,0.07)",     border:"rgba(255,0,0,0.2)",     label:"YouTube" },
-  TechRadar: { icon:"📰", letter:"T", color:"#7C3AED", bg:"rgba(124,58,237,0.08)",  border:"rgba(124,58,237,0.22)", label:"TechRadar" },
-  Google:    { icon:"G",  letter:"G", color:"#4285F4", bg:"rgba(66,133,244,0.08)",  border:"rgba(66,133,244,0.22)", label:"Google" },
-  Quora:     { icon:"Q",  letter:"Q", color:"#B92B27", bg:"rgba(185,43,39,0.08)",   border:"rgba(185,43,39,0.22)",  label:"Quora" },
-  Flipkart:  { icon:"F",  letter:"F", color:"#2874F0", bg:"rgba(40,116,240,0.08)",  border:"rgba(40,116,240,0.22)", label:"Flipkart" },
-  RTINGS:    { icon:"R",  letter:"R", color:"#10B981", bg:"rgba(16,185,129,0.08)",  border:"rgba(16,185,129,0.22)", label:"RTINGS" },
+const SOURCE_CFG: Record<string, { domain: string; color: string; bg: string; border: string; label: string }> = {
+  Reddit:    { domain:"reddit.com",    color:"#FF4500", bg:"rgba(255,69,0,0.09)",    border:"rgba(255,69,0,0.25)",    label:"Reddit" },
+  Amazon:    { domain:"amazon.com",    color:"#FF9900", bg:"rgba(255,153,0,0.09)",   border:"rgba(255,153,0,0.25)",   label:"Amazon" },
+  YouTube:   { domain:"youtube.com",   color:"#FF0000", bg:"rgba(255,0,0,0.08)",     border:"rgba(255,0,0,0.22)",     label:"YouTube" },
+  TechRadar: { domain:"techradar.com", color:"#7C3AED", bg:"rgba(124,58,237,0.09)",  border:"rgba(124,58,237,0.25)",  label:"TechRadar" },
+  Google:    { domain:"google.com",    color:"#4285F4", bg:"rgba(66,133,244,0.09)",  border:"rgba(66,133,244,0.25)",  label:"Google" },
+  Quora:     { domain:"quora.com",     color:"#B92B27", bg:"rgba(185,43,39,0.09)",   border:"rgba(185,43,39,0.25)",   label:"Quora" },
+  Flipkart:  { domain:"flipkart.com",  color:"#2874F0", bg:"rgba(40,116,240,0.09)",  border:"rgba(40,116,240,0.25)",  label:"Flipkart" },
+  RTINGS:    { domain:"rtings.com",    color:"#10B981", bg:"rgba(16,185,129,0.09)",  border:"rgba(16,185,129,0.25)",  label:"RTINGS" },
 };
 
-/* plain text badge — kept for SourceIntelligence cards */
-function SourceBadge({ source, size="sm" }: { source: string; size?: "sm"|"xs" }) {
-  const m = SOURCE_CFG[source] ?? { icon:"◆", letter:"?", color:"#7a3358", bg:"rgba(122,51,88,0.07)", border:"rgba(122,51,88,0.2)", label:source };
+/* Square favicon box — used in SourceIntelligence list */
+function FaviconBox({ source, size = 26 }: { source: string; size?: number }) {
+  const [err, setErr] = useState(false);
+  const cfg = SOURCE_CFG[source] ?? { domain:"", color:"#7a3358", bg:"rgba(122,51,88,0.08)", border:"rgba(122,51,88,0.22)", label:source };
+  const faviconUrl = cfg.domain ? `https://www.google.com/s2/favicons?domain=${cfg.domain}&sz=32` : "";
+  const imgSz = Math.round(size * 0.58);
   return (
-    <span style={{ display:"inline-flex", alignItems:"center", gap:4, background:m.bg, border:`1px solid ${m.border}`, borderRadius:20, padding: size==="xs"?"1px 6px":"2px 8px", fontSize: size==="xs"?9:10, fontWeight:700, color:m.color, flexShrink:0 }}>
-      <span style={{ fontSize: size==="xs"?8:9 }}>{m.icon}</span>{m.label}
+    <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center",
+                   width:size, height:size, flexShrink:0,
+                   background:cfg.bg, border:`1px solid ${cfg.border}`, borderRadius:8 }}>
+      {faviconUrl && !err
+        ? <img src={faviconUrl} width={imgSz} height={imgSz} alt="" onError={() => setErr(true)}
+               style={{ objectFit:"contain", display:"block" }} />
+        : <span style={{ fontSize:Math.round(size * 0.44), fontWeight:900, color:cfg.color, lineHeight:1 }}>{cfg.label[0]}</span>
+      }
     </span>
   );
 }
 
-/* small clickable icon with tooltip — used inline next to insights */
-function SourceIcon({ source, url, size = 20 }: { source: string; url?: string; size?: number }) {
-  const [hovered, setHovered] = useState(false);
-  const cfg = SOURCE_CFG[source] ?? { letter:(source[0]??"?").toUpperCase(), color:"#7a3358", bg:"rgba(122,51,88,0.08)", border:"rgba(122,51,88,0.22)", label:source, icon:"◆" };
+/* Pill chip with favicon + name — visible inline next to every insight */
+function SourceChip({ source, url, size = "md" }: { source: string; url?: string; size?: "xs" | "sm" | "md" }) {
+  const [err, setErr] = useState(false);
+  const cfg = SOURCE_CFG[source] ?? { domain:"", color:"#7a3358", bg:"rgba(122,51,88,0.08)", border:"rgba(122,51,88,0.22)", label:source };
+  const faviconUrl = cfg.domain ? `https://www.google.com/s2/favicons?domain=${cfg.domain}&sz=32` : "";
+  const iconSz  = size === "xs" ? 11 : size === "sm" ? 12 : 14;
+  const fontSize = size === "xs" ? 9  : size === "sm" ? 10 : 11;
+  const pad      = size === "xs" ? "1px 6px 1px 4px" : size === "sm" ? "2px 7px 2px 5px" : "3px 9px 3px 6px";
+  const gap      = size === "xs" ? 3 : 4;
 
-  const circleStyle: React.CSSProperties = {
-    display:"inline-flex", alignItems:"center", justifyContent:"center",
-    width:size, height:size, borderRadius:"50%",
-    background: hovered ? cfg.color + "28" : cfg.bg,
-    border:`1.5px solid ${hovered ? cfg.color + "66" : cfg.border}`,
-    fontSize:Math.round(size * 0.46), fontWeight:800, color:cfg.color,
-    flexShrink:0, cursor: url ? "pointer" : "default",
-    transition:"transform 0.14s ease, border-color 0.14s, background 0.14s, box-shadow 0.14s",
-    transform: hovered ? "scale(1.22)" : "scale(1)",
-    boxShadow: hovered ? `0 2px 8px ${cfg.color}35` : "none",
-    lineHeight:1, letterSpacing:"-0.01em", userSelect:"none",
-  };
-
-  const iconEl = (
-    <span style={{ position:"relative", display:"inline-flex" }}>
-      <span
-        style={circleStyle}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        title={url ? `View source: ${cfg.label}` : cfg.label}
-      >
-        {cfg.letter}
-      </span>
-      {hovered && (
-        <span style={{
-          position:"absolute", bottom:`${size + 6}px`, left:"50%",
-          transform:"translateX(-50%)", zIndex:9999,
-          background:"rgba(20,6,12,0.90)", color:"#fff",
-          fontSize:9.5, fontWeight:600, whiteSpace:"nowrap",
-          padding:"3px 8px", borderRadius:6, pointerEvents:"none",
-          letterSpacing:"0.01em",
-        }}>
-          {url ? `${cfg.label} ↗` : cfg.label}
-          <span style={{
-            position:"absolute", top:"100%", left:"50%", transform:"translateX(-50%)",
-            width:0, height:0,
-            borderLeft:"4px solid transparent", borderRight:"4px solid transparent",
-            borderTop:"4px solid rgba(20,6,12,0.90)",
-          }}/>
-        </span>
-      )}
+  const chip = (
+    <span style={{ display:"inline-flex", alignItems:"center", gap,
+                   background:cfg.bg, border:`1px solid ${cfg.border}`, borderRadius:20,
+                   padding:pad, fontSize, fontWeight:700, color:cfg.color,
+                   flexShrink:0, userSelect:"none",
+                   cursor: url ? "pointer" : "default" }}
+          title={url ? `View on ${cfg.label} ↗` : cfg.label}>
+      {faviconUrl && !err
+        ? <img src={faviconUrl} width={iconSz} height={iconSz} alt=""
+               onError={() => setErr(true)}
+               style={{ borderRadius:2, display:"block", flexShrink:0, objectFit:"contain" }} />
+        : <span style={{ width:iconSz, height:iconSz, display:"inline-flex", alignItems:"center",
+                         justifyContent:"center", fontWeight:900, fontSize:iconSz - 2, lineHeight:1 }}>
+            {cfg.label[0]}
+          </span>
+      }
+      {cfg.label}
     </span>
   );
 
   if (url) {
     return (
       <a href={url} target="_blank" rel="noreferrer"
-         style={{ textDecoration:"none", display:"inline-flex" }}>
-        {iconEl}
+         style={{ textDecoration:"none", display:"inline-flex", flexShrink:0 }}>
+        {chip}
       </a>
     );
   }
-  return iconEl;
+  return chip;
+}
+
+/* Kept for backward compat — renders as a SourceChip */
+function SourceBadge({ source, size = "sm" }: { source: string; size?: "sm" | "xs" }) {
+  return <SourceChip source={source} size={size} />;
 }
 
 function SourceIntelligence({ insights, platforms }: { insights: NonNullable<TruthLayerResult["sourceInsights"]>; platforms: string[] }) {
@@ -715,7 +710,7 @@ function SourceIntelligence({ insights, platforms }: { insights: NonNullable<Tru
           return (
             <div key={i} style={{ display:"flex", gap:11, padding:"11px 14px", borderBottom: i<displayInsights.length-1?"1px solid rgba(236,72,153,0.06)":"none", borderLeft:`3px solid ${cfg.color}` }}>
               <div style={{ flexShrink:0, marginTop:1 }}>
-                <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:26, height:26, background:cfg.bg, border:`1px solid ${cfg.border}`, borderRadius:8, fontSize:13 }}>{cfg.icon}</span>
+                <FaviconBox source={ins.source} size={26} />
               </div>
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:6, marginBottom:4 }}>
@@ -751,7 +746,7 @@ function ProsConsCard({ loves, hates, sourceUrlMap }: { loves: TruthLayerResult[
             <div key={i} style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 14px", borderBottom: i<loves.length-1?"1px solid rgba(52,211,153,0.07)":"none", borderLeft:"3px solid #34d399" }}>
               <span style={{ color:"#34d399", fontWeight:800, flexShrink:0, fontSize:12 }}>✓</span>
               <span style={{ fontSize:12, color:"var(--text-primary)", lineHeight:1.55, flex:1 }}>{item.text}</span>
-              <SourceIcon source={item.source} url={sourceUrlMap[item.source]} size={19} />
+              <SourceChip source={item.source} url={sourceUrlMap[item.source]} size="sm" />
             </div>
           );
         })}
@@ -769,7 +764,7 @@ function ProsConsCard({ loves, hates, sourceUrlMap }: { loves: TruthLayerResult[
             <div key={i} style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 14px", borderBottom: i<hates.length-1?"1px solid rgba(248,113,113,0.07)":"none", borderLeft:"3px solid #f87171" }}>
               <span style={{ color:"#f87171", fontWeight:800, flexShrink:0, fontSize:12 }}>✗</span>
               <span style={{ fontSize:12, color:"var(--text-primary)", lineHeight:1.55, flex:1 }}>{item.text}</span>
-              <SourceIcon source={item.source} url={sourceUrlMap[item.source]} size={19} />
+              <SourceChip source={item.source} url={sourceUrlMap[item.source]} size="sm" />
             </div>
           );
         })}
@@ -802,9 +797,8 @@ function WatchOutCard({ insights, sourceUrlMap }: { insights: TruthLayerResult["
                 <div style={{ fontSize:9.5, fontWeight:700, color:c.color, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:3 }}>{c.label}</div>
                 <p style={{ fontSize:12, color:"var(--text-primary)", lineHeight:1.6, margin:0, fontWeight:500 }}>{ins.text}</p>
                 {ins.source && (
-                  <div style={{ marginTop:7, display:"flex", alignItems:"center", gap:6 }}>
-                    <SourceIcon source={ins.source} url={sourceUrlMap[ins.source]} size={18} />
-                    <span style={{ fontSize:9.5, color:"var(--text-muted)", fontWeight:600 }}>{ins.source}</span>
+                  <div style={{ marginTop:7 }}>
+                    <SourceChip source={ins.source} url={sourceUrlMap[ins.source]} size="xs" />
                   </div>
                 )}
               </div>

@@ -9,6 +9,7 @@ interface UserProfile {
   name: string; email: string; phone: string; address: string;
   linkedin: string; github: string; portfolio: string;
   skills: string; qualifications: string; experience: string; summary: string;
+  photo: string; dob: string; nationality: string; postalCode: string;
 }
 
 interface SmartySection { id: string; icon: string; label: string; content: string[]; }
@@ -20,7 +21,7 @@ type AnyResult = { type: "product"; data: ProductResult } | { type: "smarty"; da
 
 /* ── Profile Storage ───────────────────────────────── */
 const PROFILE_KEY = "masterscan_profile";
-const EMPTY: UserProfile = { name:"", email:"", phone:"", address:"", linkedin:"", github:"", portfolio:"", skills:"", qualifications:"", experience:"", summary:"" };
+const EMPTY: UserProfile = { name:"", email:"", phone:"", address:"", linkedin:"", github:"", portfolio:"", skills:"", qualifications:"", experience:"", summary:"", photo:"", dob:"", nationality:"", postalCode:"" };
 
 function loadProfile(): UserProfile {
   try { return { ...EMPTY, ...JSON.parse(localStorage.getItem(PROFILE_KEY) ?? "{}") }; }
@@ -392,7 +393,7 @@ function ResumeInput({ profile, query, setQuery }: { profile: UserProfile; query
     <div style={{display:"flex", flexDirection:"column", gap:8}}>
       <div style={{padding:"10px 14px", background: filled > 3 ? "rgba(16,185,129,0.06)" : "rgba(236,72,153,0.04)", border:`1px solid ${filled > 3 ? "rgba(16,185,129,0.2)" : "rgba(236,72,153,0.15)"}`, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"space-between"}}>
         <div>
-          <div style={{fontSize:12,fontWeight:700,color: filled > 3 ? "var(--green)" : "var(--text-primary)"}}>{filled > 3 ? `✓ Profile ready (${filled}/11 fields)` : `⚠ Profile incomplete (${filled}/11)`}</div>
+          <div style={{fontSize:12,fontWeight:700,color: filled > 3 ? "var(--green)" : "var(--text-primary)"}}>{filled > 3 ? `✓ Profile ready (${filled}/15 fields)` : `⚠ Profile incomplete (${filled}/15)`}</div>
           <div style={{fontSize:11,color:"var(--text-muted)"}}>Tap the profile icon (top right) to fill in your info</div>
         </div>
       </div>
@@ -683,6 +684,74 @@ const SECTION_STYLES: Record<string, { accent: string; bg: string; border: strin
 };
 const DEFAULT_SECTION_STYLE = { accent:"#ec4899", bg:"rgba(236,72,153,0.04)", border:"rgba(236,72,153,0.18)", numBg:"rgba(236,72,153,0.12)" };
 
+function downloadNotesAsPDF(data: SmartyResult, mode: string, modeLabel: string, modeIcon: string) {
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const totalPoints = (data.sections ?? []).reduce((a, s) => a + (s.content?.length ?? 0), 0);
+
+  const sectionsHtml = (data.sections ?? []).map(sec => `
+    <div class="section">
+      <div class="sec-header">
+        <span class="sec-icon">${sec.icon}</span>
+        <span class="sec-label">${sec.label}</span>
+        <span class="sec-count">${sec.content?.length ?? 0} points</span>
+      </div>
+      <ol class="points">
+        ${(sec.content ?? []).map(p => `<li>${p.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</li>`).join("")}
+      </ol>
+    </div>`).join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${(data.title || modeLabel + " Notes").replace(/</g,"&lt;")}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;max-width:720px;margin:0 auto;padding:48px 36px;color:#1a1a2e;background:#fff;font-size:13px;line-height:1.6}
+  .header{padding-bottom:20px;margin-bottom:32px;border-bottom:3px solid #ec4899}
+  .badge-row{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+  .badge{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;border-radius:12px;padding:3px 10px}
+  .badge-mode{background:#fce7f3;color:#be185d}
+  .badge-ai{background:#f3f4f6;color:#6b7280}
+  h1{font-size:20px;font-weight:800;color:#0f0a1e;line-height:1.3;margin-bottom:8px}
+  .meta{font-size:11px;color:#9ca3af}
+  .section{margin-bottom:22px;border:1px solid #ede9fe;border-radius:10px;overflow:hidden;page-break-inside:avoid}
+  .sec-header{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#faf5ff;border-bottom:1px solid #ede9fe}
+  .sec-icon{font-size:16px;flex-shrink:0}
+  .sec-label{font-size:11.5px;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:0.4px;flex:1}
+  .sec-count{font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px}
+  .points{padding:14px 18px 14px 38px}
+  .points li{font-size:12.5px;color:#1e1b4b;line-height:1.75;margin-bottom:9px;padding-left:4px}
+  .points li:last-child{margin-bottom:0}
+  .footer{margin-top:40px;padding-top:16px;border-top:1px solid #f3f4f6;font-size:10px;color:#d1d5db;text-align:center}
+  @media print{
+    body{padding:20px 24px}
+    .section{break-inside:avoid}
+    .header{break-after:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="badge-row">
+    <span class="badge badge-mode">${modeIcon} ${modeLabel}</span>
+    <span class="badge badge-ai">AI Notes</span>
+  </div>
+  <h1>${(data.title || modeLabel + " Analysis").replace(/</g,"&lt;")}</h1>
+  <div class="meta">Generated by DecisionAI &nbsp;·&nbsp; ${date} &nbsp;·&nbsp; ${(data.sections ?? []).length} sections &nbsp;·&nbsp; ${totalPoints} insights</div>
+</div>
+${sectionsHtml}
+<div class="footer">Generated by DecisionAI — AI-powered research assistant</div>
+</body></html>`;
+
+  const win = window.open("", "_blank", "width=900,height=700");
+  if (!win) { alert("Please allow pop-ups for this site to download the PDF."); return; }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 500);
+}
+
 function SmartyResultView({ data, mode }: { data: SmartyResult; mode: Mode }) {
   const info = MODES.find(m => m.id === mode)!;
   const sections = data.sections ?? [];
@@ -712,7 +781,7 @@ function SmartyResultView({ data, mode }: { data: SmartyResult; mode: Mode }) {
               fontSize:14.5,fontWeight:800,color:"var(--text-primary)",
               lineHeight:1.3,wordBreak:"break-word",letterSpacing:"-0.2px",marginBottom:5,
             }}>{data.title || `${info.label} Analysis`}</div>
-            <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:8}}>
               <span style={{
                 fontSize:9.5,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",
                 background:"rgba(236,72,153,0.1)",color:"var(--accent)",
@@ -721,6 +790,26 @@ function SmartyResultView({ data, mode }: { data: SmartyResult; mode: Mode }) {
               <span style={{fontSize:10,color:"var(--text-muted)"}}>·</span>
               <span style={{fontSize:10,color:"var(--text-muted)",fontWeight:500}}>{sections.length} sections · {sections.reduce((a,s)=>a+(s.content?.length??0),0)} insights</span>
             </div>
+            <button
+              onClick={() => downloadNotesAsPDF(data, mode, info.label, info.icon)}
+              style={{
+                display:"inline-flex",alignItems:"center",gap:6,
+                padding:"7px 13px",
+                background:"linear-gradient(135deg,rgba(236,72,153,0.12),rgba(108,141,250,0.1))",
+                border:"1px solid rgba(236,72,153,0.28)",
+                borderRadius:9,fontSize:11.5,fontWeight:700,
+                color:"var(--accent)",cursor:"pointer",
+                transition:"background 0.15s,box-shadow 0.15s",
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background="linear-gradient(135deg,rgba(236,72,153,0.2),rgba(108,141,250,0.16))";e.currentTarget.style.boxShadow="0 2px 10px rgba(236,72,153,0.18)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="linear-gradient(135deg,rgba(236,72,153,0.12),rgba(108,141,250,0.1))";e.currentTarget.style.boxShadow="none";}}
+            >
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 1v9M8 10l-3-3M8 10l3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              Download as PDF
+            </button>
           </div>
         </div>
       </div>
@@ -856,45 +945,123 @@ function ResumeResultView({ data }: { data: ResumeResult }) {
 /* ── Profile View ───────────────────────────────────── */
 function ProfileView({ profile, onSave, onCancel }: { profile: UserProfile; onSave: (p: UserProfile) => void; onCancel: () => void }) {
   const [form, setForm] = useState<UserProfile>({ ...profile });
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const set = (k: keyof UserProfile) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const fields: { key: keyof UserProfile; label: string; placeholder: string; multi?: boolean }[] = [
+  function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const dataUrl = ev.target?.result as string;
+      setForm(f => ({ ...f, photo: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const inputBase: React.CSSProperties = { padding:"9px 12px", background:"#fff", border:"1px solid rgba(236,72,153,0.18)", borderRadius:9, fontSize:12.5, color:"var(--text-primary)", fontFamily:"inherit", outline:"none", boxSizing:"border-box", width:"100%" };
+  const focusIn  = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.currentTarget.style.borderColor="rgba(236,72,153,0.45)"; e.currentTarget.style.boxShadow="0 0 0 3px rgba(236,72,153,0.08)"; };
+  const focusOut = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => { e.currentTarget.style.borderColor="rgba(236,72,153,0.18)"; e.currentTarget.style.boxShadow="none"; };
+
+  const textFields: { key: keyof UserProfile; label: string; placeholder: string; type?: string; multi?: boolean }[] = [
     { key:"name",          label:"Full Name",            placeholder:"John Doe" },
-    { key:"email",         label:"Email Address",        placeholder:"john@example.com" },
-    { key:"phone",         label:"Phone Number",         placeholder:"+1 (555) 000-0000" },
-    { key:"address",       label:"Address / City",       placeholder:"San Francisco, CA" },
+    { key:"dob",           label:"Date of Birth",        placeholder:"",                   type:"date" },
+    { key:"nationality",   label:"Nationality",          placeholder:"e.g. American, Indian, British" },
+    { key:"email",         label:"Email Address",        placeholder:"john@example.com",   type:"email" },
+    { key:"phone",         label:"Phone Number",         placeholder:"+1 (555) 000-0000",  type:"tel" },
+    { key:"address",       label:"Address / City",       placeholder:"123 Main St, San Francisco, CA" },
+    { key:"postalCode",    label:"Postal / ZIP Code",    placeholder:"e.g. 94102" },
     { key:"linkedin",      label:"LinkedIn URL",         placeholder:"linkedin.com/in/johndoe" },
     { key:"github",        label:"GitHub / Portfolio",   placeholder:"github.com/johndoe" },
     { key:"skills",        label:"Skills",               placeholder:"React, TypeScript, Python, SQL…", multi:true },
-    { key:"qualifications",label:"Qualifications",       placeholder:"B.Sc. Computer Science, MBA…", multi:true },
-    { key:"experience",    label:"Work Experience",      placeholder:"5 yrs frontend at Acme Corp…", multi:true },
+    { key:"qualifications",label:"Qualifications",       placeholder:"B.Sc. Computer Science, MBA…",   multi:true },
+    { key:"experience",    label:"Work Experience",      placeholder:"5 yrs frontend at Acme Corp…",   multi:true },
     { key:"summary",       label:"Professional Summary", placeholder:"Experienced engineer specializing in…", multi:true },
   ];
-
-  const inputBase: React.CSSProperties = { padding:"9px 12px", background:"#fff", border:"1px solid rgba(236,72,153,0.18)", borderRadius:9, fontSize:12.5, color:"var(--text-primary)", fontFamily:"inherit", outline:"none", boxSizing:"border-box", width:"100%" };
 
   return (
     <div style={{flex:1, display:"flex", flexDirection:"column", overflow:"hidden"}}>
       <div style={{flex:1, overflowY:"auto", padding:"14px 14px 32px", display:"flex", flexDirection:"column", gap:10}}>
+
+        {/* Header */}
         <div style={{padding:"12px 14px", background:"linear-gradient(135deg,rgba(236,72,153,0.06),rgba(244,63,94,0.04))", border:"1px solid rgba(236,72,153,0.18)", borderRadius:12}}>
           <div style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",marginBottom:3}}>👤 My Profile</div>
           <div style={{fontSize:11,color:"var(--text-muted)"}}>Saved locally on your device. Used for resume auto-fill and job applications.</div>
         </div>
 
-        {fields.map(f => (
+        {/* Photo upload */}
+        <div style={{display:"flex", flexDirection:"column", gap:5}}>
+          <label style={{fontSize:11,fontWeight:600,color:"var(--text-secondary)"}}>Profile Photo</label>
+          <div style={{display:"flex", alignItems:"center", gap:14}}>
+            {/* Avatar circle */}
+            <div
+              onClick={() => photoInputRef.current?.click()}
+              style={{
+                width:72, height:72, borderRadius:"50%", flexShrink:0,
+                background: form.photo ? "transparent" : "linear-gradient(135deg,rgba(236,72,153,0.12),rgba(244,63,94,0.08))",
+                border:"2px dashed rgba(236,72,153,0.32)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                cursor:"pointer", overflow:"hidden", position:"relative",
+                transition:"border-color 0.18s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor="rgba(236,72,153,0.6)")}
+              onMouseLeave={e => (e.currentTarget.style.borderColor="rgba(236,72,153,0.32)")}
+            >
+              {form.photo ? (
+                <img src={form.photo} alt="Profile" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+              ) : (
+                <span style={{fontSize:26, opacity:0.5}}>👤</span>
+              )}
+              {/* Camera overlay on hover */}
+              <div style={{position:"absolute",inset:0,background:"rgba(236,72,153,0.0)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",transition:"background 0.18s"}}
+                onMouseEnter={e => (e.currentTarget.style.background="rgba(236,72,153,0.18)")}
+                onMouseLeave={e => (e.currentTarget.style.background="rgba(236,72,153,0)")}
+              >
+                <span style={{fontSize:16,opacity:0}}>📷</span>
+              </div>
+            </div>
+
+            <div style={{flex:1}}>
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                style={{display:"block", width:"100%", padding:"8px 14px", background:"var(--bg-elevated)", border:"1px solid rgba(236,72,153,0.22)", borderRadius:9, fontSize:12, fontWeight:600, color:"var(--text-secondary)", cursor:"pointer", textAlign:"center", marginBottom:6}}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.45)"; e.currentTarget.style.color="var(--accent)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.22)"; e.currentTarget.style.color="var(--text-secondary)"; }}
+              >
+                📷 {form.photo ? "Change Photo" : "Upload Photo"}
+              </button>
+              {form.photo && (
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, photo: "" }))}
+                  style={{display:"block", width:"100%", padding:"5px 14px", background:"transparent", border:"1px solid rgba(248,113,113,0.25)", borderRadius:9, fontSize:11, fontWeight:600, color:"#f87171", cursor:"pointer", textAlign:"center"}}
+                >
+                  Remove Photo
+                </button>
+              )}
+              <div style={{fontSize:10,color:"var(--text-muted)",marginTop:5}}>JPG, PNG or WebP · Max 5 MB · Stored locally</div>
+            </div>
+          </div>
+          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}} />
+        </div>
+
+        {/* Divider */}
+        <div style={{height:1, background:"rgba(236,72,153,0.1)", margin:"2px 0"}} />
+
+        {/* Text fields */}
+        {textFields.map(f => (
           <div key={f.key} style={{display:"flex", flexDirection:"column", gap:5}}>
             <label style={{fontSize:11,fontWeight:600,color:"var(--text-secondary)"}}>{f.label}</label>
             {f.multi ? (
               <textarea value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder} rows={3}
                 style={{...inputBase, resize:"none", lineHeight:1.6} as React.CSSProperties}
-                onFocus={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.45)"; e.currentTarget.style.boxShadow="0 0 0 3px rgba(236,72,153,0.08)"; }}
-                onBlur={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.18)"; e.currentTarget.style.boxShadow="none"; }}
+                onFocus={focusIn} onBlur={focusOut}
               />
             ) : (
-              <input type="text" value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder}
-                style={inputBase}
-                onFocus={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.45)"; e.currentTarget.style.boxShadow="0 0 0 3px rgba(236,72,153,0.08)"; }}
-                onBlur={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.18)"; e.currentTarget.style.boxShadow="none"; }}
+              <input type={f.type ?? "text"} value={form[f.key]} onChange={set(f.key)} placeholder={f.placeholder}
+                style={{...inputBase, ...(f.type === "date" && form[f.key] === "" ? {color:"var(--text-muted)"} : {})}}
+                onFocus={focusIn} onBlur={focusOut}
               />
             )}
           </div>
