@@ -1,6 +1,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { color-scheme: light; }
+html { color-scheme: light !important; }
+html, body { background-color: #fff0f7 !important; color: #1a0810 !important; }
+@media (prefers-color-scheme: dark) {
+  html { color-scheme: light !important; }
+  html, body { background-color: #fff0f7 !important; color: #1a0810 !important; }
+  :root {
+    --bg-base: #fff0f7 !important; --bg-surface: #ffffff !important;
+    --bg-elevated: #fce7f3 !important; --bg-hover: #fbd5ea !important;
+    --border: rgba(236,72,153,0.14) !important;
+    --text-primary: #1a0810 !important; --text-secondary: #7a3358 !important;
+    --text-muted: #c28aab !important;
+  }
+}
 
 :root {
   --bg-base: #fff0f7; --bg-surface: #ffffff; --bg-elevated: #fce7f3; --bg-hover: #fbd5ea;

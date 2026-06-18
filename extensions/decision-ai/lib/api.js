@@ -46,8 +46,39 @@ export async function groqCall(messages, model, json = true, maxTokens = 4096) {
   if (!text) throw new Error('Empty response from AI');
 
   if (json) {
-    try { return JSON.parse(text); }
-    catch { throw new Error('AI returned invalid JSON. Please try again.'); }
+    // 1) Try clean parse
+    try { return JSON.parse(text); } catch (_) { /* fall through to repair */ }
+
+    // 2) Strip any markdown fences
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    try { return JSON.parse(stripped); } catch (_) { /* fall through to repair */ }
+
+    // 3) Attempt truncation repair — close any open arrays/objects
+    try {
+      let s = stripped;
+      // Count unmatched open brackets/braces
+      const stack = [];
+      let inString = false, escape = false;
+      for (const ch of s) {
+        if (escape) { escape = false; continue; }
+        if (ch === '\\' && inString) { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === '{' || ch === '[') stack.push(ch);
+        else if (ch === '}' || ch === ']') stack.pop();
+      }
+      // Remove trailing incomplete key-value (e.g. ,"key": or ,"key":"inc)
+      s = s.replace(/,\s*"[^"]*"\s*:\s*"[^"]*$/, '')   // truncated string value
+           .replace(/,\s*"[^"]*"\s*:\s*\[?[^,}\]]*$/, '') // truncated array/number
+           .replace(/,\s*"[^"]*"\s*$/, '');                // truncated key only
+      // Close open structures
+      for (let i = stack.length - 1; i >= 0; i--) {
+        s += stack[i] === '{' ? '}' : ']';
+      }
+      return JSON.parse(s);
+    } catch (_) { /* fall through */ }
+
+    throw new Error('AI returned invalid JSON. Please try again.');
   }
   return text;
 }
@@ -155,34 +186,43 @@ Always return valid JSON only, no markdown, no explanation.`
           text: `Analyze this screenshot from: ${pageUrl || 'unknown'}
 Title: ${pageTitle || 'unknown'}
 
-Step 1 — detect contentType: "article" | "research_paper" | "math" | "job_posting" | "video" | "product" | "code" | "social_post" | "recipe" | "study_material" | "other"
+Detect the content type and return ONLY the following compact JSON. Be concise — max 2-3 items per array, max 60 words per text field.
 
-Step 2 — fill ONLY the section matching that contentType. Leave all other sections as empty objects {}.
-
-Return ONLY this JSON (no extra text):
+Return ONLY this JSON (no extra text, no markdown):
 {
-  "contentType": "<detected type>",
-  "contentLabel": "<human label e.g. 'News Article'>",
-  "title": "<detected title or topic>",
+  "contentType": "article|research_paper|math|job_posting|video|product|code|social_post|recipe|study_material|other",
+  "contentLabel": "human readable label",
+  "title": "detected title or topic (max 12 words)",
   "language": "en",
-  "extractedText": "<visible text, max 500 chars>",
+  "extractedText": "key visible text, max 300 chars",
   "confidence": 90,
+  "article":        {},
+  "research":       {},
+  "math":           {},
+  "job":            {},
+  "video":          {},
+  "code":           {},
+  "social_post":    {},
+  "recipe":         {},
+  "study_material": {},
+  "general":        {}
+}
 
-  "article":        <if contentType=article: {"summary":"...","keyPoints":["..."],"sentiment":"Positive|Neutral|Negative|Mixed","readingTime":"X min","topics":["..."],"flashcards":[{"q":"...","a":"..."}]} else {}>,
-  "research":       <if contentType=research_paper: {"abstract":"...","methodology":"...","findings":["..."],"conclusions":"...","simplifiedExplanation":"...","flashcards":[{"q":"...","a":"..."}]} else {}>,
-  "math":           <if contentType=math: {"problem":"...","solution":"...","steps":[{"step":1,"description":"...","result":"..."}],"concepts":["..."],"difficulty":"Easy|Medium|Hard"} else {}>,
-  "job":            <if contentType=job_posting: {"company":"...","role":"...","location":"...","salary":"...","requirements":["..."],"skills":["..."],"applicationTips":["..."],"redFlags":["..."]} else {}>,
-  "video":          <if contentType=video: {"title":"...","channel":"...","summary":"...","keyTopics":["..."],"studyNotes":["..."]} else {}>,
-  "code":           <if contentType=code: {"language":"...","explanation":"...","codeSnippet":"...","improvements":["..."],"bugs":["..."]} else {}>,
-  "social_post":    <if contentType=social_post: {"platform":"...","author":"...","content":"...","sentiment":"...","context":"...","keyTakeaway":"..."} else {}>,
-  "recipe":         <if contentType=recipe: {"name":"...","ingredients":["..."],"steps":["..."],"prepTime":"...","servings":"..."} else {}>,
-  "study_material": <if contentType=study_material: {"subject":"...","summary":"...","keyTerms":[{"term":"...","definition":"..."}],"flashcards":[{"q":"...","a":"..."}],"practiceQuestions":["..."]} else {}>,
-  "general":        <if contentType=other: {"summary":"...","keyInsights":["..."],"actionItems":["..."],"categories":["..."]} else {}>
-}`
+After the base JSON, fill ONLY the single section that matches contentType:
+- article → "article": {"summary":"2-3 sentences max","keyPoints":["pt1","pt2","pt3"],"sentiment":"Positive|Neutral|Negative|Mixed","readingTime":"X min","topics":["t1","t2"]}
+- research_paper → "research": {"abstract":"2 sentences","findings":["f1","f2","f3"],"conclusions":"1 sentence","simplifiedExplanation":"1 sentence"}
+- math → "math": {"problem":"brief","solution":"answer","steps":[{"step":1,"description":"desc","result":"res"}],"difficulty":"Easy|Medium|Hard"}
+- job_posting → "job": {"company":"name","role":"title","location":"loc","salary":"range","requirements":["r1","r2","r3"],"skills":["s1","s2","s3"],"redFlags":["flag1"]}
+- video → "video": {"title":"title","channel":"ch","summary":"2 sentences","keyTopics":["t1","t2","t3"]}
+- code → "code": {"language":"lang","explanation":"2 sentences","improvements":["i1","i2"],"bugs":["b1"]}
+- social_post → "social_post": {"platform":"name","author":"handle","content":"text","sentiment":"pos/neg/neutral","keyTakeaway":"1 sentence"}
+- recipe → "recipe": {"name":"dish","ingredients":["i1","i2","i3"],"steps":["s1","s2","s3"],"prepTime":"Xmin"}
+- study_material → "study_material": {"subject":"name","summary":"2 sentences","keyTerms":[{"term":"t","definition":"d"}],"practiceQuestions":["q1","q2"]}
+- other → "general": {"summary":"2-3 sentences","keyInsights":["i1","i2","i3"],"actionItems":["a1","a2"]}`
         }
       ]
     }
   ];
 
-  return groqCall(messages, VISION_MODEL, true, 3000);
+  return groqCall(messages, VISION_MODEL, true, 8000);
 }
