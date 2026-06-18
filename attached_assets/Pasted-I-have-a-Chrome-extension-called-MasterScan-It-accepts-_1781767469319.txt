@@ -1,0 +1,160 @@
+I have a Chrome extension called MasterScan. It accepts different input types:
+1. YouTube URL → generate detailed video notes
+2. Article/blog/PDF URL → summarize and extract important points
+3. General questions/problems → solve step-by-step
+4. Startup roadmap requests → create a complete startup roadmap
+5. Study roadmap requests → create a personalized study schedule/learning path
+6. Resume autofill → help improve and fill resume content
+
+Currently the AI gives generic answers because it does not understand the user's intent. I want you to redesign the AI processing logic so every input type is treated separately and the response format changes automatically.
+
+Implement an intent detection system before sending prompts to the AI.
+
+Flow:
+
+User Input
+↓
+Detect intent/type
+↓
+Use a specialized system prompt for that category
+↓
+Generate answer in the correct format
+
+Create these AI modes:
+
+=========================
+MODE 1: YOUTUBE ANALYZER
+=========================
+Trigger:
+- User pastes YouTube URL
+- User clicks YouTube URL option
+
+Output format:
+
+Title:
+Video Summary:
+(Short overview)
+
+Detailed Notes:
+- Explain concepts clearly
+- Include all important information
+- Maintain the order of the video
+
+Key Takeaways:
+- Bullet points
+
+Important Concepts:
+- Explain difficult terms
+
+Action Items:
+- What the user should do after watching
+
+Do not give a generic summary. Treat it like professional study notes.
+
+=========================
+MODE 2: ARTICLE/PDF/BLOG ANALYZER
+=========================
+Trigger:
+- Article URL
+- PDF
+- Blog URL
+
+Output:
+
+Main Idea:
+Important Highlights:
+- Only the most valuable points
+
+Key Facts:
+Important Numbers/Data:
+Pros & Cons (if relevant)
+
+Final Summary:
+A concise explanation.
+
+Focus on extracting useful information, not rewriting the whole article.
+
+=========================
+MODE 3: PROBLEM SOLVER
+=========================
+Trigger:
+- User asks questions
+- User asks "how to solve"
+- User describes a problem
+
+Output:
+
+Understanding:
+Explain what the problem is.
+
+Solution:
+Step-by-step solution.
+
+Reasoning:
+Explain why each step works.
+
+Example:
+Give an example if useful.
+
+Final Answer:
+Clear conclusion.
+
+=========================
+MODE 4: STARTUP ROADMAP BUILDER
+=========================
+Trigger:
+- User asks startup roadmap
+- Business plan
+- How to build a company
+
+Output:
+
+Startup Goal:
+Define the objective.
+
+Phase 1: Foundation
+(Duration)
+Tasks:
+- 
+- 
+
+Phase 2: Building MVP
+
+Phase 3: Launch
+
+Phase 4: Growth
+
+Skills Needed:
+Tools Needed:
+Weekly Schedule:
+Next Immediate Action:
+
+Make it practical like a founder guide.
+
+=========================
+MODE 5: STUDY ROADMAP BUILDER
+=========================
+Trigger:
+- User asks learning roadmap
+- Study plan
+- Learn something
+
+Output:
+
+Goal:
+Current Level:
+Target Level:
+
+Learning Path:
+
+Month/Week wise plan:
+
+Daily Schedule:
+
+Resources:
+
+Practice Plan:
+
+What to do next:
+
+Make it personalized and structured.

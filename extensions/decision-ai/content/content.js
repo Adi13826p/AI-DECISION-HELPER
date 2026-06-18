@@ -160,10 +160,150 @@
   // OVERLAY — main entry point
   // ══════════════════════════════════════════════════════════════════════════
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // YOUTUBE INTELLIGENCE
+  // ══════════════════════════════════════════════════════════════════════════
+
+  function extractYouTubeId(str) {
+    const patterns = [
+      /(?:youtube\.com\/watch\?.*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/,
+      /^([A-Za-z0-9_-]{11})$/
+    ];
+    for (const p of patterns) {
+      const m = str.match(p);
+      if (m) return m[1];
+    }
+    return null;
+  }
+
+  async function fetchYouTubeData(videoId) {
+    const resp = await fetch('https://www.youtube.com/watch?v=' + videoId, {
+      headers: { 'Accept-Language': 'en-US,en;q=0.9' }
+    });
+    if (!resp.ok) throw new Error('Could not fetch YouTube page (status ' + resp.status + ')');
+    const html = await resp.text();
+
+    // Pull fields via targeted regex (avoids parsing multi-MB JSON)
+    function rget(pattern) {
+      const m = html.match(pattern);
+      if (!m) return '';
+      try { return JSON.parse('"' + m[1] + '"'); } catch(_) { return m[1]; }
+    }
+
+    const title       = rget(/"videoDetails":\{"videoId":"[A-Za-z0-9_-]{11}","title":"((?:[^"\\]|\\.)*)"/);
+    const author      = rget(/"author":"((?:[^"\\]|\\.)*?)"/);
+    const desc        = rget(/"shortDescription":"((?:[^"\\]|\\.){0,800})"/);
+    const durSecs     = rget(/"lengthSeconds":"(\d+)"/);
+    const viewCount   = rget(/"viewCount":"(\d+)"/);
+    const duration    = durSecs ? Math.floor(parseInt(durSecs) / 60) + ' min' : '';
+    const views       = viewCount ? parseInt(viewCount).toLocaleString() + ' views' : '';
+
+    // Caption track URL
+    let transcript = '';
+    const captMatch = html.match(/"captionTracks":\[.*?"baseUrl":"([^"]+)"/);
+    if (captMatch) {
+      try {
+        const captUrl = captMatch[1].replace(/\\u0026/g, '&').replace(/\\u003d/g, '=').replace(/\\/g, '');
+        const captResp = await fetch(captUrl + '&fmt=json3');
+        if (captResp.ok) {
+          const captData = await captResp.json();
+          const parts = [];
+          for (const ev of (captData.events || [])) {
+            if (!ev.segs) continue;
+            for (const seg of ev.segs) {
+              if (seg.utf8 && seg.utf8 !== '\n') parts.push(seg.utf8.trim());
+            }
+          }
+          transcript = parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+        }
+      } catch (_) {}
+    }
+
+    // Timestamps from description
+    const timestamps = [];
+    const tsRegex = /(\d{1,2}:\d{2}(?::\d{2})?)\s+(.+)/g;
+    let tsMatch;
+    const descFull = rget(/"shortDescription":"((?:[^"\\]|\\.){0,3000})"/);
+    while ((tsMatch = tsRegex.exec(descFull)) !== null && timestamps.length < 20) {
+      timestamps.push({ time: tsMatch[1], label: tsMatch[2].trim() });
+    }
+
+    return {
+      title: title || 'YouTube Video',
+      author,
+      description: desc,
+      transcript: transcript.slice(0, 18000),
+      hasTranscript: transcript.length > 0,
+      duration,
+      views,
+      timestamps,
+      videoId
+    };
+  }
+
+  async function analyzeYouTubeContent(ytData) {
+    const hasTranscript = ytData.hasTranscript && ytData.transcript.length > 100;
+    const contentSource = hasTranscript
+      ? 'FULL TRANSCRIPT:\n' + ytData.transcript
+      : 'VIDEO DESCRIPTION:\n' + ytData.description;
+
+    const tsSection = ytData.timestamps.length
+      ? '\nTIMESTAMPS:\n' + ytData.timestamps.map(t => t.time + ' — ' + t.label).join('\n')
+      : '';
+
+    return groqCall([
+      { role: 'system', content:
+        'You are DecisionAI YouTube Intelligence — a world-class lecture analyst. ' +
+        'Given a YouTube video transcript or description, you generate comprehensive, professional study notes. ' +
+        'Your notes must cover ALL concepts discussed — do not skip anything important. ' +
+        'Write in a clear, expert voice. Every chapter must have real explanations, not vague summaries. ' +
+        'Always return valid JSON only, no markdown.'
+      },
+      { role: 'user', content:
+        'VIDEO: ' + ytData.title + '\n' +
+        'CHANNEL: ' + ytData.author + '\n' +
+        (ytData.duration ? 'DURATION: ' + ytData.duration + '\n' : '') +
+        tsSection + '\n\n' +
+        contentSource + '\n\n' +
+        'Generate comprehensive study notes. Return ONLY this JSON:\n' +
+        '{"contentType":"youtube","contentLabel":"YouTube ' + (hasTranscript ? 'Lecture' : 'Video') + '",' +
+        '"title":"' + (ytData.title||'').replace(/"/g,'\\"') + '",' +
+        '"channel":"' + (ytData.author||'').replace(/"/g,'\\"') + '",' +
+        '"duration":"' + (ytData.duration||'') + '",' +
+        '"views":"' + (ytData.views||'') + '",' +
+        '"topics":["topic1","topic2","topic3"],' +
+        '"quickOverview":"2-sentence executive overview of what this video covers and why it matters",' +
+        '"hasTranscript":' + hasTranscript + ',' +
+        '"youtube":{"introduction":"3-4 sentence introduction covering the video\'s purpose and scope",' +
+        '"chapters":[{"title":"Chapter title based on content","explanation":"Detailed paragraph — minimum 4 sentences — covering the main explanation given in this section. No vague language. Capture the actual concepts taught.","concepts":["Concept 1 with brief context","Concept 2"],"definitions":[{"term":"Term","definition":"Precise definition as given"}],"examples":["Specific example explained in the video"],"formulas":["Formula if present, else omit"]}],' +
+        '"importantPoints":["Specific point 1 — not vague","Point 2","Point 3","Point 4","Point 5"],' +
+        '"quickRevision":["Short bullet 1","Short bullet 2","Short bullet 3","Short bullet 4","Short bullet 5","Short bullet 6"],' +
+        '"conclusion":"3-4 sentence final conclusion covering the key lesson and takeaway"}}'
+      }
+    ], 'llama-3.3-70b-versatile');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   // SMARTY SEARCH — text/URL query from popup (no screenshot)
+  // ══════════════════════════════════════════════════════════════════════════
+
   async function handleSmartySearch({ query, pageUrl, pageTitle }) {
     showOverlay('masterscan', null);
     try {
+      // Detect YouTube URL — route to dedicated pipeline
+      const ytId = extractYouTubeId(query.trim());
+      if (ytId) {
+        updateOverlayLoadingText('Fetching YouTube data…');
+        const ytData = await fetchYouTubeData(ytId);
+        updateOverlayLoadingText(ytData.hasTranscript
+          ? 'Transcript found (' + ytData.transcript.split(' ').length + ' words) — generating study notes…'
+          : 'Generating notes from video metadata…');
+        const result = await analyzeYouTubeContent(ytData);
+        overlayShowResult(result, 'masterscan');
+        return;
+      }
+
+      // Generic Smarty search
       const result = await groqCall([
         { role: 'system', content: 'You are Smarty — a universal AI assistant by DecisionAI. Analyze URLs, answer questions, summarize content. When given a URL, infer the content type and provide a structured response. Always return valid JSON only, no markdown.' },
         { role: 'user', content:
@@ -171,20 +311,32 @@
           'Current page: ' + (pageUrl || 'unknown') + '\n' +
           'Page title: ' + (pageTitle || 'unknown') + '\n\n' +
           'Determine the intent and respond with this JSON:\n' +
-          '{"contentType":"article|research_paper|math|job_posting|video|product|code|social_post|question|other","contentLabel":"Human-readable label","title":"Detected or inferred title","confidence":90,' +
+          '{"contentType":"article|research_paper|math|job_posting|code|social_post|question|other","contentLabel":"Human-readable label","title":"Detected or inferred title","topics":["topic1"],"confidence":90,"quickOverview":"2-sentence overview",' +
           '"article":{"executiveSummary":"","keyTakeaways":[],"coreConcepts":[{"term":"","definition":""}],"expertPerspective":"","actionItems":[],"flashcards":[{"q":"","a":""}]},' +
-          '"research":{"abstract":"","methodology":"","findings":[],"conclusions":"","simplifiedExplanation":"","flashcards":[]},' +
-          '"math":{"problem":"","solution":"","steps":[{"step":1,"description":"","result":""}],"difficulty":""},' +
-          '"job":{"company":"","role":"","location":"","salary":"","requirements":[],"skills":[],"applicationTips":[],"redFlags":[]},' +
-          '"video":{"title":"","channel":"","summary":"","keyTopics":[],"studyNotes":[]},' +
-          '"code":{"language":"","explanation":"","improvements":[],"bugs":[]},' +
-          '"general":{"summary":"","keyInsights":[],"actionItems":[]}}'
+          '"research":{"abstract":"","methodology":"","keyFindings":[],"conclusions":"","simplifiedExplanation":"","limitations":"","flashcards":[]},' +
+          '"math":{"problem":"","solution":"","steps":[{"step":1,"description":"","result":""}],"difficulty":"","concepts":[]},' +
+          '"job":{"company":"","role":"","location":"","salary":"","overview":"","requirements":[],"skills":[],"applicationTips":[],"redFlags":[],"fitScore":""},' +
+          '"code":{"language":"","explanation":"","improvements":[],"bugs":[],"bestPractices":[]},' +
+          '"general":{"executiveSummary":"","keyInsights":[],"actionItems":[]}}'
         }
       ], 'llama-3.3-70b-versatile');
       overlayShowResult(result, 'masterscan');
     } catch (err) {
       overlayShowError(err.message);
     }
+  }
+
+  function updateOverlayLoadingText(msg) {
+    const el = document.querySelector('#__dai-overlay-panel #__dai-content div[style*="Analyzing"]');
+    if (!el) {
+      const desc = document.querySelector('#__dai-overlay-panel #__dai-content');
+      if (desc) {
+        const p = desc.querySelector('div[style*="Running"]');
+        if (p) p.textContent = msg;
+      }
+      return;
+    }
+    el.textContent = msg;
   }
 
   async function handleShowOverlay(message) {
@@ -650,6 +802,83 @@
         ((j.redFlags && j.redFlags.length) ? sec('⚠ Red Flags', '#ef4444',
           '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
           j.redFlags.map(x => li(x, '#ef4444')).join('') + '</ul>'
+        ) : '');
+
+    } else if (ct === 'youtube' && d.youtube) {
+      const y = d.youtube;
+      const transcriptBadge = d.hasTranscript
+        ? '<span style="font-size:9.5px;font-weight:700;color:#10b981;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);border-radius:100px;padding:2px 8px">✓ Full Transcript</span>'
+        : '<span style="font-size:9.5px;font-weight:700;color:#f59e0b;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:100px;padding:2px 8px">Metadata only</span>';
+
+      const metaBar = '<div style="padding:10px 16px 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px">' +
+        (d.channel ? badge('📺 ' + d.channel, accent) : '') +
+        (d.duration ? badge('⏱ ' + d.duration, 'rgba(255,255,255,0.1)') : '') +
+        (d.views ? badge('👁 ' + d.views, 'rgba(255,255,255,0.1)') : '') +
+        transcriptBadge +
+      '</div>';
+
+      const chaptersHTML = (y.chapters && y.chapters.length)
+        ? y.chapters.map((ch, idx) =>
+            '<div style="background:rgba(255,255,255,0.03);border:1px solid ' + accent + '25;border-radius:12px;overflow:hidden">' +
+              '<div style="padding:9px 14px;background:linear-gradient(90deg,' + accent + '18,transparent);border-bottom:1px solid ' + accent + '20;display:flex;align-items:center;gap:8px">' +
+                '<span style="font-size:9.5px;font-weight:800;color:' + accent + ';background:' + accent + '25;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">' + (idx+1) + '</span>' +
+                '<span style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(ch.title) + '</span>' +
+              '</div>' +
+              '<div style="padding:11px 14px;display:flex;flex-direction:column;gap:9px">' +
+                (ch.explanation ? '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7;margin:0">' + esc(ch.explanation) + '</p>' : '') +
+                ((ch.concepts && ch.concepts.length) ?
+                  '<div><div style="font-size:9.5px;font-weight:700;color:' + accent + ';text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px">Key Concepts</div>' +
+                  '<div style="display:flex;flex-wrap:wrap;gap:5px">' + ch.concepts.map(c => '<span style="font-size:11px;color:rgba(240,238,255,0.7);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:3px 9px">' + esc(c) + '</span>').join('') + '</div></div>'
+                : '') +
+                ((ch.definitions && ch.definitions.filter(d=>d.term).length) ?
+                  '<div><div style="font-size:9.5px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px">Definitions</div>' +
+                  '<div style="display:flex;flex-direction:column;gap:4px">' + ch.definitions.filter(d=>d.term).map(d =>
+                    '<div style="display:flex;gap:6px"><span style="font-size:11.5px;font-weight:700;color:#f59e0b;white-space:nowrap">' + esc(d.term) + ':</span><span style="font-size:11.5px;color:rgba(240,238,255,0.65);line-height:1.5">' + esc(d.definition) + '</span></div>'
+                  ).join('') + '</div></div>'
+                : '') +
+                ((ch.examples && ch.examples.length) ?
+                  '<div><div style="font-size:9.5px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px">Examples</div>' +
+                  '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px">' + ch.examples.map(x => li(x, '#10b981')).join('') + '</ul></div>'
+                : '') +
+                ((ch.formulas && ch.formulas.length) ?
+                  '<div><div style="font-size:9.5px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px">Formulas</div>' +
+                  '<div style="display:flex;flex-direction:column;gap:3px">' + ch.formulas.map(f => '<div style="font-size:12px;font-family:ui-monospace,monospace;color:#a78bfa;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);border-radius:7px;padding:5px 10px">' + esc(f) + '</div>').join('') + '</div></div>'
+                : '') +
+              '</div>' +
+            '</div>'
+          ).join('')
+        : '';
+
+      bodyHTML = metaBar +
+
+        (y.introduction ? sec('📝 Introduction', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(y.introduction) + '</p>'
+        ) : '') +
+
+        (chaptersHTML ? '<div style="display:flex;flex-direction:column;gap:8px">' + chaptersHTML + '</div>' : '') +
+
+        ((y.importantPoints && y.importantPoints.length) ? sec('🎯 Important Points', '#f59e0b',
+          '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px">' +
+          y.importantPoints.map((x, i) =>
+            '<li style="display:flex;align-items:flex-start;gap:9px">' +
+              '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.35);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:#f59e0b">' + (i+1) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+            '</li>'
+          ).join('') + '</ol>'
+        ) : '') +
+
+        ((y.quickRevision && y.quickRevision.length) ? sec('⚡ Quick Revision Notes', '#06b6d4',
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">' +
+          y.quickRevision.map(x =>
+            '<div style="display:flex;align-items:flex-start;gap:6px;padding:6px 8px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.15);border-radius:8px">' +
+              '<span style="color:#06b6d4;font-size:10px;font-weight:800;flex-shrink:0;margin-top:2px">›</span>' +
+              '<span style="font-size:11.5px;color:rgba(240,238,255,0.7);line-height:1.4">' + esc(x) + '</span>' +
+            '</div>'
+          ).join('') + '</div>'
+        ) : '') +
+
+        (y.conclusion ? sec('📚 Final Conclusion', '#10b981',
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(y.conclusion) + '</p>'
         ) : '');
 
     } else if (ct === 'video' && d.video) {
