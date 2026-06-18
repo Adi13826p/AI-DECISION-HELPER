@@ -284,17 +284,168 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SMARTY SEARCH — text/URL query from popup (no screenshot)
+  // INTENT DETECTION
+  // ══════════════════════════════════════════════════════════════════════════
+
+  function detectIntent(query) {
+    const q = query.trim();
+    const ql = q.toLowerCase();
+
+    if (extractYouTubeId(q)) return 'youtube';
+
+    if (/^https?:\/\//i.test(q)) return 'article_url';
+
+    if (/startup|build\s+(a\s+)?company|business\s+plan|founder|entrepreneurship|launch\s+(a\s+)?(product|startup|business)|mvp\s+(development|build|plan)|go.to.market|monetiz/i.test(ql))
+      return 'startup_roadmap';
+
+    if (/study\s+(plan|roadmap|schedule)|learn(ing)?\s+(roadmap|path|plan|schedule|guide)|roadmap\s+(for|to)\s+learn|how\s+to\s+(learn|master|become)\s+\w|course\s+plan|curriculum/i.test(ql))
+      return 'study_roadmap';
+
+    return 'problem';
+  }
+
+  // ── Article / URL fetcher ──────────────────────────────────────────────────
+
+  async function fetchArticleContent(url) {
+    const resp = await fetch(url, {
+      headers: { 'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9' }
+    });
+    if (!resp.ok) throw new Error('Could not fetch URL (HTTP ' + resp.status + ')');
+
+    const contentType = resp.headers.get('content-type') || '';
+    if (contentType.includes('application/pdf')) {
+      throw new Error('PDF_NO_PARSE');
+    }
+
+    const html = await resp.text();
+
+    // Title
+    const titleM = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleM ? titleM[1].trim().replace(/&amp;/g,'&').replace(/&#39;/g,"'") : url;
+
+    // Prefer article/main body content
+    let body = html;
+    const articleM = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)
+      || html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)
+      || html.match(/<div[^>]+(?:class|id)="[^"]*(?:post|article|content|story|body)[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    if (articleM) body = articleM[1];
+
+    const text = body
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+      .replace(/<header[\s\S]*?<\/header>/gi, '')
+      .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+      .replace(/<aside[\s\S]*?<\/aside>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+      .trim()
+      .slice(0, 16000);
+
+    return { title, text, url };
+  }
+
+  // ── Specialized AI callers ────────────────────────────────────────────────
+
+  function analyzeArticle(articleData) {
+    return groqCall([
+      { role: 'system', content: 'You are DecisionAI Article Intelligence — a professional content analyst. Extract only the most valuable information. Be thorough yet concise. No filler. Always return valid JSON only, no markdown.' },
+      { role: 'user', content:
+        'ARTICLE URL: ' + articleData.url + '\n' +
+        'TITLE: ' + articleData.title + '\n\n' +
+        'CONTENT:\n' + articleData.text + '\n\n' +
+        'Analyze this article. Return ONLY this JSON:\n' +
+        '{"contentType":"article_url","contentLabel":"Article Analysis","title":' + JSON.stringify(articleData.title) + ',' +
+        '"topics":["topic1","topic2"],' +
+        '"quickOverview":"2-sentence executive summary of the core message",' +
+        '"articleData":{"mainIdea":"2-3 sentences capturing the central argument or thesis",' +
+        '"importantHighlights":["Most valuable point — specific, not vague","Another high-value insight","Another","Another","Another"],' +
+        '"keyFacts":["Concrete fact or data point stated in the article","Another fact"],' +
+        '"importantData":["Any numbers, percentages, statistics, or measurements — exact values","Another data point"],' +
+        '"pros":["If the article reviews or compares — pros"],' +
+        '"cons":["Cons if applicable, or empty array"],' +
+        '"finalSummary":"3-4 sentence synthesis — what the reader should take away and why this matters"}}'
+      }
+    ], 'llama-3.3-70b-versatile');
+  }
+
+  function analyzeProblem(query) {
+    return groqCall([
+      { role: 'system', content: 'You are DecisionAI Problem Solver — an expert analytical mind. Break down any problem clearly and solve it step by step. Write in a direct, confident, expert voice. Always return valid JSON only, no markdown.' },
+      { role: 'user', content:
+        'PROBLEM / QUESTION:\n' + query + '\n\n' +
+        'Solve this thoroughly. Return ONLY this JSON:\n' +
+        '{"contentType":"problem","contentLabel":"Problem Solver",' +
+        '"title":"Concise problem title (8 words max)",' +
+        '"topics":["relevant topic"],' +
+        '"quickOverview":"One sentence: what this problem is and what the solution reveals",' +
+        '"problem":{"understanding":"2-3 sentences explaining what the problem is asking and what context matters",' +
+        '"solution":[{"step":1,"title":"Step title","explanation":"Full explanation of this step — minimum 2 sentences. Be specific."}],' +
+        '"reasoning":"2-3 sentences explaining the underlying logic of why this solution works",' +
+        '"example":"A concrete example that illustrates the solution — skip if not helpful",' +
+        '"finalAnswer":"The clear, direct, complete answer in 1-3 sentences",' +
+        '"relatedConcepts":["Related concept worth knowing","Another"]}}'
+      }
+    ], 'llama-3.3-70b-versatile');
+  }
+
+  function analyzeStartupRoadmap(query) {
+    return groqCall([
+      { role: 'system', content: 'You are DecisionAI Startup Advisor — a seasoned founder and VC advisor. Create practical, actionable startup roadmaps. Think like YC. Be specific with tasks, timelines, and tools. Always return valid JSON only, no markdown.' },
+      { role: 'user', content:
+        'STARTUP REQUEST:\n' + query + '\n\n' +
+        'Create a complete, practical startup roadmap. Return ONLY this JSON:\n' +
+        '{"contentType":"startup_roadmap","contentLabel":"Startup Roadmap",' +
+        '"title":"Startup Roadmap: [extract the startup idea/domain]",' +
+        '"topics":["topic1","topic2"],' +
+        '"quickOverview":"2-sentence summary of the startup goal and path to market",' +
+        '"roadmap":{"startupGoal":"Clear 2-3 sentence definition of what is being built, for whom, and what problem it solves",' +
+        '"phases":[{"name":"Phase 1: Foundation","duration":"Weeks 1–4","tasks":["Specific task 1","Task 2","Task 3"],"milestone":"What success looks like at end of this phase"},{"name":"Phase 2: Build MVP","duration":"Weeks 5–10","tasks":["Task 1","Task 2","Task 3"],"milestone":"MVP milestone"},{"name":"Phase 3: Launch","duration":"Weeks 11–14","tasks":["Task 1","Task 2"],"milestone":"Launch milestone"},{"name":"Phase 4: Growth","duration":"Month 4+","tasks":["Task 1","Task 2"],"milestone":"Growth milestone"}],' +
+        '"skillsNeeded":["Specific skill with context"],' +
+        '"toolsNeeded":["Tool — what it is used for"],' +
+        '"weeklySchedule":["Mon–Tue: specific focus","Wed–Thu: specific focus","Fri: specific focus","Weekend: optional"],' +
+        '"nextAction":"The single most important first step — concrete and specific",' +
+        '"watchOutFor":["Common mistake or pitfall for this type of startup"]}}'
+      }
+    ], 'llama-3.3-70b-versatile');
+  }
+
+  function analyzeStudyRoadmap(query) {
+    return groqCall([
+      { role: 'system', content: 'You are DecisionAI Learning Advisor — a world-class curriculum designer and educator. Create personalized, structured study plans. Be specific with resources, timelines, and daily schedules. Always return valid JSON only, no markdown.' },
+      { role: 'user', content:
+        'STUDY REQUEST:\n' + query + '\n\n' +
+        'Create a complete personalized study roadmap. Return ONLY this JSON:\n' +
+        '{"contentType":"study_roadmap","contentLabel":"Study Roadmap",' +
+        '"title":"Learning Path: [extract the subject]",' +
+        '"topics":["topic1","topic2"],' +
+        '"quickOverview":"2-sentence summary of what will be learned and the estimated timeline",' +
+        '"studyPlan":{"goal":"Clear 2-3 sentence learning goal — what the learner will be able to do",' +
+        '"currentLevel":"Assumed starting level based on the request",' +
+        '"targetLevel":"Where the learner will be after completing this plan",' +
+        '"totalDuration":"Estimated total time (e.g. 3 months)",' +
+        '"learningPath":[{"phase":"Week/Month 1","title":"Phase title","focus":"What this phase covers","topics":["Specific topic"],"resources":[{"name":"Resource name","type":"Book|Course|YouTube|Docs|Practice Site","url":"URL if known","note":"Why this resource"}],"dailyHours":"X hours/day","weekGoal":"What to accomplish by end of week"}],' +
+        '"dailySchedule":["Morning: specific activity","Afternoon: specific activity","Evening: specific activity"],' +
+        '"practicePlan":"2-3 sentences on how to practice — projects, exercises, challenges",' +
+        '"nextAction":"The single most important first step today — specific",' +
+        '"tips":["Practical learning tip specific to this subject"]}}'
+      }
+    ], 'llama-3.3-70b-versatile');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SMARTY SEARCH — intent-aware dispatcher
   // ══════════════════════════════════════════════════════════════════════════
 
   async function handleSmartySearch({ query, pageUrl, pageTitle }) {
     showOverlay('masterscan', null);
     try {
-      // Detect YouTube URL — route to dedicated pipeline
-      const ytId = extractYouTubeId(query.trim());
-      if (ytId) {
+      const intent = detectIntent(query);
+
+      if (intent === 'youtube') {
         updateOverlayLoadingText('Fetching YouTube data…');
-        const ytData = await fetchYouTubeData(ytId);
+        const ytData = await fetchYouTubeData(extractYouTubeId(query.trim()));
         updateOverlayLoadingText(ytData.hasTranscript
           ? 'Transcript found (' + ytData.transcript.split(' ').length + ' words) — generating study notes…'
           : 'Generating notes from video metadata…');
@@ -303,40 +454,53 @@
         return;
       }
 
-      // Generic Smarty search
-      const result = await groqCall([
-        { role: 'system', content: 'You are Smarty — a universal AI assistant by DecisionAI. Analyze URLs, answer questions, summarize content. When given a URL, infer the content type and provide a structured response. Always return valid JSON only, no markdown.' },
-        { role: 'user', content:
-          'User query: ' + query + '\n' +
-          'Current page: ' + (pageUrl || 'unknown') + '\n' +
-          'Page title: ' + (pageTitle || 'unknown') + '\n\n' +
-          'Determine the intent and respond with this JSON:\n' +
-          '{"contentType":"article|research_paper|math|job_posting|code|social_post|question|other","contentLabel":"Human-readable label","title":"Detected or inferred title","topics":["topic1"],"confidence":90,"quickOverview":"2-sentence overview",' +
-          '"article":{"executiveSummary":"","keyTakeaways":[],"coreConcepts":[{"term":"","definition":""}],"expertPerspective":"","actionItems":[],"flashcards":[{"q":"","a":""}]},' +
-          '"research":{"abstract":"","methodology":"","keyFindings":[],"conclusions":"","simplifiedExplanation":"","limitations":"","flashcards":[]},' +
-          '"math":{"problem":"","solution":"","steps":[{"step":1,"description":"","result":""}],"difficulty":"","concepts":[]},' +
-          '"job":{"company":"","role":"","location":"","salary":"","overview":"","requirements":[],"skills":[],"applicationTips":[],"redFlags":[],"fitScore":""},' +
-          '"code":{"language":"","explanation":"","improvements":[],"bugs":[],"bestPractices":[]},' +
-          '"general":{"executiveSummary":"","keyInsights":[],"actionItems":[]}}'
+      if (intent === 'article_url') {
+        updateOverlayLoadingText('Fetching article content…');
+        let articleData;
+        try {
+          articleData = await fetchArticleContent(query.trim());
+        } catch (e) {
+          if (e.message === 'PDF_NO_PARSE') {
+            overlayShowError('PDF files cannot be read directly. Try copying the text and pasting it into Smarty, or use a PDF-to-text tool first.');
+            return;
+          }
+          throw e;
         }
-      ], 'llama-3.3-70b-versatile');
+        updateOverlayLoadingText('Analyzing article — extracting key insights…');
+        const result = await analyzeArticle(articleData);
+        overlayShowResult(result, 'masterscan');
+        return;
+      }
+
+      if (intent === 'startup_roadmap') {
+        updateOverlayLoadingText('Building your startup roadmap…');
+        const result = await analyzeStartupRoadmap(query);
+        overlayShowResult(result, 'masterscan');
+        return;
+      }
+
+      if (intent === 'study_roadmap') {
+        updateOverlayLoadingText('Creating your personalized study plan…');
+        const result = await analyzeStudyRoadmap(query);
+        overlayShowResult(result, 'masterscan');
+        return;
+      }
+
+      // Default: problem solver
+      updateOverlayLoadingText('Solving your problem step by step…');
+      const result = await analyzeProblem(query);
       overlayShowResult(result, 'masterscan');
+
     } catch (err) {
       overlayShowError(err.message);
     }
   }
 
   function updateOverlayLoadingText(msg) {
-    const el = document.querySelector('#__dai-overlay-panel #__dai-content div[style*="Analyzing"]');
-    if (!el) {
-      const desc = document.querySelector('#__dai-overlay-panel #__dai-content');
-      if (desc) {
-        const p = desc.querySelector('div[style*="Running"]');
-        if (p) p.textContent = msg;
-      }
-      return;
-    }
-    el.textContent = msg;
+    const content = document.getElementById('__dai-content');
+    if (!content) return;
+    const descEl = content.querySelector('div[style*="Running"]');
+    if (descEl) descEl.textContent = msg;
   }
 
   async function handleShowOverlay(message) {
@@ -650,7 +814,240 @@
     // ── Per-content-type body ─────────────────────────────────────────────
     let bodyHTML = '';
 
-    if (ct === 'article' && d.article) {
+    // ── MODE 2: Article / URL Analyzer ───────────────────────────────────
+    if (ct === 'article_url' && d.articleData) {
+      const a = d.articleData;
+
+      bodyHTML =
+        (a.mainIdea ? sec('💡 Main Idea', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(a.mainIdea) + '</p>'
+        ) : '') +
+
+        ((a.importantHighlights && a.importantHighlights.length) ? sec('⭐ Important Highlights', accent,
+          '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px">' +
+          a.importantHighlights.map((x, i) =>
+            '<li style="display:flex;align-items:flex-start;gap:9px">' +
+              '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + accent + '20;border:1px solid ' + accent + '40;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
+              '<span style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.5;padding-top:2px">' + esc(x) + '</span>' +
+            '</li>'
+          ).join('') + '</ol>'
+        ) : '') +
+
+        ((a.keyFacts && a.keyFacts.length) ? sec('📌 Key Facts', '#10b981',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          a.keyFacts.map(x => li(x, '#10b981')).join('') + '</ul>'
+        ) : '') +
+
+        ((a.importantData && a.importantData.length) ? sec('📊 Important Numbers & Data', '#06b6d4',
+          '<div style="display:flex;flex-direction:column;gap:6px">' +
+          a.importantData.map(x =>
+            '<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 11px;background:rgba(6,182,212,0.07);border:1px solid rgba(6,182,212,0.2);border-radius:9px">' +
+              '<span style="color:#06b6d4;font-size:14px;font-weight:800;flex-shrink:0;line-height:1">›</span>' +
+              '<span style="font-size:12px;color:rgba(240,238,255,0.75);line-height:1.5">' + esc(x) + '</span>' +
+            '</div>'
+          ).join('') + '</div>'
+        ) : '') +
+
+        ((a.pros && a.pros.length && a.pros[0]) || (a.cons && a.cons.length && a.cons[0])
+          ? '<div style="padding:12px 16px 0"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+              ((a.pros && a.pros.length && a.pros[0]) ?
+                '<div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:10px 12px"><div style="font-size:9.5px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px">✓ Pros</div>' +
+                '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + a.pros.map(x => '<li style="display:flex;gap:6px"><span style="color:#10b981;flex-shrink:0">+</span><span style="font-size:11.5px;color:rgba(240,238,255,0.72);line-height:1.4">' + esc(x) + '</span></li>').join('') + '</ul></div>'
+              : '<div></div>') +
+              ((a.cons && a.cons.length && a.cons[0]) ?
+                '<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 12px"><div style="font-size:9.5px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px">✗ Cons</div>' +
+                '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + a.cons.map(x => '<li style="display:flex;gap:6px"><span style="color:#ef4444;flex-shrink:0">–</span><span style="font-size:11.5px;color:rgba(240,238,255,0.72);line-height:1.4">' + esc(x) + '</span></li>').join('') + '</ul></div>'
+              : '<div></div>') +
+            '</div></div>'
+          : '') +
+
+        (a.finalSummary ? sec('📝 Final Summary', '#f59e0b',
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(a.finalSummary) + '</p>'
+        ) : '');
+
+    // ── MODE 3: Problem Solver ────────────────────────────────────────────
+    } else if (ct === 'problem' && d.problem) {
+      const p = d.problem;
+
+      bodyHTML =
+        (p.understanding ? sec('🔍 Understanding the Problem', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(p.understanding) + '</p>'
+        ) : '') +
+
+        ((p.solution && p.solution.length) ? sec('⚙️ Step-by-Step Solution', accent,
+          '<div style="display:flex;flex-direction:column;gap:8px">' +
+          p.solution.map((s, i) =>
+            '<div style="background:rgba(255,255,255,0.03);border:1px solid ' + accent + '22;border-radius:11px;overflow:hidden">' +
+              '<div style="display:flex;align-items:center;gap:9px;padding:8px 13px;background:linear-gradient(90deg,' + accent + '15,transparent)">' +
+                '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + accent + '25;border:1px solid ' + accent + '45;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:' + accent + '">' + (i+1) + '</span>' +
+                '<span style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(s.title || ('Step ' + (i+1))) + '</span>' +
+              '</div>' +
+              '<div style="padding:9px 13px">' +
+                '<p style="font-size:12.5px;color:rgba(240,238,255,0.76);line-height:1.68;margin:0">' + esc(s.explanation) + '</p>' +
+              '</div>' +
+            '</div>'
+          ).join('') + '</div>'
+        ) : '') +
+
+        (p.reasoning ? sec('🧠 Why This Works', '#10b981',
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(p.reasoning) + '</p>'
+        ) : '') +
+
+        (p.example ? sec('📌 Example', '#f59e0b',
+          '<div style="padding:11px 14px;border-left:3px solid #f59e0b50;background:rgba(245,158,11,0.06);border-radius:0 10px 10px 0">' +
+            '<p style="font-size:12.5px;color:rgba(240,238,255,0.76);line-height:1.65;margin:0">' + esc(p.example) + '</p>' +
+          '</div>'
+        ) : '') +
+
+        (p.finalAnswer ? '<div style="padding:12px 16px 0">' +
+          '<div style="padding:13px 16px;background:linear-gradient(135deg,' + accent + '18,' + accent + '08);border:1.5px solid ' + accent + '40;border-radius:13px">' +
+            '<div style="font-size:9.5px;font-weight:800;color:' + accent + ';text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">✅ Final Answer</div>' +
+            '<p style="font-size:13px;font-weight:500;color:#f0eeff;line-height:1.65;margin:0">' + esc(p.finalAnswer) + '</p>' +
+          '</div>' +
+        '</div>' : '') +
+
+        ((p.relatedConcepts && p.relatedConcepts.length) ? sec('🔗 Related Concepts', 'rgba(255,255,255,0.25)',
+          '<div style="display:flex;flex-wrap:wrap;gap:5px">' +
+          p.relatedConcepts.map(c => '<span style="font-size:11px;color:rgba(240,238,255,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:3px 10px">' + esc(c) + '</span>').join('') +
+          '</div>'
+        ) : '');
+
+    // ── MODE 4: Startup Roadmap ───────────────────────────────────────────
+    } else if (ct === 'startup_roadmap' && d.roadmap) {
+      const r = d.roadmap;
+
+      const phaseColors = ['#7c3aed', '#2563eb', '#0891b2', '#059669'];
+
+      bodyHTML =
+        (r.startupGoal ? sec('🚀 Startup Goal', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(r.startupGoal) + '</p>'
+        ) : '') +
+
+        ((r.phases && r.phases.length) ? sec('🗺️ Roadmap Phases', accent,
+          '<div style="display:flex;flex-direction:column;gap:9px">' +
+          r.phases.map((ph, idx) => {
+            const pc = phaseColors[idx] || accent;
+            return '<div style="border:1px solid ' + pc + '30;border-radius:12px;overflow:hidden">' +
+              '<div style="padding:9px 14px;background:linear-gradient(90deg,' + pc + '20,transparent);display:flex;align-items:center;justify-content:space-between">' +
+                '<div style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(ph.name) + '</div>' +
+                (ph.duration ? '<div style="font-size:10px;color:rgba(240,238,255,0.4);background:rgba(255,255,255,0.06);border-radius:100px;padding:2px 9px">' + esc(ph.duration) + '</div>' : '') +
+              '</div>' +
+              '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:6px">' +
+                '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' +
+                  ph.tasks.map(t => '<li style="display:flex;gap:7px;font-size:12px;color:rgba(240,238,255,0.72)"><span style="color:' + pc + ';flex-shrink:0;font-weight:700">›</span>' + esc(t) + '</li>').join('') +
+                '</ul>' +
+                (ph.milestone ? '<div style="margin-top:4px;font-size:11px;color:' + pc + ';background:' + pc + '12;border:1px solid ' + pc + '25;border-radius:7px;padding:5px 9px">🎯 ' + esc(ph.milestone) + '</div>' : '') +
+              '</div>' +
+            '</div>';
+          }).join('') + '</div>'
+        ) : '') +
+
+        ((r.skillsNeeded && r.skillsNeeded.length) ? sec('🧩 Skills Needed', '#f59e0b',
+          '<div style="display:flex;flex-wrap:wrap;gap:5px">' +
+          r.skillsNeeded.map(s => '<span style="font-size:11.5px;color:rgba(240,238,255,0.7);background:rgba(245,158,11,0.09);border:1px solid rgba(245,158,11,0.25);border-radius:100px;padding:3px 10px">' + esc(s) + '</span>').join('') +
+          '</div>'
+        ) : '') +
+
+        ((r.toolsNeeded && r.toolsNeeded.length) ? sec('🛠️ Tools Needed', '#06b6d4',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' +
+          r.toolsNeeded.map(t => li(t, '#06b6d4')).join('') + '</ul>'
+        ) : '') +
+
+        ((r.weeklySchedule && r.weeklySchedule.length) ? sec('📅 Weekly Schedule', '#10b981',
+          '<div style="display:flex;flex-direction:column;gap:4px">' +
+          r.weeklySchedule.map(s =>
+            '<div style="font-size:12px;color:rgba(240,238,255,0.72);padding:5px 9px;background:rgba(16,185,129,0.06);border-radius:7px">' + esc(s) + '</div>'
+          ).join('') + '</div>'
+        ) : '') +
+
+        ((r.watchOutFor && r.watchOutFor.length) ? sec('⚠️ Watch Out For', '#ef4444',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' +
+          r.watchOutFor.map(x => li(x, '#ef4444')).join('') + '</ul>'
+        ) : '') +
+
+        (r.nextAction ? '<div style="padding:12px 16px 0">' +
+          '<div style="padding:13px 16px;background:linear-gradient(135deg,rgba(124,58,237,0.18),rgba(124,58,237,0.06));border:1.5px solid rgba(124,58,237,0.4);border-radius:13px">' +
+            '<div style="font-size:9.5px;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">⚡ Next Immediate Action</div>' +
+            '<p style="font-size:13px;font-weight:500;color:#f0eeff;line-height:1.6;margin:0">' + esc(r.nextAction) + '</p>' +
+          '</div>' +
+        '</div>' : '');
+
+    // ── MODE 5: Study Roadmap ─────────────────────────────────────────────
+    } else if (ct === 'study_roadmap' && d.studyPlan) {
+      const sp = d.studyPlan;
+
+      const levelBadge = (label, val, color) => val
+        ? '<div style="flex:1;padding:9px 11px;background:' + color + '0a;border:1px solid ' + color + '30;border-radius:10px;text-align:center">' +
+            '<div style="font-size:9px;font-weight:700;color:' + color + ';text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">' + label + '</div>' +
+            '<div style="font-size:12px;font-weight:600;color:rgba(240,238,255,0.8)">' + esc(val) + '</div>' +
+          '</div>'
+        : '';
+
+      bodyHTML =
+        (sp.goal ? sec('🎯 Learning Goal', accent,
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.82);line-height:1.72">' + esc(sp.goal) + '</p>'
+        ) : '') +
+
+        ((sp.currentLevel || sp.targetLevel || sp.totalDuration) ?
+          '<div style="padding:10px 16px 0"><div style="display:flex;gap:7px">' +
+          levelBadge('Current Level', sp.currentLevel, '#ef4444') +
+          levelBadge('Target Level', sp.targetLevel, '#10b981') +
+          levelBadge('Total Time', sp.totalDuration, '#f59e0b') +
+          '</div></div>'
+        : '') +
+
+        ((sp.learningPath && sp.learningPath.length) ? sec('📚 Learning Path', accent,
+          '<div style="display:flex;flex-direction:column;gap:9px">' +
+          sp.learningPath.map((phase, idx) => {
+            const pc = ['#7c3aed','#2563eb','#0891b2','#059669','#d97706'][idx % 5];
+            return '<div style="border:1px solid ' + pc + '30;border-radius:12px;overflow:hidden">' +
+              '<div style="padding:8px 14px;background:linear-gradient(90deg,' + pc + '1a,transparent);display:flex;align-items:center;justify-content:space-between">' +
+                '<div style="font-size:12px;font-weight:700;color:#f0eeff">' + esc(phase.phase) + (phase.title ? ' — ' + esc(phase.title) : '') + '</div>' +
+                (phase.dailyHours ? '<div style="font-size:10px;color:rgba(240,238,255,0.4);background:rgba(255,255,255,0.06);border-radius:100px;padding:2px 9px">⏱ ' + esc(phase.dailyHours) + '</div>' : '') +
+              '</div>' +
+              '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:7px">' +
+                (phase.focus ? '<p style="font-size:12px;color:rgba(240,238,255,0.72);margin:0;line-height:1.5">' + esc(phase.focus) + '</p>' : '') +
+                ((phase.topics && phase.topics.length) ?
+                  '<div style="display:flex;flex-wrap:wrap;gap:5px">' + phase.topics.map(t => '<span style="font-size:11px;color:rgba(240,238,255,0.65);background:' + pc + '0f;border:1px solid ' + pc + '28;border-radius:6px;padding:2px 8px">' + esc(t) + '</span>').join('') + '</div>'
+                : '') +
+                ((phase.resources && phase.resources.length) ?
+                  '<div style="display:flex;flex-direction:column;gap:3px">' + phase.resources.map(res =>
+                    '<div style="display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:rgba(240,238,255,0.65)">' +
+                      '<span style="color:' + pc + ';flex-shrink:0;font-weight:700;font-size:10px;margin-top:2px">▶</span>' +
+                      '<span>' + esc(typeof res === 'string' ? res : (res.name + (res.type ? ' [' + res.type + ']' : '') + (res.note ? ' — ' + res.note : ''))) + '</span>' +
+                    '</div>'
+                  ).join('') + '</div>'
+                : '') +
+                (phase.weekGoal ? '<div style="font-size:11px;color:' + pc + ';background:' + pc + '10;border-radius:7px;padding:5px 9px">✓ ' + esc(phase.weekGoal) + '</div>' : '') +
+              '</div>' +
+            '</div>';
+          }).join('') + '</div>'
+        ) : '') +
+
+        ((sp.dailySchedule && sp.dailySchedule.length) ? sec('⏰ Daily Schedule', '#06b6d4',
+          '<div style="display:flex;flex-direction:column;gap:4px">' +
+          sp.dailySchedule.map(s =>
+            '<div style="font-size:12px;color:rgba(240,238,255,0.72);padding:5px 9px;background:rgba(6,182,212,0.07);border-radius:7px">' + esc(s) + '</div>'
+          ).join('') + '</div>'
+        ) : '') +
+
+        (sp.practicePlan ? sec('💪 Practice Plan', '#10b981',
+          '<p style="font-size:12.5px;color:rgba(240,238,255,0.78);line-height:1.7">' + esc(sp.practicePlan) + '</p>'
+        ) : '') +
+
+        ((sp.tips && sp.tips.length) ? sec('💡 Pro Tips', '#f59e0b',
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px">' +
+          sp.tips.map(t => liAction(t)).join('') + '</ul>'
+        ) : '') +
+
+        (sp.nextAction ? '<div style="padding:12px 16px 0">' +
+          '<div style="padding:13px 16px;background:linear-gradient(135deg,' + accent + '18,' + accent + '08);border:1.5px solid ' + accent + '40;border-radius:13px">' +
+            '<div style="font-size:9.5px;font-weight:800;color:' + accent + ';text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px">⚡ Start Here Today</div>' +
+            '<p style="font-size:13px;font-weight:500;color:#f0eeff;line-height:1.6;margin:0">' + esc(sp.nextAction) + '</p>' +
+          '</div>' +
+        '</div>' : '');
+
+    } else if (ct === 'article' && d.article) {
       const a = d.article;
       bodyHTML =
         (a.executiveSummary ? sec('Executive Summary', accent,
