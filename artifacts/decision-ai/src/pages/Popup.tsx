@@ -94,8 +94,11 @@ export default function Popup() {
           />
         </main>
 
-        {/* Download Extension Banner */}
+        {/* Download Extension Banner — upgraded */}
         <div style={s.downloadBanner}>
+          {/* Background shimmer line */}
+          <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,transparent,rgba(138,92,255,0.6),rgba(255,79,216,0.6),transparent)",borderRadius:"14px 14px 0 0"}} />
+
           <div style={s.downloadLeft}>
             <div style={s.downloadIconWrap}>
               <svg style={s.downloadIcon} viewBox="0 0 24 24" fill="none">
@@ -105,7 +108,14 @@ export default function Popup() {
             </div>
             <div>
               <div style={s.downloadTitle}>Install Chrome Extension</div>
-              <div style={s.downloadSub}>Get the real browser overlay</div>
+              <div style={s.downloadSub}>Get the real browser overlay — free</div>
+              <div style={{display:"flex", gap:5, marginTop:5}}>
+                {["Product scanner","AI notes","Resume auto-fill"].map(f => (
+                  <span key={f} style={{fontSize:9, fontWeight:600, padding:"2px 7px", borderRadius:10, background:"rgba(138,92,255,0.1)", color:"#8A5CFF", border:"1px solid rgba(138,92,255,0.2)"}}>
+                    {f}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
           <DownloadButton />
@@ -403,21 +413,22 @@ const s: Record<string, React.CSSProperties> = {
   // Feature cards
   features: { display: "flex", flexDirection: "column", gap: 8, padding: "14px 12px 4px" },
   featureCard: {
-    display: "flex", alignItems: "flex-start", gap: 13, padding: "16px 15px",
+    display: "flex", alignItems: "flex-start", gap: 14, padding: "18px 16px",
     background: "#ffffff",
-    border: "1px solid rgba(236,72,153,0.14)",
-    borderRadius: 18, color: "inherit", textAlign: "left",
+    border: "1.5px solid rgba(236,72,153,0.14)",
+    borderRadius: 20, color: "inherit", textAlign: "left",
     transition: "background 0.25s, border-color 0.25s, transform 0.18s, box-shadow 0.25s",
     width: "100%",
     position: "relative",
     overflow: "hidden",
-    boxShadow: "0 2px 12px rgba(236,72,153,0.08)",
+    boxShadow: "0 4px 20px rgba(236,72,153,0.10), 0 1px 4px rgba(236,72,153,0.06)",
+    cursor: "pointer",
   },
   featureIconWrap: {
-    flexShrink: 0, width: 46, height: 46, borderRadius: 14,
+    flexShrink: 0, width: 52, height: 52, borderRadius: 16,
     display: "flex", alignItems: "center", justifyContent: "center",
   },
-  featureIconSvg: { width: 21, height: 21 },
+  featureIconSvg: { width: 24, height: 24 },
   featureContent: { flex: 1, minWidth: 0 },
   featureHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 },
   featureTitle: { fontSize: 14.5, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.3px" },
@@ -468,11 +479,14 @@ const s: Record<string, React.CSSProperties> = {
   downloadBanner: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
     margin: "8px 12px 0",
-    padding: "12px 14px",
-    background: "linear-gradient(135deg, rgba(236,72,153,0.07) 0%, rgba(244,63,94,0.05) 100%)",
-    border: "1px solid rgba(236,72,153,0.2)",
-    borderRadius: 14,
+    padding: "14px 16px",
+    background: "linear-gradient(135deg, rgba(138,92,255,0.09) 0%, rgba(255,79,216,0.06) 100%)",
+    border: "1.5px solid rgba(138,92,255,0.22)",
+    borderRadius: 18,
     gap: 10,
+    position: "relative",
+    overflow: "hidden",
+    boxShadow: "0 4px 20px rgba(138,92,255,0.10)",
   },
   downloadLeft: {
     display: "flex", alignItems: "center", gap: 10, minWidth: 0,

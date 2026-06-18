@@ -236,7 +236,7 @@ html, body {
   border: 1px solid rgba(124,58,237,0.2); border-radius: 100px; padding: 1px 6px;
 }
 .ws-tab-badge.complete { background: var(--green-bg); color: #059669; border-color: rgba(16,185,129,0.2); }
-.ws-panel { display: flex; flex-direction: column; }
+.ws-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
 
 /* ── Footer ─────────────────────────────────────────────────────────────────── */
 .footer {
@@ -255,6 +255,11 @@ html, body {
 
 #masterScanView {
   background: #f8f4ff;
+  height: 600px;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 #masterScanView .ws-header {
@@ -491,7 +496,7 @@ html, body {
    MY PROFILE PANEL (inside MasterScan)
 ══════════════════════════════════════════════════════════════════════════════ */
 
-#panelProfile { display: flex; flex-direction: column; max-height: 560px; }
+#panelProfile { display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0; }
 
 /* Save bar row */
 .prof-save-bar {

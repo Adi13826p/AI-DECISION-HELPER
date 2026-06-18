@@ -29,13 +29,13 @@ function loadProfile(): UserProfile {
 function saveProfile(p: UserProfile) { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); }
 
 /* ── Mode Config ───────────────────────────────────── */
-const MODES: { id: Mode; icon: string; label: string; placeholder: string; hint: string }[] = [
-  { id:"product",   icon:"📦", label:"Product",   placeholder:"Enter product name (e.g., iPhone 16 Pro)", hint:"AI product intelligence — score, pros, cons" },
-  { id:"article",   icon:"📰", label:"Article",   placeholder:"Paste a URL (https://...) or paste article text directly", hint:"URL fetched & analyzed — key points, takeaways & insights" },
-  { id:"youtube",   icon:"▶",  label:"YouTube",   placeholder:"Paste YouTube URL (e.g., https://youtube.com/watch?v=...)", hint:"Organized video notes, key timestamps & takeaways" },
-  { id:"planner",   icon:"🧭", label:"Planner",   placeholder:"Describe your goal (e.g., Learn Python in 30 days)", hint:"Roadmaps, schedules & action plans" },
-  { id:"resume",    icon:"📄", label:"Resume",    placeholder:"Paste job URL or description (optional)", hint:"Auto-fill from your saved profile" },
-  { id:"translate", icon:"🌐", label:"Translate", placeholder:"Paste text to translate — or select text from any result and tap Translate", hint:"Translate text or selected content into any language" },
+const MODES: { id: Mode; icon: string; label: string; placeholder: string; hint: string; color: string; bg: string; border: string }[] = [
+  { id:"product",   icon:"📦", label:"Product",   placeholder:"Enter product name (e.g., iPhone 16 Pro)",          hint:"AI product intelligence — score, pros & cons",       color:"#ec4899", bg:"rgba(236,72,153,0.09)",  border:"rgba(236,72,153,0.25)" },
+  { id:"article",   icon:"📰", label:"Article",   placeholder:"Paste a URL (https://...) or paste article text",    hint:"URL fetched & analyzed — key points & insights",     color:"#6c8dfa", bg:"rgba(108,141,250,0.09)", border:"rgba(108,141,250,0.25)" },
+  { id:"youtube",   icon:"▶",  label:"YouTube",   placeholder:"Paste YouTube URL (e.g., https://youtube.com/...)", hint:"Structured video notes, key moments & takeaways",    color:"#f87171", bg:"rgba(248,113,113,0.09)", border:"rgba(248,113,113,0.25)" },
+  { id:"planner",   icon:"🧭", label:"Planner",   placeholder:"Describe your goal (e.g., Learn Python in 30 days)", hint:"Roadmaps, schedules & step-by-step action plans",  color:"#10b981", bg:"rgba(16,185,129,0.09)",  border:"rgba(16,185,129,0.25)"  },
+  { id:"resume",    icon:"📄", label:"Resume",    placeholder:"Paste job URL or description (optional)",            hint:"Auto-fill forms from your saved profile",            color:"#a374ff", bg:"rgba(163,116,255,0.09)", border:"rgba(163,116,255,0.25)" },
+  { id:"translate", icon:"🌐", label:"Translate", placeholder:"Paste text to translate into any language",          hint:"Instantly translate text or selected content",       color:"#fb923c", bg:"rgba(251,146,60,0.09)",  border:"rgba(251,146,60,0.25)"  },
 ];
 
 const STEPS: Record<Mode, string[]> = {
@@ -198,29 +198,53 @@ function HomeView({ mode, setMode, query, setQuery, onAnalyze, error, profile, l
   const btnLabel = mode==="resume" ? "🪄 Auto-Fill Resume" : mode==="planner" ? "🧭 Generate Plan" : mode==="translate" ? "🌐 Translate Now" : mode==="youtube" ? "▶ Extract Notes" : "⚡ Analyze Now";
 
   return (
-    <div style={{flex:1, overflowY:"auto", padding:"14px 14px 32px", display:"flex", flexDirection:"column", gap:12}}>
+    <div style={{flex:1, overflowY:"auto", padding:"16px 14px 36px", display:"flex", flexDirection:"column", gap:14}}>
+
       {/* Mode tabs */}
-      <div style={{display:"flex", gap:5, overflowX:"auto", paddingBottom:2}}>
-        {MODES.map(m => (
-          <button key={m.id} onClick={() => setMode(m.id)}
-            style={{flexShrink:0, display:"flex", alignItems:"center", gap:4, padding:"6px 11px", borderRadius:20, border:"1px solid", fontSize:11.5, fontWeight:600, cursor:"pointer", transition:"all 0.15s",
-              background: mode===m.id ? "var(--accent)" : "var(--bg-surface)",
-              color:       mode===m.id ? "#fff" : "var(--text-secondary)",
-              borderColor: mode===m.id ? "var(--accent)" : "var(--border)",
-              boxShadow:   mode===m.id ? "0 3px 10px rgba(236,72,153,0.3)" : "none",
-            }}>
-            <span style={{fontSize:12}}>{m.icon}</span>{m.label}
-          </button>
-        ))}
+      <div style={{display:"flex", gap:6, overflowX:"auto", paddingBottom:2}}>
+        {MODES.map(m => {
+          const active = mode === m.id;
+          return (
+            <button key={m.id} onClick={() => setMode(m.id)}
+              style={{flexShrink:0, display:"flex", alignItems:"center", gap:5, padding:"7px 13px", borderRadius:22, border:"1px solid", fontSize:11.5, fontWeight:700, cursor:"pointer", transition:"all 0.18s",
+                background: active ? m.color : "var(--bg-surface)",
+                color:       active ? "#fff" : "var(--text-secondary)",
+                borderColor: active ? m.color : "var(--border)",
+                boxShadow:   active ? `0 4px 14px ${m.color}45` : "none",
+                transform:   active ? "translateY(-1px)" : "none",
+              }}>
+              <span style={{fontSize:13}}>{m.icon}</span>
+              {m.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Mode hint */}
-      <div style={{padding:"10px 14px", background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:11, display:"flex", alignItems:"center", gap:10}}>
-        <span style={{fontSize:22}}>{info.icon}</span>
-        <div>
-          <div style={{fontSize:12,fontWeight:700,color:"var(--text-primary)"}}>{info.label} Mode</div>
-          <div style={{fontSize:11,color:"var(--text-muted)"}}>{info.hint}</div>
+      {/* Mode hint card — colour-coded per mode */}
+      <div style={{
+        padding:"14px 16px",
+        background: `linear-gradient(135deg, ${info.bg} 0%, rgba(255,255,255,0.6) 100%)`,
+        border:`1.5px solid ${info.border}`,
+        borderRadius:16,
+        display:"flex", alignItems:"center", gap:13,
+        position:"relative", overflow:"hidden",
+      }}>
+        {/* Decorative blob */}
+        <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:`radial-gradient(circle,${info.color}22 0%,transparent 70%)`,pointerEvents:"none"}} />
+        {/* Icon bubble */}
+        <div style={{
+          flexShrink:0, width:44, height:44, borderRadius:14,
+          background:`linear-gradient(135deg,${info.color}25,${info.color}0e)`,
+          border:`1px solid ${info.color}35`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:22, boxShadow:`0 4px 16px ${info.color}20`,
+        }}>{info.icon}</div>
+        <div style={{flex:1, minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:800,color:"var(--text-primary)",letterSpacing:"-0.3px"}}>{info.label} Mode</div>
+          <div style={{fontSize:11.5,color:"var(--text-secondary)",marginTop:2,lineHeight:1.4}}>{info.hint}</div>
         </div>
+        {/* Active dot */}
+        <div style={{width:8,height:8,borderRadius:"50%",background:info.color,boxShadow:`0 0 10px ${info.color}`,flexShrink:0}} />
       </div>
 
       {/* Planner templates (only in planner mode) */}
@@ -233,39 +257,80 @@ function HomeView({ mode, setMode, query, setQuery, onAnalyze, error, profile, l
         <TranslateInput query={query} setQuery={setQuery} lang={lang} setLang={setLang} placeholder={info.placeholder} />
       ) : (
         <>
-          <textarea value={query} onChange={e => setQuery(e.target.value)} placeholder={info.placeholder} rows={4}
-            style={{width:"100%", padding:"12px 14px", background:"#fff", border:"1px solid rgba(236,72,153,0.2)", borderRadius:12, color:"var(--text-primary)", fontSize:13, fontFamily:"inherit", resize:"none", outline:"none", boxSizing:"border-box", lineHeight:1.6} as React.CSSProperties}
-            onFocus={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.5)"; e.currentTarget.style.boxShadow="0 0 0 3px rgba(236,72,153,0.1)"; }}
-            onBlur={e => { e.currentTarget.style.borderColor="rgba(236,72,153,0.2)"; e.currentTarget.style.boxShadow="none"; }}
-          />
+          <div style={{position:"relative"}}>
+            <textarea value={query} onChange={e => setQuery(e.target.value)} placeholder={info.placeholder} rows={5}
+              style={{width:"100%", padding:"14px 15px", background:"#fff",
+                border:`1.5px solid ${info.border}`,
+                borderRadius:14, color:"var(--text-primary)", fontSize:13, fontFamily:"inherit", resize:"none", outline:"none", boxSizing:"border-box", lineHeight:1.65,
+                boxShadow:`0 2px 12px ${info.color}10`} as React.CSSProperties}
+              onFocus={e => { e.currentTarget.style.borderColor=info.color; e.currentTarget.style.boxShadow=`0 0 0 3px ${info.color}20, 0 2px 12px ${info.color}15`; }}
+              onBlur={e => { e.currentTarget.style.borderColor=info.border; e.currentTarget.style.boxShadow=`0 2px 12px ${info.color}10`; }}
+            />
+            {query.length > 0 && (
+              <div style={{position:"absolute",bottom:10,right:12,fontSize:10,color:"var(--text-muted)",fontWeight:500,background:"rgba(255,255,255,0.9)",padding:"2px 6px",borderRadius:6}}>
+                {query.length} chars
+              </div>
+            )}
+          </div>
           {/* URL detection badge for article/youtube modes */}
           {(mode === "article" || mode === "youtube") && /^https?:\/\//i.test(query.trim()) && (
-            <div style={{display:"flex", alignItems:"center", gap:7, padding:"7px 11px", background: mode==="youtube" ? "rgba(248,113,113,0.06)" : "rgba(108,141,250,0.07)", border:`1px solid ${mode==="youtube" ? "rgba(248,113,113,0.22)" : "rgba(108,141,250,0.22)"}`, borderRadius:8, marginTop:-4}}>
-              <span style={{fontSize:13}}>{mode==="youtube" ? "▶" : "🔗"}</span>
-              <span style={{fontSize:11, fontWeight:600, color: mode==="youtube" ? "#f87171" : "#6c8dfa"}}>
-                {mode==="youtube" ? "YouTube URL detected — AI will generate structured video notes" : "URL detected — article content will be fetched and analyzed"}
+            <div style={{display:"flex", alignItems:"center", gap:8, padding:"9px 13px",
+              background: mode==="youtube" ? "rgba(248,113,113,0.08)" : "rgba(108,141,250,0.08)",
+              border:`1.5px solid ${mode==="youtube" ? "rgba(248,113,113,0.25)" : "rgba(108,141,250,0.25)"}`,
+              borderRadius:10, marginTop:-6}}>
+              <span style={{fontSize:14}}>{mode==="youtube" ? "▶" : "🔗"}</span>
+              <span style={{fontSize:11.5, fontWeight:600, color: mode==="youtube" ? "#f87171" : "#6c8dfa"}}>
+                {mode==="youtube" ? "YouTube URL detected — generating structured video notes" : "URL detected — fetching & analyzing article content"}
               </span>
             </div>
           )}
         </>
       )}
 
-      {error && <div style={{padding:"8px 12px", background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.2)", borderRadius:8, fontSize:11.5, color:"var(--red)"}}>{error}</div>}
+      {error && (
+        <div style={{padding:"10px 14px", background:"rgba(248,113,113,0.08)", border:"1.5px solid rgba(248,113,113,0.25)", borderRadius:10, fontSize:12, color:"var(--red)", display:"flex", gap:7, alignItems:"center"}}>
+          <span>⚠️</span>{error}
+        </div>
+      )}
 
+      {/* Analyze button — always visible, dims when empty */}
       <button onClick={onAnalyze} disabled={!canSubmit}
-        style={{padding:"13px", background: canSubmit ? "linear-gradient(135deg,#ec4899,#f43f5e)" : "var(--bg-elevated)", border:"none", borderRadius:12, color: canSubmit ? "#fff" : "var(--text-muted)", fontSize:14, fontWeight:700, cursor: canSubmit ? "pointer" : "not-allowed", transition:"all 0.2s", boxShadow: canSubmit ? "0 4px 16px rgba(236,72,153,0.3)" : "none"}}>
+        style={{
+          padding:"15px", borderRadius:14, border:"none", fontSize:15, fontWeight:800, cursor: canSubmit ? "pointer" : "not-allowed",
+          transition:"all 0.2s", letterSpacing:"-0.3px",
+          background: canSubmit
+            ? `linear-gradient(135deg, ${info.color}, ${info.color}cc)`
+            : "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(244,63,94,0.08))",
+          color: canSubmit ? "#fff" : "var(--text-muted)",
+          boxShadow: canSubmit ? `0 6px 20px ${info.color}45, 0 2px 8px ${info.color}25` : "none",
+          transform: canSubmit ? "none" : "none",
+        }}
+        onMouseEnter={e => { if (canSubmit) { e.currentTarget.style.transform="translateY(-1px)"; e.currentTarget.style.boxShadow=`0 10px 28px ${info.color}50, 0 4px 12px ${info.color}30`; }}}
+        onMouseLeave={e => { e.currentTarget.style.transform="none"; e.currentTarget.style.boxShadow=canSubmit ? `0 6px 20px ${info.color}45, 0 2px 8px ${info.color}25` : "none"; }}
+      >
         {btnLabel}
       </button>
 
-      {/* Quick examples (not for planner — templates handle it there) */}
-      {mode !== "planner" && (
+      {/* Quick examples */}
+      {mode !== "planner" && EXAMPLES[mode].length > 0 && (
         <div>
-          <div style={{fontSize:10,fontWeight:600,color:"var(--text-muted)",textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:8}}>Quick Examples</div>
-          <div style={{display:"flex", flexWrap:"wrap", gap:6}}>
+          <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:10}}>
+            <div style={{fontSize:10.5, fontWeight:700, color:"var(--text-muted)", textTransform:"uppercase", letterSpacing:"0.7px"}}>Try an example</div>
+            <div style={{flex:1, height:1, background:`linear-gradient(90deg, ${info.border}, transparent)`}} />
+          </div>
+          <div style={{display:"flex", flexWrap:"wrap", gap:7}}>
             {EXAMPLES[mode].map(ex => (
               <button key={ex} onClick={() => setQuery(ex)}
-                style={{fontSize:11, padding:"4px 10px", background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:20, color:"var(--text-secondary)", cursor:"pointer"}}>
-                {ex.length > 34 ? ex.slice(0,34)+"…" : ex}
+                style={{fontSize:11.5, padding:"6px 12px",
+                  background: `linear-gradient(135deg, ${info.bg}, rgba(255,255,255,0.8))`,
+                  border:`1px solid ${info.border}`,
+                  borderRadius:22, color: info.color, cursor:"pointer", fontWeight:600,
+                  transition:"all 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background=info.color; e.currentTarget.style.color="#fff"; e.currentTarget.style.boxShadow=`0 3px 12px ${info.color}35`; }}
+                onMouseLeave={e => { e.currentTarget.style.background=`linear-gradient(135deg, ${info.bg}, rgba(255,255,255,0.8))`; e.currentTarget.style.color=info.color; e.currentTarget.style.boxShadow="none"; }}
+              >
+                {ex.length > 36 ? ex.slice(0,36)+"…" : ex}
               </button>
             ))}
           </div>

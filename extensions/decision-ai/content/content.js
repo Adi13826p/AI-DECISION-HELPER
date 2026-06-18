@@ -692,9 +692,7 @@
   // ── Loading ───────────────────────────────────────────────────────────────
 
   function buildLoadingHTML(imageDataUrl, accent, label) {
-    const preview = imageDataUrl ? '<div style="width:100%;height:120px;background:url(\'' + imageDataUrl + '\') center/cover no-repeat;border-radius:10px;border:1px solid rgba(255,255,255,0.08);margin-bottom:4px;opacity:0.85"></div>' : '';
     return '<div style="padding:28px 20px;display:flex;flex-direction:column;gap:20px;animation:__dai-fadein 0.25s ease both">' +
-      preview +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0">' +
       '<div style="position:relative;width:52px;height:52px"><svg style="animation:__dai-spin 1s linear infinite" width="52" height="52" viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="22" stroke="rgba(255,255,255,0.07)" stroke-width="3"/><circle cx="26" cy="26" r="22" stroke="' + accent + '" stroke-width="3" stroke-linecap="round" stroke-dasharray="35 104"/></svg><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:' + accent + '"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div></div>' +
       '<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#f0eeff;margin-bottom:5px">Analyzing with AI…</div><div id="__dai-loading-desc" style="font-size:12px;color:rgba(240,238,255,0.45)">Running ' + label + ' on your selection</div></div>' +
