@@ -492,38 +492,119 @@ function ProductResultView({ data }: { data: ProductResult }) {
 }
 
 /* ── Smarty Result (Article / YouTube / Planner) ─────── */
+const SECTION_STYLES: Record<string, { accent: string; bg: string; border: string; numBg: string }> = {
+  summary:    { accent:"#ec4899", bg:"rgba(236,72,153,0.04)",  border:"rgba(236,72,153,0.18)", numBg:"rgba(236,72,153,0.12)" },
+  takeaways:  { accent:"#6c8dfa", bg:"rgba(108,141,250,0.04)", border:"rgba(108,141,250,0.18)", numBg:"rgba(108,141,250,0.12)" },
+  insights:   { accent:"#a374ff", bg:"rgba(163,116,255,0.04)", border:"rgba(163,116,255,0.18)", numBg:"rgba(163,116,255,0.12)" },
+  facts:      { accent:"#10b981", bg:"rgba(16,185,129,0.04)",  border:"rgba(16,185,129,0.18)",  numBg:"rgba(16,185,129,0.12)" },
+  conclusion: { accent:"#f43f5e", bg:"rgba(244,63,94,0.04)",   border:"rgba(244,63,94,0.18)",   numBg:"rgba(244,63,94,0.12)" },
+};
+const DEFAULT_SECTION_STYLE = { accent:"#ec4899", bg:"rgba(236,72,153,0.04)", border:"rgba(236,72,153,0.18)", numBg:"rgba(236,72,153,0.12)" };
+
 function SmartyResultView({ data, mode }: { data: SmartyResult; mode: Mode }) {
-  const [open, setOpen] = useState<string | null>(data.sections?.[0]?.id ?? null);
   const info = MODES.find(m => m.id === mode)!;
+  const sections = data.sections ?? [];
+
   return (
     <>
-      <div style={{padding:"12px 14px", background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:12, display:"flex", alignItems:"center", gap:10}}>
-        <span style={{fontSize:20}}>{info.icon}</span>
-        <div style={{flex:1, minWidth:0}}>
-          <div style={{fontSize:13,fontWeight:700,color:"var(--text-primary)",lineHeight:1.3,wordBreak:"break-word"}}>{data.title || `${info.label} Analysis`}</div>
-          <div style={{fontSize:10,color:"var(--text-muted)",marginTop:2}}>AI-generated {info.label.toLowerCase()} intelligence</div>
+      {/* ── Header card ── */}
+      <div style={{
+        background:"linear-gradient(135deg,rgba(236,72,153,0.07) 0%,rgba(108,141,250,0.05) 60%,rgba(163,116,255,0.04) 100%)",
+        border:"1px solid rgba(236,72,153,0.16)",
+        borderRadius:16,
+        padding:"16px 16px 14px",
+        position:"relative",
+        overflow:"hidden",
+      }}>
+        {/* decorative orb */}
+        <div style={{position:"absolute",top:-20,right:-20,width:90,height:90,borderRadius:"50%",background:"radial-gradient(circle,rgba(236,72,153,0.12),transparent 70%)",pointerEvents:"none"}} />
+        <div style={{display:"flex",alignItems:"flex-start",gap:12,position:"relative",zIndex:1}}>
+          <div style={{
+            width:40,height:40,borderRadius:12,flexShrink:0,
+            background:"linear-gradient(135deg,rgba(236,72,153,0.18),rgba(108,141,250,0.12))",
+            border:"1px solid rgba(236,72,153,0.22)",
+            display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,
+          }}>{info.icon}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{
+              fontSize:14.5,fontWeight:800,color:"var(--text-primary)",
+              lineHeight:1.3,wordBreak:"break-word",letterSpacing:"-0.2px",marginBottom:5,
+            }}>{data.title || `${info.label} Analysis`}</div>
+            <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+              <span style={{
+                fontSize:9.5,fontWeight:700,letterSpacing:"0.6px",textTransform:"uppercase",
+                background:"rgba(236,72,153,0.1)",color:"var(--accent)",
+                border:"1px solid rgba(236,72,153,0.2)",borderRadius:20,padding:"2px 8px",
+              }}>AI Intelligence</span>
+              <span style={{fontSize:10,color:"var(--text-muted)"}}>·</span>
+              <span style={{fontSize:10,color:"var(--text-muted)",fontWeight:500}}>{sections.length} sections · {sections.reduce((a,s)=>a+(s.content?.length??0),0)} insights</span>
+            </div>
+          </div>
         </div>
       </div>
-      {(data.sections ?? []).map(sec => (
-        <div key={sec.id} style={{background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:12, overflow:"hidden"}}>
-          <button onClick={() => setOpen(open === sec.id ? null : sec.id)}
-            style={{width:"100%", display:"flex", alignItems:"center", gap:10, padding:"12px 14px", background:"none", border:"none", cursor:"pointer", textAlign:"left"}}>
-            <span style={{fontSize:16,flexShrink:0}}>{sec.icon}</span>
-            <span style={{fontSize:12.5,fontWeight:600,color:"var(--text-primary)",flex:1}}>{sec.label}</span>
-            <span style={{fontSize:14,color:"var(--text-muted)", display:"inline-block", transform: open===sec.id ? "rotate(90deg)" : "none", transition:"transform 0.2s"}}>›</span>
-          </button>
-          {open === sec.id && (
-            <div style={{padding:"0 14px 12px", borderTop:"1px solid var(--border)", display:"flex", flexDirection:"column", gap:6, paddingTop:10}}>
+
+      {/* ── Sections ── */}
+      {sections.map((sec, sIdx) => {
+        const st = SECTION_STYLES[sec.id] ?? DEFAULT_SECTION_STYLE;
+        const isLast = sIdx === sections.length - 1;
+        return (
+          <div key={sec.id} style={{
+            background:"var(--bg-surface)",
+            border:`1px solid ${st.border}`,
+            borderRadius:14,
+            overflow:"hidden",
+          }}>
+            {/* Section header */}
+            <div style={{
+              padding:"11px 14px 10px",
+              background:st.bg,
+              borderBottom:`1px solid ${st.border}`,
+              display:"flex",alignItems:"center",gap:9,
+            }}>
+              <div style={{
+                width:28,height:28,borderRadius:8,flexShrink:0,
+                background:st.numBg,border:`1px solid ${st.border}`,
+                display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,
+              }}>{sec.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:11.5,fontWeight:800,color:st.accent,letterSpacing:"0.2px"}}>{sec.label}</div>
+              </div>
+              <div style={{
+                fontSize:9,fontWeight:700,letterSpacing:"0.5px",textTransform:"uppercase",
+                color:st.accent,opacity:0.7,
+              }}>{sec.content?.length ?? 0} points</div>
+            </div>
+
+            {/* Points */}
+            <div style={{display:"flex",flexDirection:"column",gap:0}}>
               {(sec.content ?? []).map((point, i) => (
-                <div key={i} style={{display:"flex", alignItems:"flex-start", gap:8, padding:"8px 10px", background:"var(--bg-elevated)", borderRadius:8}}>
-                  <span style={{color:"var(--accent)",fontWeight:700,flexShrink:0,fontSize:11,marginTop:1}}>→</span>
-                  <span style={{fontSize:12,color:"var(--text-primary)",lineHeight:1.6}}>{point}</span>
+                <div key={i} style={{
+                  display:"flex",alignItems:"flex-start",gap:11,
+                  padding:"11px 14px",
+                  borderBottom: i < (sec.content?.length ?? 0) - 1 ? `1px solid rgba(0,0,0,0.04)` : "none",
+                  background: i % 2 === 1 ? "rgba(0,0,0,0.012)" : "transparent",
+                }}>
+                  {/* Number badge */}
+                  <div style={{
+                    width:20,height:20,borderRadius:6,flexShrink:0,marginTop:1,
+                    background:st.numBg,border:`1px solid ${st.border}`,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    fontSize:9.5,fontWeight:800,color:st.accent,
+                  }}>{i + 1}</div>
+                  {/* Text */}
+                  <span style={{
+                    fontSize:12.5,color:"var(--text-primary)",lineHeight:1.65,
+                    flex:1,letterSpacing:"0.01px",
+                  }}>{point}</span>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-      ))}
+
+            {/* Bottom accent line */}
+            <div style={{height:2,background:`linear-gradient(90deg,${st.accent}30,transparent)`}} />
+          </div>
+        );
+      })}
     </>
   );
 }

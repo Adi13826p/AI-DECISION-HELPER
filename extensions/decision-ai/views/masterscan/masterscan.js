@@ -61,8 +61,7 @@ async function runAnalysis() {
 
   showState(STATES.LOADING);
   const prev = $('loadingPreview');
-  prev.style.backgroundImage = `url(${capturedData.image})`;
-  prev.classList.remove('hidden');
+  prev.classList.add('hidden');
 
   const animP = animateSteps(3200);
   try {
@@ -94,7 +93,7 @@ function showError(msg) {
 // ── Render Results ────────────────────────────────────────────────────────────
 
 function renderResults(data) {
-  $('capturePreview').style.backgroundImage = `url(${capturedData.image})`;
+  $('capturePreview').style.display = 'none';
 
   const ct = data.contentType || 'other';
   const cfg = CONTENT_TYPES[ct] || CONTENT_TYPES.other;
