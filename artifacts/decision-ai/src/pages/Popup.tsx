@@ -2,11 +2,87 @@ import React, { useState } from "react";
 import { TruthLayerPanel } from "@/pages/TruthLayer";
 import { MasterScanPanel } from "@/pages/MasterScan";
 
+const POPUP_KEYFRAMES = `
+  @keyframes gradient-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50%       { background-position: 100% 50%; }
+  }
+  @keyframes shimmer-sweep {
+    0%   { transform: translateX(-160%) skewX(-12deg); }
+    100% { transform: translateX(260%) skewX(-12deg); }
+  }
+  @keyframes sparkle-twinkle {
+    0%, 100% { opacity: 0;   transform: scale(0.4) rotate(0deg); }
+    25%       { opacity: 1;   transform: scale(1.4) rotate(60deg); }
+    55%       { opacity: 0.6; transform: scale(0.95) rotate(130deg); }
+    80%       { opacity: 0.9; transform: scale(1.2) rotate(195deg); }
+  }
+  @keyframes float-ping {
+    0%   { transform: scale(1);   opacity: 0.55; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+  @keyframes card-enter {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%       { transform: translate(12px, -16px) scale(1.09); }
+    66%       { transform: translate(-9px, 7px) scale(0.94); }
+  }
+  @keyframes top-bar-flow {
+    0%, 100% { background-position: 0% 50%; }
+    50%       { background-position: 100% 50%; }
+  }
+  @keyframes hero-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes logo-grad {
+    0%, 100% { background-position: 0% 50%; }
+    50%       { background-position: 100% 50%; }
+  }
+  /* Card shimmer */
+  .popup-card-shimmer::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.72) 50%, transparent 80%);
+    transform: translateX(-160%) skewX(-12deg);
+    pointer-events: none; z-index: 2; border-radius: 20px;
+  }
+  .popup-card-shimmer:hover::after {
+    animation: shimmer-sweep 0.55s ease-out forwards;
+  }
+  /* Staggered card entrance */
+  .popup-card-1 { animation: card-enter 0.45s cubic-bezier(0.16,1,0.3,1) 0.10s both; }
+  .popup-card-2 { animation: card-enter 0.45s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
+  /* Hero entrance */
+  .popup-hero   { animation: hero-up 0.4s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+  /* Sparkle ping ring */
+  .sparkle-ping-1::after {
+    content: '';
+    position: absolute; inset: -6px; border-radius: 50%;
+    border: 1px solid rgba(236,72,153,0.45);
+    animation: float-ping 2.3s ease-out infinite;
+    pointer-events: none;
+  }
+  /* Logo accent gradient */
+  .popup-logo-accent {
+    background: linear-gradient(90deg, #ec4899, #f43f5e, #a855f7, #f472b6, #ec4899);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: logo-grad 4s ease-in-out infinite;
+  }
+`;
+
 export default function Popup() {
   const [view, setView] = useState<"home" | "truth-layer" | "masterscan">("home");
 
   return (
     <div style={s.root}>
+      <style dangerouslySetInnerHTML={{ __html: POPUP_KEYFRAMES }} />
+
       {/* Layered ambient orbs */}
       <div style={s.blob1} />
       <div style={s.blob2} />
@@ -16,8 +92,20 @@ export default function Popup() {
       <div style={s.dotGrid} />
 
       <div style={s.popup}>
-        {/* Animated top border */}
+        {/* Animated rainbow top border */}
         <div style={s.topBorder} />
+
+        {/* Ambient orbs inside popup card */}
+        <div style={s.popupOrb1} />
+        <div style={s.popupOrb2} />
+        <div style={s.popupOrb3} />
+
+        {/* Floating sparkle particles */}
+        <span style={s.sp1} className="sparkle-ping-1">✦</span>
+        <span style={s.sp2}>✦</span>
+        <span style={s.sp3}>✶</span>
+        <span style={s.sp4}>✦</span>
+        <span style={s.sp5}>✦</span>
 
         {/* Header */}
         <header style={s.header}>
@@ -50,7 +138,7 @@ export default function Popup() {
               </svg>
             </div>
             <span style={s.logoText}>
-              Decision<span style={s.logoAccent}>AI</span>
+              Decision<span style={s.logoAccent} className="popup-logo-accent">AI</span>
             </span>
           </div>
           <div style={s.headerBadge}>
@@ -60,7 +148,7 @@ export default function Popup() {
         </header>
 
         {/* Hero */}
-        <div style={s.hero}>
+        <div style={s.hero} className="popup-hero">
           <div style={s.heroEyebrow}>
             <div style={s.eyebrowLine} />
             <span>AI-powered browser intelligence</span>
@@ -79,6 +167,7 @@ export default function Popup() {
             onClick={() => setView("truth-layer")}
             accentColor="#FF4FD8"
             accentScan={false}
+            cardClassName="popup-card-shimmer popup-card-1"
             icon={
               <svg style={s.featureIconSvg} viewBox="0 0 24 24" fill="none">
                 <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6"/>
@@ -98,6 +187,7 @@ export default function Popup() {
             accentColor="#a374ff"
             accentScan
             dimmed
+            cardClassName="popup-card-shimmer popup-card-2"
             icon={
               <svg style={s.featureIconSvg} viewBox="0 0 24 24" fill="none">
                 <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.6"/>
@@ -221,7 +311,7 @@ function DownloadButton() {
 
 function FeatureCard({
   onClick, accentColor, accentScan, icon, title, tag,
-  desc, bullets, bulletDone, dimmed,
+  desc, bullets, bulletDone, dimmed, cardClassName,
 }: {
   onClick: () => void;
   accentColor: string; accentScan: boolean;
@@ -232,6 +322,7 @@ function FeatureCard({
   bullets: string[];
   bulletDone: boolean;
   dimmed?: boolean;
+  cardClassName?: string;
 }) {
   const glowColor = accentScan ? "rgba(244,63,94,0.12)" : "rgba(236,72,153,0.12)";
 
@@ -253,6 +344,7 @@ function FeatureCard({
   return (
     <button
       style={{ ...s.featureCard, opacity: dimmed ? 0.85 : 1 }}
+      className={cardClassName}
       onClick={onClick}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
@@ -362,9 +454,57 @@ const s: Record<string, React.CSSProperties> = {
     zIndex: 1,
   },
   topBorder: {
-    height: 2,
-    background: "linear-gradient(90deg, transparent 0%, #ec4899 25%, #f472b6 50%, #f43f5e 75%, transparent 100%)",
-    opacity: 1,
+    height: 2.5, flexShrink: 0,
+    background: "linear-gradient(90deg, #ec4899, #f472b6, #a855f7, #f43f5e, #f472b6, #ec4899)",
+    backgroundSize: "300% 100%",
+    animation: "top-bar-flow 3.5s ease-in-out infinite",
+  },
+
+  // Inline popup orbs
+  popupOrb1: {
+    position: "absolute", borderRadius: "50%", pointerEvents: "none", zIndex: 0,
+    width: 220, height: 220, top: -70, right: -55,
+    background: "radial-gradient(circle, rgba(236,72,153,0.10) 0%, transparent 68%)",
+    animation: "orb-float 15s ease-in-out infinite",
+  },
+  popupOrb2: {
+    position: "absolute", borderRadius: "50%", pointerEvents: "none", zIndex: 0,
+    width: 160, height: 160, bottom: -45, left: -45,
+    background: "radial-gradient(circle, rgba(168,85,247,0.09) 0%, transparent 68%)",
+    animation: "orb-float 20s ease-in-out infinite reverse",
+  },
+  popupOrb3: {
+    position: "absolute", borderRadius: "50%", pointerEvents: "none", zIndex: 0,
+    width: 120, height: 120, top: "42%", right: -25,
+    background: "radial-gradient(circle, rgba(244,63,94,0.07) 0%, transparent 68%)",
+    animation: "orb-float 13s ease-in-out infinite 2s",
+  },
+
+  // Sparkle particles
+  sp1: {
+    position: "absolute", pointerEvents: "none", zIndex: 5, userSelect: "none",
+    top: 15, right: 22, fontSize: 9, color: "#ec4899",
+    animation: "sparkle-twinkle 3.8s ease-in-out infinite 0s",
+  },
+  sp2: {
+    position: "absolute", pointerEvents: "none", zIndex: 5, userSelect: "none",
+    top: 48, right: 15, fontSize: 5.5, color: "#f472b6",
+    animation: "sparkle-twinkle 3.8s ease-in-out infinite 1.1s",
+  },
+  sp3: {
+    position: "absolute", pointerEvents: "none", zIndex: 5, userSelect: "none",
+    top: 30, left: 20, fontSize: 6, color: "#f43f5e",
+    animation: "sparkle-twinkle 3.8s ease-in-out infinite 0.55s",
+  },
+  sp4: {
+    position: "absolute", pointerEvents: "none", zIndex: 5, userSelect: "none",
+    bottom: 100, right: 24, fontSize: 7.5, color: "#a855f7",
+    animation: "sparkle-twinkle 3.8s ease-in-out infinite 2.2s",
+  },
+  sp5: {
+    position: "absolute", pointerEvents: "none", zIndex: 5, userSelect: "none",
+    bottom: 148, left: 26, fontSize: 5, color: "#ec4899",
+    animation: "sparkle-twinkle 3.8s ease-in-out infinite 1.65s",
   },
 
   // Header
