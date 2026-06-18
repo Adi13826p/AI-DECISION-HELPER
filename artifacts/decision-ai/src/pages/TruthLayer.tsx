@@ -3,6 +3,13 @@ import { useLocation } from "wouter";
 import { type TruthLayerResult } from "@/lib/mockData";
 
 /* ── Normalise raw API response ─────────────────────── */
+function normalizeVerdictType(t: unknown): 'recommended' | 'consider' | 'avoid' {
+  const s = String(t ?? '').toLowerCase();
+  if (s.includes('avoid') || s.includes('skip')) return 'avoid';
+  if (s.includes('consider') || s.includes('maybe') || s.includes('neutral')) return 'consider';
+  return 'recommended';
+}
+
 function normalizeResult(raw: unknown): TruthLayerResult {
   const d = raw as Record<string, unknown>;
   const toNum = (v: unknown): number => {
@@ -45,6 +52,10 @@ function normalizeResult(raw: unknown): TruthLayerResult {
     customerReviews: (d.customerReviews as TruthLayerResult["customerReviews"] | undefined) ?? [],
     whoShouldBuy:    (d.whoShouldBuy as string[] | undefined) ?? [],
     whoShouldSkip:   (d.whoShouldSkip as string[] | undefined) ?? [],
+    verdict: {
+      ...((d.verdict ?? {}) as TruthLayerResult["verdict"]),
+      type: normalizeVerdictType((d.verdict as Record<string, unknown> | undefined)?.type),
+    },
   };
 }
 
@@ -489,11 +500,12 @@ function ResultsDashboard({ result, onReanalyze }: { result: TruthLayerResult; o
 /* ── 1. Product Header ──────────────────────────────── */
 function ProductHeader({ product, score, verdict, stats }: { product: TruthLayerResult["product"]; score: number; verdict: TruthLayerResult["verdict"]; stats: TruthLayerResult["analysisStats"] }) {
   const col = score>=80 ? "#34d399" : score>=65 ? "#fbbf24" : "#f87171";
-  const verdictCfg = {
+  const verdictCfgMap = {
     recommended: { bg:"rgba(52,211,153,0.12)", color:"#34d399", border:"rgba(52,211,153,0.3)" },
     consider:    { bg:"rgba(251,191,36,0.12)",  color:"#fbbf24", border:"rgba(251,191,36,0.3)" },
     avoid:       { bg:"rgba(248,113,113,0.12)", color:"#f87171", border:"rgba(248,113,113,0.3)" },
-  }[verdict.type];
+  };
+  const verdictCfg = verdictCfgMap[verdict.type as keyof typeof verdictCfgMap] ?? verdictCfgMap.recommended;
 
   return (
     <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border)", borderRadius:16, overflow:"hidden" }}>
