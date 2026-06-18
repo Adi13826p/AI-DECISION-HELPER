@@ -645,7 +645,7 @@ html, body {
   cursor: pointer; text-align: left; transition: background 0.14s;
 }
 .prof-sec-header:hover { background: var(--bg-elevated); }
-.prof-sec-left { display: flex; align-items: center; gap: 8px; }
+.prof-sec-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; overflow: hidden; }
 
 .prof-sec-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
@@ -655,7 +655,7 @@ html, body {
 .prof-sec-dot.dot-missing  { background: var(--yellow); box-shadow: 0 0 5px rgba(245,158,11,0.4); }
 .prof-sec-dot.dot-partial  { background: var(--accent-profile); box-shadow: 0 0 5px rgba(124,58,237,0.4); }
 
-.prof-sec-title { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
+.prof-sec-title { font-size: 12.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .prof-sec-arrow {
   color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0;
