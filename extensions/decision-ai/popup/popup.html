@@ -8,127 +8,217 @@
 </head>
 <body>
   <div class="app">
-    <header class="header">
-      <div class="logo">
-        <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-        </svg>
-        <span class="logo-text">Decision<span class="logo-accent">AI</span></span>
-      </div>
-      <div class="header-right">
-        <div class="header-badge">Beta</div>
-        <button class="settings-btn" id="settingsBtn" title="API Key Settings">
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- ── HOME VIEW ──────────────────────────────────────────────────────── -->
+    <div id="homeView">
+      <header class="header">
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
           </svg>
+          <span class="logo-text">Decision<span class="logo-accent">AI</span></span>
+        </div>
+        <div class="header-right">
+          <div class="header-badge">Beta</div>
+          <button class="settings-btn" id="settingsBtn" title="API Key Settings">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Settings panel -->
+      <div class="settings-panel hidden" id="settingsPanel">
+        <div class="settings-title">
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+            <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Groq API Key
+        </div>
+        <div class="settings-desc">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
+        <div class="settings-input-row">
+          <input type="password" id="apiKeyInput" class="api-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+          <button class="save-key-btn" id="saveKeyBtn">Save</button>
+        </div>
+        <div class="key-status hidden" id="keyStatus"></div>
+      </div>
+
+      <div class="hero">
+        <p class="hero-tagline">Select any area on screen. Get instant AI insights.</p>
+      </div>
+
+      <main class="features">
+        <button class="feature-card" id="truthLayerBtn">
+          <div class="feature-icon-wrap feature-icon-truth">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="feature-content">
+            <div class="feature-header">
+              <h2 class="feature-title">Truth Layer</h2>
+              <span class="feature-tag feature-tag-live">Live</span>
+            </div>
+            <p class="feature-desc">Select any product on screen for a full analysis — reviews, price comparison, and buy recommendation.</p>
+            <ul class="feature-bullets">
+              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Price comparison across stores</li>
+              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Red flag detection</li>
+              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Buy recommendation</li>
+            </ul>
+          </div>
+          <div class="feature-arrow">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
         </button>
-      </div>
-    </header>
 
-    <!-- Settings panel -->
-    <div class="settings-panel hidden" id="settingsPanel">
-      <div class="settings-title">
-        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-          <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-          <path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
-        Groq API Key
-      </div>
-      <div class="settings-desc">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
-      <div class="settings-input-row">
-        <input type="password" id="apiKeyInput" class="api-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
-        <button class="save-key-btn" id="saveKeyBtn">Save</button>
-      </div>
-      <div class="key-status hidden" id="keyStatus"></div>
+        <button class="feature-card" id="masterScanBtn">
+          <div class="feature-icon-wrap feature-icon-scan">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="feature-content">
+            <div class="feature-header">
+              <h2 class="feature-title">MasterScan</h2>
+              <span class="feature-tag feature-tag-new">New</span>
+            </div>
+            <p class="feature-desc">Universal AI copilot. Paste any URL, ask a question, or scan your screen — instant summaries, notes, and solutions.</p>
+            <ul class="feature-bullets">
+              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>YouTube, articles, research papers</li>
+              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Ask any question with AI</li>
+              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan any area of the screen</li>
+            </ul>
+          </div>
+          <div class="feature-arrow">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </button>
+      </main>
+
+      <footer class="footer">
+        <div class="api-key-indicator" id="apiKeyIndicator">
+          <span class="indicator-dot" id="indicatorDot"></span>
+          <span id="indicatorLabel">Checking…</span>
+        </div>
+        <span>v1.0.0</span>
+      </footer>
     </div>
 
-    <div class="hero">
-      <p class="hero-tagline">Select any area on screen. Get instant AI insights.</p>
+    <!-- ── MASTERSCAN WORKSPACE VIEW ──────────────────────────────────────── -->
+    <div id="masterScanView" class="hidden">
+      <header class="header ws-header">
+        <button class="back-btn" id="backBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Back
+        </button>
+        <div class="ws-title">
+          <div class="ws-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
+              <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span>MasterScan</span>
+        </div>
+        <div style="width:56px"></div>
+      </header>
+
+      <div class="workspace">
+        <!-- Search bar -->
+        <div class="ws-search-wrap">
+          <div class="ws-search-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="15" height="15">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <textarea
+            id="smartyInput"
+            class="ws-search"
+            placeholder="Paste YouTube URL, article link, PDF link, or ask anything…"
+            rows="3"
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- Example chips -->
+        <div class="ws-chips">
+          <span class="ws-chip-label">Try:</span>
+          <button class="ws-chip" data-example="youtube">
+            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><rect x="2" y="5" width="20" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 9l5 3-5 3V9z" fill="currentColor"/></svg>
+            YouTube URL
+          </button>
+          <button class="ws-chip" data-example="research">
+            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Research Paper
+          </button>
+          <button class="ws-chip" data-example="blog">
+            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Blog URL
+          </button>
+          <button class="ws-chip" data-example="ask">
+            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M9 9a3 3 0 015.12 2.12c0 1.5-1.5 2.25-2.12 3M12 17h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Ask Smarty
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="ws-divider">
+          <span>Choose how to analyze</span>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="ws-actions">
+          <button class="ws-action-btn ws-action-primary" id="smartySearchBtn">
+            <div class="ws-action-icon ws-action-icon-primary">
+              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="ws-action-text">
+              <div class="ws-action-title">Search with Smarty</div>
+              <div class="ws-action-desc">Analyze URL, question, or pasted text</div>
+            </div>
+            <svg class="ws-action-arrow" viewBox="0 0 24 24" fill="none" width="14" height="14">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button class="ws-action-btn ws-action-secondary" id="scanScreenBtn">
+            <div class="ws-action-icon ws-action-icon-secondary">
+              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+                <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <rect x="8" y="8" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.4"/>
+              </svg>
+            </div>
+            <div class="ws-action-text">
+              <div class="ws-action-title">Scan Screen</div>
+              <div class="ws-action-desc">Draw a box around any area on screen</div>
+            </div>
+            <svg class="ws-action-arrow" viewBox="0 0 24 24" fill="none" width="14" height="14">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <main class="features">
-      <button class="feature-card" id="truthLayerBtn">
-        <div class="feature-icon-wrap feature-icon-truth">
-          <svg viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="feature-content">
-          <div class="feature-header">
-            <h2 class="feature-title">Truth Layer</h2>
-            <span class="feature-tag feature-tag-live">Live</span>
-          </div>
-          <p class="feature-desc">Select any product on screen for a full analysis — reviews, price comparison, and buy recommendation.</p>
-          <ul class="feature-bullets">
-            <li>
-              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Price comparison across stores
-            </li>
-            <li>
-              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Red flag detection
-            </li>
-            <li>
-              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Buy recommendation
-            </li>
-          </ul>
-        </div>
-        <div class="feature-arrow">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-      </button>
-
-      <button class="feature-card" id="masterScanBtn">
-        <div class="feature-icon-wrap feature-icon-scan">
-          <svg viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="feature-content">
-          <div class="feature-header">
-            <h2 class="feature-title">MasterScan</h2>
-            <span class="feature-tag feature-tag-new">New</span>
-          </div>
-          <p class="feature-desc">Universal AI copilot. Select articles, research papers, math, job posts, videos — get instant summaries, notes, and solutions.</p>
-          <ul class="feature-bullets">
-            <li>
-              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Summarize &amp; explain anything
-            </li>
-            <li>
-              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Solve math step-by-step
-            </li>
-            <li>
-              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Flashcards &amp; quiz generation
-            </li>
-          </ul>
-        </div>
-        <div class="feature-arrow">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-      </button>
-    </main>
-
-    <footer class="footer">
-      <div class="api-key-indicator" id="apiKeyIndicator">
-        <span class="indicator-dot" id="indicatorDot"></span>
-        <span id="indicatorLabel">Checking…</span>
-      </div>
-      <span>v1.0.0</span>
-    </footer>
   </div>
-
   <script src="popup.js"></script>
 </body>
 </html>

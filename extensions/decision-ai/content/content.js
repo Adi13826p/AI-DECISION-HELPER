@@ -135,6 +135,9 @@
       case 'SHOW_OVERLAY':
         handleShowOverlay(message);
         return false;
+      case 'SMARTY_SEARCH':
+        handleSmartySearch(message);
+        return false;
       default:
         return false;
     }
@@ -143,6 +146,33 @@
   // ══════════════════════════════════════════════════════════════════════════
   // OVERLAY — main entry point
   // ══════════════════════════════════════════════════════════════════════════
+
+  // SMARTY SEARCH — text/URL query from popup (no screenshot)
+  async function handleSmartySearch({ query, pageUrl, pageTitle }) {
+    showOverlay('masterscan', null);
+    try {
+      const result = await groqCall([
+        { role: 'system', content: 'You are Smarty — a universal AI assistant by DecisionAI. Analyze URLs, answer questions, summarize content. When given a URL, infer the content type and provide a structured response. Always return valid JSON only, no markdown.' },
+        { role: 'user', content:
+          'User query: ' + query + '\n' +
+          'Current page: ' + (pageUrl || 'unknown') + '\n' +
+          'Page title: ' + (pageTitle || 'unknown') + '\n\n' +
+          'Determine the intent and respond with this JSON:\n' +
+          '{"contentType":"article|research_paper|math|job_posting|video|product|code|social_post|question|other","contentLabel":"Human-readable label","title":"Detected or inferred title","confidence":90,' +
+          '"article":{"summary":"","keyPoints":[],"sentiment":"","readingTime":"","flashcards":[{"q":"","a":""}]},' +
+          '"research":{"abstract":"","methodology":"","findings":[],"conclusions":"","simplifiedExplanation":"","flashcards":[]},' +
+          '"math":{"problem":"","solution":"","steps":[{"step":1,"description":"","result":""}],"difficulty":""},' +
+          '"job":{"company":"","role":"","location":"","salary":"","requirements":[],"skills":[],"applicationTips":[],"redFlags":[]},' +
+          '"video":{"title":"","channel":"","summary":"","keyTopics":[],"studyNotes":[]},' +
+          '"code":{"language":"","explanation":"","improvements":[],"bugs":[]},' +
+          '"general":{"summary":"","keyInsights":[],"actionItems":[]}}'
+        }
+      ], 'llama-3.3-70b-versatile');
+      overlayShowResult(result, 'masterscan');
+    } catch (err) {
+      overlayShowError(err.message);
+    }
+  }
 
   async function handleShowOverlay(message) {
     const { mode, imageDataUrl, pageUrl, pageTitle, error } = message;
