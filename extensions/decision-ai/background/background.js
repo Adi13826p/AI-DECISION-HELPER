@@ -63,6 +63,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         try {
           const croppedDataUrl = await cropImage(dataUrl, rect, dpr);
 
+          // Ensure content script is injected before messaging it
+          await chrome.scripting.executeScript({
+            target: { tabId },
+            files: ['content/content.js']
+          }).catch(() => {});
+
           // Send cropped image to content script — it handles the AI call and UI
           chrome.tabs.sendMessage(tabId, {
             type: 'SHOW_OVERLAY',
@@ -104,6 +110,63 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: true });
       });
       return true;
+
+    case 'FETCH_URL': {
+      // Generic URL fetcher — routes from content script to bypass CORS
+      (async () => {
+        try {
+          const resp = await fetch(message.url, {
+            headers: {
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.9',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            }
+          });
+          const contentType = resp.headers.get('content-type') || '';
+          if (contentType.includes('application/pdf')) {
+            sendResponse({ success: false, error: 'PDF_NO_PARSE' });
+            return;
+          }
+          if (!resp.ok) {
+            sendResponse({ success: false, error: 'HTTP ' + resp.status });
+            return;
+          }
+          const html = await resp.text();
+          sendResponse({ success: true, html, contentType });
+        } catch (err) {
+          sendResponse({ success: false, error: err.message });
+        }
+      })();
+      return true;
+    }
+
+    case 'FETCH_YOUTUBE': {
+      (async () => {
+        try {
+          if (message.captUrl) {
+            // Fetch caption track JSON — also needs background context to avoid CORS
+            const resp = await fetch(message.captUrl + '&fmt=json3');
+            if (!resp.ok) { sendResponse({ success: false, error: 'Caption fetch failed: ' + resp.status }); return; }
+            const data = await resp.json();
+            sendResponse({ success: true, data });
+          } else {
+            // Fetch YouTube page HTML
+            const resp = await fetch('https://www.youtube.com/watch?v=' + message.videoId, {
+              headers: {
+                'Accept-Language': 'en-US,en;q=0.9',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+              }
+            });
+            if (!resp.ok) { sendResponse({ success: false, error: 'YouTube fetch failed: ' + resp.status }); return; }
+            const html = await resp.text();
+            sendResponse({ success: true, html });
+          }
+        } catch (err) {
+          sendResponse({ success: false, error: err.message });
+        }
+      })();
+      return true;
+    }
 
     case 'GET_ACTIVE_TAB':
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

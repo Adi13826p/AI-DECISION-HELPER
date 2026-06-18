@@ -25,9 +25,21 @@
     });
   }
 
-  async function groqCall(messages, model) {
+  async function groqCall(messages, model, maxTokens) {
     const apiKey = await getApiKey();
     if (!apiKey) throw new Error('NO_API_KEY');
+
+    const isVision = model === VISION_MODEL;
+    const body = {
+      model,
+      messages,
+      temperature: 0.3,
+      max_tokens: maxTokens || (isVision ? 2048 : 3500),
+    };
+    // Vision models do NOT support response_format — text models do
+    if (!isVision) {
+      body.response_format = { type: 'json_object' };
+    }
 
     const resp = await fetch(GROQ_ENDPOINT, {
       method: 'POST',
@@ -35,42 +47,50 @@
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + apiKey
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.3,
-        max_tokens: 2048,
-        response_format: { type: 'json_object' }
-      })
+      body: JSON.stringify(body)
     });
 
     if (!resp.ok) {
-      const err = await resp.text().catch(() => resp.statusText);
+      const errText = await resp.text().catch(() => resp.statusText);
       if (resp.status === 401) throw new Error('INVALID_API_KEY');
-      throw new Error('Groq API error ' + resp.status + ': ' + err);
+      throw new Error('Groq API error ' + resp.status + ': ' + errText);
     }
 
     const data = await resp.json();
-    const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-    if (!text) throw new Error('Empty response from AI');
+    const rawText = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (!rawText) throw new Error('Empty response from AI');
 
-    try { return JSON.parse(text); }
-    catch (_) { throw new Error('AI returned invalid JSON. Please try again.'); }
+    // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+    const stripped = rawText.trim();
+    const fenceMatch = stripped.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/);
+    const jsonStr = fenceMatch ? fenceMatch[1].trim() : stripped;
+
+    try { return JSON.parse(jsonStr); }
+    catch (_) {
+      // Last resort: find the outermost JSON object
+      const objStart = jsonStr.indexOf('{');
+      const objEnd   = jsonStr.lastIndexOf('}');
+      if (objStart !== -1 && objEnd > objStart) {
+        try { return JSON.parse(jsonStr.slice(objStart, objEnd + 1)); }
+        catch (_2) {}
+      }
+      throw new Error('AI returned invalid JSON. Please try again.');
+    }
   }
 
   function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
     return groqCall([
-      { role: 'system', content: 'You are DecisionAI Truth Layer — an expert product analyst AI. Analyze product screenshots and return comprehensive, honest assessments. Always return valid JSON only, no markdown.' },
+      { role: 'system', content: 'You are DecisionAI Truth Layer — an expert product analyst AI. Analyze product screenshots and return comprehensive, honest assessments. Always return valid JSON only, no markdown. Do NOT wrap in markdown code fences.' },
       { role: 'user', content: [
         { type: 'image_url', image_url: { url: imageDataUrl } },
         { type: 'text', text: 'Analyze this screenshot from: ' + (pageUrl || 'unknown page') + '\nTitle: ' + (pageTitle || 'unknown') + '\n\nReturn ONLY this JSON:\n{"product":{"name":"full product name","brand":"brand","model":"model if visible","price":"price as shown","currency":"currency","rating":"rating e.g. 4.2/5","reviewCount":"reviews count","store":"store name","inStock":true},"truthScore":75,"scoreLabel":"Good","verdict":{"type":"buy","label":"Recommended Buy","reasoning":"3-4 sentence explanation","emoji":"✅"},"reviews":{"summary":"2-3 sentence customer summary","pros":["Pro 1","Pro 2","Pro 3"],"cons":["Con 1","Con 2"],"hiddenComplaints":["Common hidden issue"]},"priceIntel":{"currentPrice":"visible price","fairPrice":"fair market value","dealRating":"Great Deal|Fair|Overpriced","alternatives":[{"store":"Amazon","estimatedPrice":"$XX","note":"note"}]},"buyTiming":{"recommendation":"buy-now","reason":"short reason"},"competitors":[{"name":"Competitor","why":"comparison","betterFor":"use case"}]}' }
       ]}
-    ], VISION_MODEL);
+    ], VISION_MODEL, 3000);
   }
 
   function analyzeMasterScan(imageDataUrl, pageUrl, pageTitle) {
     return groqCall([
-      { role: 'system', content: 'You are MasterScan — a premium AI analyst by DecisionAI. Your output is used by professionals who need deep, substantive analysis. Every field must be thorough, analytical, and written in a confident expert voice. No fluff, no vague statements. Always return valid JSON only, no markdown.' },
+      { role: 'system', content: 'You are MasterScan — a premium AI analyst by DecisionAI. Return ONLY raw JSON. No markdown. No code fences. No extra text. Start your response with { and end with }.' },
       { role: 'user', content: [
         { type: 'image_url', image_url: { url: imageDataUrl } },
         { type: 'text', text:
@@ -88,7 +108,7 @@
           '"general":{"executiveSummary":"4-6 analytical sentences covering what this is, why it matters, and key context","keyInsights":["Specific substantive insight","Another insight","Another insight"],"actionItems":["Concrete action","Another action"]}}'
         }
       ]}
-    ], VISION_MODEL);
+    ], VISION_MODEL, 4096);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -151,6 +171,15 @@
       case 'SMARTY_SEARCH':
         handleSmartySearch(message);
         return false;
+      case 'EXTRACT_PROFILE':
+        handleExtractProfile(message, sendResponse);
+        return true;
+      case 'PARSE_RESUME_TEXT':
+        handleParseResumeText(message, sendResponse);
+        return true;
+      case 'AUTOFILL_FORM':
+        handleAutofillForm(sendResponse);
+        return true;
       default:
         return false;
     }
@@ -177,11 +206,12 @@
   }
 
   async function fetchYouTubeData(videoId) {
-    const resp = await fetch('https://www.youtube.com/watch?v=' + videoId, {
-      headers: { 'Accept-Language': 'en-US,en;q=0.9' }
-    });
-    if (!resp.ok) throw new Error('Could not fetch YouTube page (status ' + resp.status + ')');
-    const html = await resp.text();
+    // Route through background service worker — content script fetch() is CORS-blocked by YouTube
+    const pageResp = await chrome.runtime.sendMessage({ type: 'FETCH_YOUTUBE', videoId });
+    if (!pageResp || !pageResp.success) {
+      throw new Error(pageResp?.error || 'Could not fetch YouTube page');
+    }
+    const html = pageResp.html;
 
     // Pull fields via targeted regex (avoids parsing multi-MB JSON)
     function rget(pattern) {
@@ -198,15 +228,15 @@
     const duration    = durSecs ? Math.floor(parseInt(durSecs) / 60) + ' min' : '';
     const views       = viewCount ? parseInt(viewCount).toLocaleString() + ' views' : '';
 
-    // Caption track URL
+    // Caption track URL — also fetched via background to avoid CORS
     let transcript = '';
     const captMatch = html.match(/"captionTracks":\[.*?"baseUrl":"([^"]+)"/);
     if (captMatch) {
       try {
         const captUrl = captMatch[1].replace(/\\u0026/g, '&').replace(/\\u003d/g, '=').replace(/\\/g, '');
-        const captResp = await fetch(captUrl + '&fmt=json3');
-        if (captResp.ok) {
-          const captData = await captResp.json();
+        const captResp = await chrome.runtime.sendMessage({ type: 'FETCH_YOUTUBE', captUrl });
+        if (captResp && captResp.success && captResp.data) {
+          const captData = captResp.data;
           const parts = [];
           for (const ev of (captData.events || [])) {
             if (!ev.segs) continue;
@@ -280,7 +310,7 @@
         '"quickRevision":["Short bullet 1","Short bullet 2","Short bullet 3","Short bullet 4","Short bullet 5","Short bullet 6"],' +
         '"conclusion":"3-4 sentence final conclusion covering the key lesson and takeaway"}}'
       }
-    ], 'llama-3.3-70b-versatile');
+    ], 'llama-3.3-70b-versatile', 4096);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -307,17 +337,13 @@
   // ── Article / URL fetcher ──────────────────────────────────────────────────
 
   async function fetchArticleContent(url) {
-    const resp = await fetch(url, {
-      headers: { 'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9' }
-    });
-    if (!resp.ok) throw new Error('Could not fetch URL (HTTP ' + resp.status + ')');
-
-    const contentType = resp.headers.get('content-type') || '';
-    if (contentType.includes('application/pdf')) {
-      throw new Error('PDF_NO_PARSE');
+    // Route through background service worker to bypass CORS restrictions
+    const bgResp = await chrome.runtime.sendMessage({ type: 'FETCH_URL', url });
+    if (!bgResp || !bgResp.success) {
+      if (bgResp?.error === 'PDF_NO_PARSE') throw new Error('PDF_NO_PARSE');
+      throw new Error(bgResp?.error || 'Could not fetch URL');
     }
-
-    const html = await resp.text();
+    const html = bgResp.html;
 
     // Title
     const titleM = html.match(/<title[^>]*>([^<]+)<\/title>/i);
@@ -497,9 +523,7 @@
   }
 
   function updateOverlayLoadingText(msg) {
-    const content = document.getElementById('__dai-content');
-    if (!content) return;
-    const descEl = content.querySelector('div[style*="Running"]');
+    const descEl = document.getElementById('__dai-loading-desc');
     if (descEl) descEl.textContent = msg;
   }
 
@@ -673,7 +697,7 @@
       preview +
       '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0">' +
       '<div style="position:relative;width:52px;height:52px"><svg style="animation:__dai-spin 1s linear infinite" width="52" height="52" viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="22" stroke="rgba(255,255,255,0.07)" stroke-width="3"/><circle cx="26" cy="26" r="22" stroke="' + accent + '" stroke-width="3" stroke-linecap="round" stroke-dasharray="35 104"/></svg><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:' + accent + '"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div></div>' +
-      '<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#f0eeff;margin-bottom:5px">Analyzing with AI…</div><div style="font-size:12px;color:rgba(240,238,255,0.45)">Running ' + label + ' on your selection</div></div>' +
+      '<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:#f0eeff;margin-bottom:5px">Analyzing with AI…</div><div id="__dai-loading-desc" style="font-size:12px;color:rgba(240,238,255,0.45)">Running ' + label + ' on your selection</div></div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:280px">' +
       loadingStep(1, 'Capturing your selection', accent) +
       loadingStep(2, 'Processing with vision AI', accent) +
@@ -788,28 +812,29 @@
 
     // ── Header block: type badge + title + topics + quick overview ────────
     const topicsHTML = (d.topics && d.topics.length)
-      ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">' +
-          d.topics.map(t => '<span style="font-size:10.5px;font-weight:500;color:rgba(240,238,255,0.55);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:3px 9px">' + esc(t) + '</span>').join('') +
+      ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:12px">' +
+          d.topics.map(t => '<span style="font-size:11px;font-weight:600;color:rgba(240,238,255,0.6);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:100px;padding:4px 11px">' + esc(t) + '</span>').join('') +
         '</div>'
       : '';
 
     const overviewHTML = d.quickOverview
-      ? '<div style="margin:12px 16px 0;padding:11px 14px;background:linear-gradient(135deg,' + accent + '14,' + accent + '06);border:1px solid ' + accent + '30;border-radius:12px">' +
-          '<div style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:' + accent + ';margin-bottom:5px;opacity:0.8">⚡ Quick Overview</div>' +
-          '<p style="font-size:12.5px;color:rgba(240,238,255,0.85);line-height:1.65;margin:0">' + esc(d.quickOverview) + '</p>' +
+      ? '<div style="margin:14px 0 0;padding:15px 18px;background:linear-gradient(135deg,' + accent + '1a,' + accent + '08,rgba(255,255,255,0.02));border:1px solid ' + accent + '40;border-radius:14px;position:relative;overflow:hidden">' +
+          '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,' + accent + ',' + accent + '44,transparent)"></div>' +
+          '<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:' + accent + ';margin-bottom:8px">⚡ Quick Overview</div>' +
+          '<p style="font-size:14px;color:rgba(240,238,255,0.92);line-height:1.7;margin:0;font-weight:400">' + esc(d.quickOverview) + '</p>' +
         '</div>'
       : '';
 
     const header =
-      '<div style="padding:14px 16px 0">' +
-        '<div style="display:flex;align-items:center;gap:7px">' +
-          '<span style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:' + accent + ';background:' + accent + '18;border:1px solid ' + accent + '35;border-radius:100px;padding:3px 10px">' + esc(d.contentLabel || 'Content') + '</span>' +
-          (d.confidence ? '<span style="font-size:10px;color:rgba(240,238,255,0.3)">' + d.confidence + '% match</span>' : '') +
+      '<div style="padding:18px 18px 0">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">' +
+          '<span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:' + accent + ';background:linear-gradient(135deg,' + accent + '22,' + accent + '0f);border:1px solid ' + accent + '45;border-radius:100px;padding:4px 13px">' + esc(d.contentLabel || 'Analysis') + '</span>' +
+          (d.confidence ? '<span style="font-size:10.5px;color:rgba(240,238,255,0.35);font-weight:500">' + d.confidence + '% confidence</span>' : '') +
         '</div>' +
-        (d.title ? '<div style="font-size:15px;font-weight:800;color:#f0eeff;line-height:1.3;margin-top:7px;letter-spacing:-0.3px">' + esc(d.title) + '</div>' : '') +
+        (d.title ? '<div style="font-size:18px;font-weight:900;color:#ffffff;line-height:1.3;letter-spacing:-0.5px;text-shadow:0 0 40px ' + accent + '33">' + esc(d.title) + '</div>' : '') +
         topicsHTML +
-      '</div>' +
-      overviewHTML;
+        overviewHTML +
+      '</div>';
 
     // ── Per-content-type body ─────────────────────────────────────────────
     let bodyHTML = '';
@@ -1369,20 +1394,34 @@
   // ── Shared helpers ────────────────────────────────────────────────────────
 
   function sec(title, accent, inner) {
-    return '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden"><div style="padding:9px 14px 7px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:7px"><div style="width:3px;height:12px;background:' + accent + ';border-radius:4px;flex-shrink:0"></div><span style="font-size:10.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:rgba(240,238,255,0.5)">' + esc(title) + '</span></div><div style="padding:11px 14px">' + inner + '</div></div>';
+    return '<div style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden">' +
+      '<div style="padding:11px 16px 10px;background:linear-gradient(90deg,' + accent + '18 0%,rgba(255,255,255,0.015) 70%);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:9px">' +
+        '<div style="width:4px;height:18px;background:linear-gradient(180deg,' + accent + ',' + accent + '55);border-radius:4px;flex-shrink:0"></div>' +
+        '<span style="font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:rgba(240,238,255,0.9)">' + esc(title) + '</span>' +
+      '</div>' +
+      '<div style="padding:14px 16px">' + inner + '</div>' +
+    '</div>';
   }
 
   function li(text, color) {
-    return '<li style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:rgba(240,238,255,0.7);line-height:1.5"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M3 8l3 3 7-7" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>' + esc(text) + '</span></li>';
+    return '<li style="display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(240,238,255,0.85);line-height:1.6;padding:3px 0">' +
+      '<div style="flex-shrink:0;margin-top:5px;width:6px;height:6px;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + '80"></div>' +
+      '<span>' + esc(text) + '</span>' +
+    '</li>';
   }
 
   function liAction(text) {
-    return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:rgba(240,238,255,0.75);line-height:1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M13 7l5 5-5 5M6 7l5 5-5 5" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>' + esc(text) + '</span></li>';
+    return '<li style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(240,238,255,0.85);line-height:1.6;padding:4px 0">' +
+      '<div style="flex-shrink:0;margin-top:4px;width:18px;height:18px;border-radius:6px;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.35);display:flex;align-items:center;justify-content:center">' +
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '</div>' +
+      '<span>' + esc(text) + '</span>' +
+    '</li>';
   }
 
   function badge(text, color) {
     const isWhite = color.includes('255,255,255');
-    return '<span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;background:' + color + '20;border:1px solid ' + color + '40;color:' + (isWhite ? 'rgba(240,238,255,0.7)' : color) + '">' + esc(text) + '</span>';
+    return '<span style="font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:100px;background:' + color + '22;border:1px solid ' + color + '45;color:' + (isWhite ? 'rgba(240,238,255,0.75)' : color) + ';letter-spacing:0.1px">' + esc(text) + '</span>';
   }
 
   function infoRow(label, value) {
@@ -1432,11 +1471,577 @@
 
   function toClipboard(result, mode) {
     if (mode === 'masterscan') {
-      const g = result.general || result.article || result.research || {};
-      return [result.title ? 'Title: ' + result.title : '', result.contentLabel ? 'Type: ' + result.contentLabel : '', g.summary ? '\nSummary:\n' + g.summary : '', (g.keyPoints||g.findings) ? '\nKey Points:\n' + (g.keyPoints||g.findings||[]).map(p=>'• '+p).join('\n') : ''].filter(Boolean).join('\n');
+      const lines = [];
+      if (result.title)        lines.push('Title: ' + result.title);
+      if (result.contentLabel) lines.push('Type: ' + result.contentLabel);
+      if (result.quickOverview) lines.push('\nOverview:\n' + result.quickOverview);
+      // article_url
+      const ad = result.articleData;
+      if (ad) {
+        if (ad.mainIdea)  lines.push('\nMain Idea:\n' + ad.mainIdea);
+        if (ad.importantHighlights && ad.importantHighlights.length) lines.push('\nHighlights:\n' + ad.importantHighlights.map(x=>'• '+x).join('\n'));
+        if (ad.finalSummary) lines.push('\nSummary:\n' + ad.finalSummary);
+      }
+      // problem solver
+      const pr = result.problem;
+      if (pr) {
+        if (pr.understanding) lines.push('\nUnderstanding:\n' + pr.understanding);
+        if (pr.solution && pr.solution.length) lines.push('\nSteps:\n' + pr.solution.map((s,i)=>(i+1)+'. '+s.title+': '+s.explanation).join('\n'));
+        if (pr.finalAnswer) lines.push('\nAnswer: ' + pr.finalAnswer);
+      }
+      // youtube
+      const yt = result.youtube;
+      if (yt) {
+        if (yt.introduction) lines.push('\nIntro:\n' + yt.introduction);
+        if (yt.importantPoints && yt.importantPoints.length) lines.push('\nKey Points:\n' + yt.importantPoints.map(x=>'• '+x).join('\n'));
+        if (yt.conclusion) lines.push('\nConclusion:\n' + yt.conclusion);
+      }
+      // startup_roadmap / study_roadmap
+      const rm = result.roadmap || result.studyPlan;
+      if (rm) {
+        const goal = rm.startupGoal || rm.goal;
+        if (goal) lines.push('\nGoal:\n' + goal);
+        if (rm.nextAction) lines.push('\nNext Action: ' + rm.nextAction);
+      }
+      // research_paper
+      const rs = result.research;
+      if (rs) {
+        if (rs.abstract) lines.push('\nAbstract:\n' + rs.abstract);
+        if (rs.keyFindings && rs.keyFindings.length) lines.push('\nKey Findings:\n' + rs.keyFindings.map(x=>'• '+x).join('\n'));
+        if (rs.conclusions) lines.push('\nConclusions:\n' + rs.conclusions);
+      }
+      // general fallback
+      const gn = result.general;
+      if (gn) {
+        if (gn.executiveSummary) lines.push('\nSummary:\n' + gn.executiveSummary);
+        if (gn.keyInsights && gn.keyInsights.length) lines.push('\nInsights:\n' + gn.keyInsights.map(x=>'• '+x).join('\n'));
+      }
+      return lines.filter(Boolean).join('\n');
     }
     const p = result.product || {}, v = result.verdict || {}, r = result.reviews || {}, pi = result.priceIntel || {};
     return ['DecisionAI Truth Layer', p.name ? 'Product: '+p.name : '', 'Truth Score: '+result.truthScore+'/100 ('+(result.scoreLabel||')'), v.label ? 'Verdict: '+v.label : '', v.reasoning ? '\n'+v.reasoning : '', (r.pros&&r.pros.length) ? '\nPros:\n'+r.pros.map(x=>'• '+x).join('\n') : '', (r.cons&&r.cons.length) ? '\nCons:\n'+r.cons.map(x=>'• '+x).join('\n') : '', pi.currentPrice ? '\nPrice: '+pi.currentPrice+' · '+(pi.dealRating||'') : ''].filter(Boolean).join('\n');
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PROFILE EXTRACTION — EXTRACT_PROFILE & PARSE_RESUME_TEXT
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const PROFILE_SCHEMA =
+    '{"name":"Full name","email":"email@example.com","phone":"+1 555-0100","location":"City, Country",' +
+    '"linkedin":"https://linkedin.com/in/...","github":"username","website":"https://...",' +
+    '"summary":"2-3 sentence professional bio",' +
+    '"skills":{"tech":"JavaScript, Python, React (comma-separated)","tools":"Git, Docker, AWS","langs":"English, Spanish","soft":"Leadership, Communication"},' +
+    '"education":[{"inst":"University Name","degree":"B.Sc","field":"Computer Science","years":"2018-2022","gpa":"3.8"}],' +
+    '"experience":[{"company":"Company Name","role":"Job Title","period":"Jan 2021 – Jun 2023","bullets":"Achievement 1\nAchievement 2"}],' +
+    '"projects":[{"name":"Project Name","desc":"What it does","tech":"React, Node.js","url":"https://..."}],' +
+    '"certifications":[{"name":"AWS Solutions Architect","issuer":"Amazon","date":"Mar 2024"}],' +
+    '"prefs":{"role":"Target Role","industry":"Fintech","workType":"Remote"}}';
+
+  async function extractProfileWithGroq(text, context) {
+    const data = await groqCall([
+      { role: 'system', content: 'You are a professional resume parser. Extract structured profile data from the provided text. Return ONLY valid JSON — no markdown, no extra text. If a field is not found, use an empty string or empty array. Be thorough and accurate.' },
+      { role: 'user', content:
+        context + '\n\n---\n' + text.slice(0, 18000) + '\n---\n\n' +
+        'Extract all available profile information and return exactly this JSON structure:\n' + PROFILE_SCHEMA
+      }
+    ], 'llama-3.3-70b-versatile');
+    return data;
+  }
+
+  async function handleExtractProfile(message, sendResponse) {
+    try {
+      const isLinkedIn = message.isLinkedIn || window.location.href.includes('linkedin.com/in/');
+
+      let pageText;
+      if (isLinkedIn) {
+        // For LinkedIn, grab structured sections directly from the DOM
+        const sections = [];
+        const name = document.querySelector('h1')?.innerText?.trim();
+        if (name) sections.push('Name: ' + name);
+
+        const headline = document.querySelector('.text-body-medium')?.innerText?.trim()
+          || document.querySelector('[data-generated-suggestion-target]')?.innerText?.trim();
+        if (headline) sections.push('Headline: ' + headline);
+
+        const location = document.querySelector('.text-body-small.inline.t-black--light')?.innerText?.trim();
+        if (location) sections.push('Location: ' + location);
+
+        // Grab all section text
+        document.querySelectorAll('section').forEach(s => {
+          const heading = s.querySelector('h2,h3')?.innerText?.trim();
+          const content = s.innerText?.trim();
+          if (content && content.length > 20) {
+            sections.push((heading ? '[' + heading + ']\n' : '') + content.slice(0, 2000));
+          }
+        });
+        pageText = sections.join('\n\n');
+      } else {
+        // Generic page — get readable text
+        const body = document.body.cloneNode(true);
+        ['script','style','nav','header','footer','aside'].forEach(tag => {
+          body.querySelectorAll(tag).forEach(el => el.remove());
+        });
+        pageText = body.innerText.replace(/\s+/g, ' ').trim().slice(0, 18000);
+      }
+
+      if (!pageText || pageText.length < 50) {
+        sendResponse({ profile: null, error: 'Not enough content found on this page.' });
+        return;
+      }
+
+      const context = isLinkedIn
+        ? 'This is a LinkedIn profile page. Extract all resume/profile information.'
+        : 'This page may contain resume or professional profile information. Extract what is available.';
+
+      const extracted = await extractProfileWithGroq(pageText, context);
+      sendResponse({ profile: extracted });
+    } catch (err) {
+      sendResponse({ profile: null, error: err.message });
+    }
+  }
+
+  async function handleParseResumeText(message, sendResponse) {
+    try {
+      const text = message.text || '';
+      if (!text || text.length < 30) {
+        sendResponse({ profile: null, error: 'Resume text too short.' });
+        return;
+      }
+      const extracted = await extractProfileWithGroq(text, 'This is resume text pasted by the user. Extract all resume fields accurately.');
+      sendResponse({ profile: extracted });
+    } catch (err) {
+      sendResponse({ profile: null, error: err.message });
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FORM AUTOFILL
+  // ══════════════════════════════════════════════════════════════════════════
+
+  async function handleAutofillForm(sendResponse) {
+    const profile = await new Promise(r => chrome.storage.local.get('userProfile', d => r(d.userProfile || null)));
+    if (!profile || (!profile.name && !profile.email)) {
+      showAutofillToast(0, [], 'Set up your profile first in the DecisionAI extension.');
+      sendResponse({ success: false, error: 'NO_PROFILE' });
+      return;
+    }
+
+    // ── Field matching rules ────────────────────────────────────────────────
+    const RULES = [
+      { keys: ['firstname','first_name','fname','givenname','given_name'], value: p => (p.name || '').split(' ')[0] },
+      { keys: ['lastname','last_name','lname','surname','familyname','family_name'], value: p => (p.name || '').split(' ').slice(1).join(' ') },
+      { keys: ['fullname','full_name','name','yourname','applicantname','candidatename','contactname'], value: p => p.name },
+      { keys: ['email','emailaddress','email_address','mail','emailid'], value: p => p.email },
+      { keys: ['phone','telephone','tel','mobile','cell','phonenumber','phone_number','contactnumber','mobilenumber'], value: p => p.phone },
+      { keys: ['location','city','address','region','country','hometown','currentlocation','currentcity'], value: p => p.location },
+      { keys: ['linkedin','linkedinurl','linkedinprofile','linkedinlink'], value: p => p.linkedin },
+      { keys: ['github','githuburl','githubprofile','githubusername','githublink'], value: p => {
+        if (!p.github) return '';
+        const uname = p.github.replace(/^@/, '').replace(/.*github\.com\//, '').replace(/\/$/, '');
+        return uname.startsWith('http') ? p.github : 'https://github.com/' + uname;
+      }},
+      { keys: ['website','portfolio','portfoliourl','personalsite','personalwebsite','portfoliolink','personalurl'], value: p => p.website },
+      { keys: ['summary','bio','about','objective','coverletter','motivation','aboutyourself','professionalsummary','personalstatement','aboutme'], value: p => p.summary },
+      { keys: ['skills','technicalskills','techskills','technologies','competencies','expertise','techstack'], value: p => [p.skills?.tech, p.skills?.tools, p.skills?.langs].filter(Boolean).join(', ') },
+      { keys: ['role','position','jobtitle','desiredrole','targetrole','applyingfor','preferredrole','desiredposition'], value: p => p.prefs?.role },
+      { keys: ['salary','expectedsalary','desiredsalary','compensation','ctc','expectedctc','salaryexpectation'], value: p => p.prefs?.salary },
+      { keys: ['availability','startdate','available','noticeperiod','joining','availablefrom'], value: p => p.prefs?.availability },
+      { keys: ['industry','sector','domain','targetindustry'], value: p => p.prefs?.industry },
+      { keys: ['worktype','workmode','remote','workstyle','joiningtype','employment'], value: p => p.prefs?.workType },
+    ];
+
+    function normalize(s) {
+      return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function getMatchedValue(el) {
+      const identifiers = [
+        el.name, el.id, el.placeholder,
+        el.getAttribute('aria-label'),
+        el.getAttribute('data-name'),
+        el.getAttribute('data-field'),
+        el.getAttribute('autocomplete'),
+        el.title,
+      ];
+      // Associated <label> text
+      if (el.id) {
+        const lbl = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
+        if (lbl) identifiers.push(lbl.textContent);
+      }
+      const closestLbl = el.closest('label');
+      if (closestLbl) identifiers.push(closestLbl.textContent);
+      const parentLbl = el.parentElement?.querySelector('label');
+      if (parentLbl) identifiers.push(parentLbl.textContent);
+
+      const normed = identifiers.map(normalize).filter(Boolean);
+
+      for (const rule of RULES) {
+        for (const key of rule.keys) {
+          if (normed.some(n => n.includes(key) || key.includes(n.slice(0, 6)))) {
+            const val = rule.value(profile);
+            if (val && String(val).trim()) return String(val).trim();
+          }
+        }
+      }
+      return null;
+    }
+
+    function fillField(el, value) {
+      try {
+        if (el.tagName === 'SELECT') {
+          const norm = normalize(value);
+          for (const opt of el.options) {
+            if (normalize(opt.value) === norm || normalize(opt.text) === norm ||
+                normalize(opt.text).includes(norm) || norm.includes(normalize(opt.text))) {
+              el.value = opt.value;
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+              return true;
+            }
+          }
+          return false;
+        }
+
+        // Use native setter to bypass React/Vue/Angular controlled-input guard
+        const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+        if (nativeSetter) {
+          nativeSetter.call(el, value);
+        } else {
+          el.value = value;
+        }
+        ['input', 'change', 'keyup'].forEach(evt =>
+          el.dispatchEvent(new Event(evt, { bubbles: true }))
+        );
+        el.dispatchEvent(new InputEvent('input', { bubbles: true, data: value }));
+        return true;
+      } catch (_) { return false; }
+    }
+
+    const SKIP_TYPES = new Set(['hidden','submit','button','reset','file','checkbox','radio','image']);
+    const fields = Array.from(document.querySelectorAll('input, textarea, select'));
+    let filled = 0, skipped = 0;
+    const filledLabels = [];
+
+    for (const el of fields) {
+      if (el.disabled || el.readOnly) { skipped++; continue; }
+      if (el.type && SKIP_TYPES.has(el.type.toLowerCase())) continue;
+      if (!el.offsetParent && el.style.display === 'none') { skipped++; continue; }
+      if (el.value && el.value.trim().length > 0) { skipped++; continue; }
+
+      const value = getMatchedValue(el);
+      if (value && fillField(el, value)) {
+        filled++;
+        const lbl = el.placeholder || el.name || el.id || 'field';
+        filledLabels.push(lbl.replace(/_/g, ' '));
+      }
+    }
+
+    showAutofillToast(filled, filledLabels, null);
+    sendResponse({ success: true, filled, skipped });
+  }
+
+  function showAutofillToast(filled, labels, customMsg) {
+    const existing = document.getElementById('__dai-autofill-toast');
+    if (existing) existing.remove();
+
+    const ok = filled > 0;
+    const toast = document.createElement('div');
+    toast.id = '__dai-autofill-toast';
+    sp(toast, {
+      position: 'fixed', bottom: '24px', right: '24px',
+      'z-index': '2147483647',
+      background: '#0e0b1a',
+      border: '1px solid ' + (ok ? 'rgba(16,185,129,0.45)' : 'rgba(245,158,11,0.4)'),
+      'border-radius': '16px',
+      padding: '16px 18px',
+      'min-width': '280px', 'max-width': '380px',
+      'box-shadow': '0 12px 48px rgba(0,0,0,0.7),0 0 0 1px ' + (ok ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.08)'),
+      animation: '__dai-slidein 0.35s cubic-bezier(0.16,1,0.3,1) both',
+      'font-family': '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+    });
+
+    const iconColor = ok ? '#10b981' : '#f59e0b';
+    const iconBg    = ok ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.15)';
+    const iconSvg   = ok
+      ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#10b981" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 8v4M12 16h.01" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#f59e0b" stroke-width="1.6"/></svg>';
+    const title = ok ? 'Auto-filled ' + filled + ' field' + (filled > 1 ? 's' : '') : 'No fields filled';
+    const desc  = customMsg || (ok
+      ? labels.slice(0, 4).join(', ') + (labels.length > 4 ? ' +' + (labels.length - 4) + ' more' : '')
+      : 'No empty matching fields found on this page.');
+
+    toast.innerHTML =
+      '<div style="display:flex;align-items:flex-start;gap:12px">' +
+        '<div style="width:34px;height:34px;border-radius:50%;background:' + iconBg + ';border:1px solid ' + iconColor + '44;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + iconSvg + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13.5px;font-weight:700;color:#f0eeff;margin-bottom:4px">' + title + '</div>' +
+          '<div style="font-size:12px;color:rgba(240,238,255,0.55);line-height:1.5;word-break:break-word">' + esc(desc) + '</div>' +
+        '</div>' +
+        '<button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:rgba(240,238,255,0.35);flex-shrink:0;padding:2px;line-height:1">✕</button>' +
+      '</div>';
+
+    document.documentElement.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        toast.style.opacity = '0'; toast.style.transform = 'translateX(20px)';
+        setTimeout(() => toast.remove(), 500);
+      }
+    }, 6000);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TEXT SELECTION TOOLBAR — Translate & Explain
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const TRANSLATE_LANGS = [
+    { code:'es', label:'Spanish',    native:'Español',    flag:'🇪🇸' },
+    { code:'hi', label:'Hindi',      native:'हिंदी',      flag:'🇮🇳' },
+    { code:'pt', label:'Portuguese', native:'Português',  flag:'🇧🇷' },
+    { code:'ur', label:'Urdu',       native:'اردو',       flag:'🇵🇰' },
+    { code:'fr', label:'French',     native:'Français',   flag:'🇫🇷' },
+    { code:'de', label:'German',     native:'Deutsch',    flag:'🇩🇪' },
+    { code:'ar', label:'Arabic',     native:'العربية',    flag:'🇸🇦' },
+    { code:'zh', label:'Chinese',    native:'中文',        flag:'🇨🇳' },
+    { code:'ja', label:'Japanese',   native:'日本語',      flag:'🇯🇵' },
+    { code:'ko', label:'Korean',     native:'한국어',      flag:'🇰🇷' },
+    { code:'ru', label:'Russian',    native:'Русский',    flag:'🇷🇺' },
+    { code:'tr', label:'Turkish',    native:'Türkçe',     flag:'🇹🇷' },
+    { code:'it', label:'Italian',    native:'Italiano',   flag:'🇮🇹' },
+    { code:'id', label:'Indonesian', native:'Bahasa',     flag:'🇮🇩' },
+  ];
+
+  let __selToolbar = null, __selPicker = null;
+
+  function removeSelectionUI() {
+    if (__selToolbar) { __selToolbar.remove(); __selToolbar = null; }
+    if (__selPicker)  { __selPicker.remove();  __selPicker  = null; }
+  }
+
+  document.addEventListener('mouseup', (e) => {
+    setTimeout(() => {
+      if (e.target.closest('#__dai-sel-toolbar') || e.target.closest('#__dai-sel-picker')) return;
+      const sel  = window.getSelection();
+      const text = sel?.toString().trim();
+      if (!text || text.length < 5 || text.length > 8000) { removeSelectionUI(); return; }
+      if (e.target.closest('#__dai-overlay-root') || e.target.closest('#__dai-autofill-toast')) return;
+
+      removeSelectionUI();
+      const range = sel.getRangeAt(0);
+      const rect  = range.getBoundingClientRect();
+      const midX  = rect.left + rect.width / 2;
+      const aboveY = rect.top - 46;
+      const useBelow = aboveY < 8;
+      const posX = Math.max(8, Math.min(window.innerWidth - 230, midX - 90));
+      const posY = useBelow ? rect.bottom + 8 : aboveY;
+
+      __selToolbar = document.createElement('div');
+      __selToolbar.id = '__dai-sel-toolbar';
+      sp(__selToolbar, {
+        position:'fixed', left:posX+'px', top:posY+'px',
+        'z-index':'2147483646',
+        background:'linear-gradient(135deg,#1c1030,#0f0c1e)',
+        border:'1px solid rgba(6,182,212,0.4)',
+        'border-radius':'12px',
+        'box-shadow':'0 8px 32px rgba(0,0,0,0.75),0 0 0 1px rgba(6,182,212,0.1)',
+        display:'flex', 'align-items':'center', gap:'3px', padding:'5px',
+        animation:'__dai-fadein 0.15s ease both',
+        'font-family':'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+        'user-select':'none', '-webkit-user-select':'none',
+      });
+
+      const mkBtn = (svgColor, icon, label, bg, onClick) => {
+        const b = document.createElement('button');
+        b.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:700;background:' + bg + ';transition:filter 0.12s;outline:none';
+        b.innerHTML = icon + '<span style="color:' + svgColor + '">' + label + '</span>';
+        b.addEventListener('mouseenter', () => b.style.filter = 'brightness(1.3)');
+        b.addEventListener('mouseleave', () => b.style.filter = 'brightness(1)');
+        b.addEventListener('click', (ev) => { ev.stopPropagation(); onClick(); });
+        return b;
+      };
+
+      const transIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 5h8M7 3v2M10 5a11 11 0 01-2.5 6.5M6 11a8.5 8.5 0 005 2" stroke="#06b6d4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="10" width="11" height="11" rx="2" stroke="#06b6d4" stroke-width="1.5"/><path d="M15 18l2-4 2 4M15.8 17h2.4" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"/></svg>';
+      const explainIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#a855f7" stroke-width="1.5"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke="#a855f7" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
+      const transBtn = mkBtn('#06b6d4', transIcon, 'Translate', 'rgba(6,182,212,0.13)', () => showLangPicker(text));
+      const explBtn  = mkBtn('#a855f7', explainIcon, 'Explain', 'rgba(168,85,247,0.11)', () => {
+        removeSelectionUI();
+        handleExplainText(text);
+      });
+
+      const divider = document.createElement('div');
+      divider.style.cssText = 'width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 1px';
+
+      __selToolbar.append(transBtn, divider, explBtn);
+      document.documentElement.appendChild(__selToolbar);
+    }, 10);
+  }, true);
+
+  document.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('#__dai-sel-toolbar') && !e.target.closest('#__dai-sel-picker')) {
+      removeSelectionUI();
+    }
+  }, true);
+
+  function showLangPicker(text) {
+    if (__selPicker) { __selPicker.remove(); __selPicker = null; }
+    if (!__selToolbar) return;
+    const ar = __selToolbar.getBoundingClientRect();
+
+    __selPicker = document.createElement('div');
+    __selPicker.id = '__dai-sel-picker';
+    sp(__selPicker, {
+      position:'fixed',
+      left: Math.max(8, Math.min(window.innerWidth - 298, ar.left)) + 'px',
+      top: (ar.bottom + 6) + 'px',
+      'z-index':'2147483647',
+      background:'linear-gradient(135deg,#1c1030,#0f0c1e)',
+      border:'1px solid rgba(6,182,212,0.3)',
+      'border-radius':'16px',
+      'box-shadow':'0 16px 56px rgba(0,0,0,0.82),0 0 0 1px rgba(6,182,212,0.08)',
+      width:'290px',
+      padding:'10px',
+      animation:'__dai-fadein 0.15s ease both',
+      'font-family':'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+    });
+
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:10px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:rgba(240,238,255,0.45);padding:2px 6px 9px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:8px';
+    hdr.textContent = 'Select target language';
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:5px';
+
+    TRANSLATE_LANGS.forEach(lang => {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);cursor:pointer;text-align:left;transition:all 0.12s;outline:none';
+      btn.innerHTML =
+        '<span style="font-size:18px;line-height:1">' + lang.flag + '</span>' +
+        '<div><div style="font-size:12px;font-weight:700;color:rgba(240,238,255,0.88)">' + lang.label + '</div>' +
+        '<div style="font-size:10px;color:rgba(240,238,255,0.38)">' + lang.native + '</div></div>';
+      btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(6,182,212,0.12)'; btn.style.borderColor = 'rgba(6,182,212,0.35)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(255,255,255,0.03)'; btn.style.borderColor = 'rgba(255,255,255,0.07)'; });
+      btn.addEventListener('click', () => { removeSelectionUI(); handleTranslateText(text, lang); });
+      grid.appendChild(btn);
+    });
+
+    __selPicker.append(hdr, grid);
+    document.documentElement.appendChild(__selPicker);
+  }
+
+  async function handleTranslateText(text, lang) {
+    showOverlay('masterscan', null);
+    updateOverlayLoadingText('Translating to ' + lang.label + '…');
+    try {
+      const result = await groqCall([
+        { role:'system', content:'You are an expert professional translator. Translate the given text to ' + lang.label + ' (' + lang.native + '). Return ONLY a valid JSON object with this exact structure (no markdown): {"translation":"the full translated text","detectedLanguage":"the detected source language name","notes":"brief cultural or linguistic note if useful, or empty string"}' },
+        { role:'user',   content:'Translate this to ' + lang.label + ':\n\n' + text }
+      ], 'llama-3.3-70b-versatile');
+
+      overlayShowTranslation({
+        lang,
+        originalText: text.slice(0, 300) + (text.length > 300 ? '…' : ''),
+        translation: (typeof result === 'object' ? result.translation : result) || '',
+        detectedLanguage: result.detectedLanguage || '',
+        notes: result.notes || '',
+      }, '#06b6d4');
+    } catch (err) {
+      overlayShowError(err.message === 'NO_API_KEY' ? 'NO_API_KEY' : err.message);
+    }
+  }
+
+  async function handleExplainText(text) {
+    showOverlay('masterscan', null);
+    updateOverlayLoadingText('Analyzing selected text…');
+    try {
+      const result = await groqCall([
+        { role:'system', content:'You are an expert explainer. Explain the given text clearly and concisely. Return ONLY valid JSON (no markdown): {"summary":"1-2 sentence plain language summary","keyPoints":["point 1","point 2","point 3"],"difficulty":"Beginner or Intermediate or Advanced","relatedTerms":["term1","term2","term3"]}' },
+        { role:'user',   content:'Explain this clearly:\n\n' + text }
+      ], 'llama-3.3-70b-versatile');
+
+      const a = '#a855f7';
+      const html =
+        '<div style="padding:18px;display:flex;flex-direction:column;gap:14px">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">' +
+          '<span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:' + a + ';background:' + a + '18;border:1px solid ' + a + '35;border-radius:100px;padding:4px 13px">✦ Explanation</span>' +
+        '</div>' +
+        '<div style="padding:16px 18px;background:linear-gradient(135deg,' + a + '18,' + a + '06);border:1.5px solid ' + a + '40;border-radius:14px;position:relative;overflow:hidden">' +
+          '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,' + a + ',' + a + '44,transparent)"></div>' +
+          '<p style="font-size:14px;color:rgba(240,238,255,0.92);line-height:1.75;margin:0">' + esc(result.summary || '') + '</p>' +
+        '</div>' +
+        ((result.keyPoints && result.keyPoints.length) ? sec('Key Points', a,
+          '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' +
+          result.keyPoints.map(p => li(p, a)).join('') + '</ul>'
+        ) : '') +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+          '<span style="font-size:10.5px;font-weight:700;color:rgba(240,238,255,0.4);text-transform:uppercase;letter-spacing:0.6px">Level:</span>' +
+          '<span style="font-size:12px;font-weight:700;padding:3px 11px;border-radius:100px;background:' + a + '18;border:1px solid ' + a + '35;color:' + a + '">' + esc(result.difficulty || 'General') + '</span>' +
+          ((result.relatedTerms && result.relatedTerms.length)
+            ? result.relatedTerms.map(t => badge(t, 'rgba(255,255,255,0.3)')).join(' ')
+            : '') +
+        '</div>' +
+        '</div>';
+
+      const content = document.getElementById('__dai-content');
+      if (content) {
+        const div = document.createElement('div');
+        sp(div, { animation:'__dai-fadein 0.3s ease both' });
+        div.innerHTML = html;
+        content.innerHTML = '';
+        content.appendChild(div);
+        const bar = document.getElementById('__dai-bottom');
+        if (bar) { sp(bar, { display:'flex' }); bar.innerHTML = buildBottomBarHTML(a); wireBottomBar(bar, result, 'masterscan'); }
+      }
+    } catch (err) {
+      overlayShowError(err.message === 'NO_API_KEY' ? 'NO_API_KEY' : err.message);
+    }
+  }
+
+  function overlayShowTranslation(d, accent) {
+    const content = document.getElementById('__dai-content');
+    if (!content) return;
+
+    const html =
+      '<div style="padding:18px;display:flex;flex-direction:column;gap:16px">' +
+
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="font-size:22px">' + d.lang.flag + '</span>' +
+        '<div>' +
+          '<div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.4px">' + d.lang.label + ' Translation</div>' +
+          (d.detectedLanguage ? '<div style="font-size:11px;color:rgba(240,238,255,0.4);margin-top:2px">Detected: ' + esc(d.detectedLanguage) + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+
+      '<div>' +
+        '<div style="font-size:10px;font-weight:800;color:rgba(240,238,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Original</div>' +
+        '<div style="padding:12px 15px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px;font-size:13px;color:rgba(240,238,255,0.6);line-height:1.65;font-style:italic">' + esc(d.originalText) + '</div>' +
+      '</div>' +
+
+      '<div>' +
+        '<div style="font-size:10px;font-weight:800;color:' + accent + ';text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Translation</div>' +
+        '<div style="padding:16px 18px;background:linear-gradient(135deg,' + accent + '1c,' + accent + '08);border:1.5px solid ' + accent + '45;border-radius:14px;position:relative;overflow:hidden">' +
+          '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,' + accent + ',' + accent + '55,transparent)"></div>' +
+          '<p style="font-size:15px;color:rgba(240,238,255,0.95);line-height:1.8;margin:0;font-weight:400">' + esc(String(d.translation)) + '</p>' +
+        '</div>' +
+      '</div>' +
+
+      (d.notes ? sec('Translator Note', '#f59e0b',
+        '<p style="font-size:13px;color:rgba(240,238,255,0.78);line-height:1.65;margin:0">' + esc(d.notes) + '</p>'
+      ) : '') +
+
+      '</div>';
+
+    const div = document.createElement('div');
+    sp(div, { animation:'__dai-fadein 0.3s ease both' });
+    div.innerHTML = html;
+    content.innerHTML = '';
+    content.appendChild(div);
+    const bar = document.getElementById('__dai-bottom');
+    if (bar) {
+      sp(bar, { display:'flex' });
+      bar.innerHTML = buildBottomBarHTML(accent);
+      wireBottomBar(bar, { text: d.translation }, 'masterscan');
+    }
   }
 
 })();

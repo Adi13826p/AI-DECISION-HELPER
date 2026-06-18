@@ -7,218 +7,503 @@
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <div class="app">
+<div class="app">
 
-    <!-- ── HOME VIEW ──────────────────────────────────────────────────────── -->
-    <div id="homeView">
-      <header class="header">
-        <div class="logo">
-          <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="M2 17l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- ── HOME VIEW ──────────────────────────────────────────────────────── -->
+  <div id="homeView">
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon-wrap">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- antenna ball -->
+            <circle cx="12" cy="2.4" r="1.3" fill="currentColor"/>
+            <!-- antenna stem -->
+            <line x1="12" y1="3.7" x2="12" y2="6.2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+            <!-- head -->
+            <rect x="3.5" y="6.2" width="17" height="13" rx="4.5" stroke="currentColor" stroke-width="1.45" fill="white" fill-opacity="0.35"/>
+            <!-- left eye -->
+            <circle cx="8.8" cy="11.4" r="2" fill="currentColor"/>
+            <circle cx="9.55" cy="10.65" r="0.72" fill="white"/>
+            <!-- right eye -->
+            <circle cx="15.2" cy="11.4" r="2" fill="currentColor"/>
+            <circle cx="15.95" cy="10.65" r="0.72" fill="white"/>
+            <!-- smile -->
+            <path d="M8.5 15.2 Q12 17.5 15.5 15.2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" fill="none"/>
           </svg>
-          <span class="logo-text">Decision<span class="logo-accent">AI</span></span>
         </div>
-        <div class="header-right">
-          <div class="header-badge">Beta</div>
-          <button class="settings-btn" id="settingsBtn" title="API Key Settings">
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-      </header>
-
-      <!-- Settings panel -->
-      <div class="settings-panel hidden" id="settingsPanel">
-        <div class="settings-title">
-          <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
-            <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-            <path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <span class="logo-text">Decision<span class="logo-accent">AI</span></span>
+      </div>
+      <div class="header-right">
+        <div class="header-badge">Beta</div>
+        <button class="settings-btn" id="settingsBtn" title="API Key Settings">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
-          Groq API Key
-        </div>
-        <div class="settings-desc">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
-        <div class="settings-input-row">
-          <input type="password" id="apiKeyInput" class="api-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
-          <button class="save-key-btn" id="saveKeyBtn">Save</button>
-        </div>
-        <div class="key-status hidden" id="keyStatus"></div>
-      </div>
-
-      <div class="hero">
-        <p class="hero-tagline">Select any area on screen. Get instant AI insights.</p>
-      </div>
-
-      <main class="features">
-        <button class="feature-card" id="truthLayerBtn">
-          <div class="feature-icon-wrap feature-icon-truth">
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="feature-content">
-            <div class="feature-header">
-              <h2 class="feature-title">Truth Layer</h2>
-              <span class="feature-tag feature-tag-live">Live</span>
-            </div>
-            <p class="feature-desc">Select any product on screen for a full analysis — reviews, price comparison, and buy recommendation.</p>
-            <ul class="feature-bullets">
-              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Price comparison across stores</li>
-              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Red flag detection</li>
-              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Buy recommendation</li>
-            </ul>
-          </div>
-          <div class="feature-arrow">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
         </button>
+      </div>
+    </header>
 
-        <button class="feature-card" id="masterScanBtn">
-          <div class="feature-icon-wrap feature-icon-scan">
-            <svg viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-              <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-              <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="feature-content">
-            <div class="feature-header">
-              <h2 class="feature-title">MasterScan</h2>
-              <span class="feature-tag feature-tag-new">New</span>
-            </div>
-            <p class="feature-desc">Universal AI copilot. Paste any URL, ask a question, or scan your screen — instant summaries, notes, and solutions.</p>
-            <ul class="feature-bullets">
-              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>YouTube, articles, research papers</li>
-              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Ask any question with AI</li>
-              <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan any area of the screen</li>
-            </ul>
-          </div>
-          <div class="feature-arrow">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </button>
-      </main>
-
-      <footer class="footer">
-        <div class="api-key-indicator" id="apiKeyIndicator">
-          <span class="indicator-dot" id="indicatorDot"></span>
-          <span id="indicatorLabel">Checking…</span>
-        </div>
-        <span>v1.0.0</span>
-      </footer>
+    <!-- Settings panel -->
+    <div class="settings-panel hidden" id="settingsPanel">
+      <div class="settings-title">
+        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+          <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M5 4V3a3 3 0 016 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Groq API Key
+      </div>
+      <div class="settings-desc">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
+      <div class="settings-input-row">
+        <input type="password" id="apiKeyInput" class="api-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+        <button class="save-key-btn" id="saveKeyBtn">Save</button>
+      </div>
+      <div class="key-status hidden" id="keyStatus"></div>
     </div>
 
-    <!-- ── MASTERSCAN WORKSPACE VIEW ──────────────────────────────────────── -->
-    <div id="masterScanView" class="hidden">
-      <header class="header ws-header">
-        <button class="back-btn" id="backBtn">
-          <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <main class="features">
+      <button class="feature-card" id="truthLayerBtn">
+        <div class="feature-icon-wrap feature-icon-truth">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
-          Back
-        </button>
-        <div class="ws-title">
-          <div class="ws-icon">
-            <svg viewBox="0 0 24 24" fill="none" width="13" height="13">
-              <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-              <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-              <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span>MasterScan</span>
         </div>
-        <div style="width:56px"></div>
-      </header>
+        <div class="feature-content">
+          <div class="feature-header">
+            <h2 class="feature-title">Truth Layer</h2>
+            <span class="feature-tag feature-tag-live">Live</span>
+          </div>
+          <p class="feature-desc">Select any product on screen for a full analysis — reviews, price comparison, and buy recommendation.</p>
+          <ul class="feature-bullets">
+            <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Price comparison across stores</li>
+            <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Red flag detection</li>
+            <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Buy recommendation</li>
+          </ul>
+        </div>
+        <div class="feature-arrow">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </button>
 
-      <div class="workspace">
-        <!-- Search bar -->
+      <button class="feature-card" id="masterScanBtn">
+        <div class="feature-icon-wrap feature-icon-scan">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3M14 21h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="feature-content">
+          <div class="feature-header">
+            <h2 class="feature-title">MasterScan</h2>
+            <span class="feature-tag feature-tag-new">New</span>
+          </div>
+          <p class="feature-desc">Universal AI copilot. Paste any URL, ask a question, scan your screen — and manage your profile for instant form autofill.</p>
+          <ul class="feature-bullets">
+            <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>YouTube, articles, research papers</li>
+            <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>5 AI modes: Problems, Roadmaps &amp; more</li>
+            <li><svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>My Profile tab — auto-fill any job form</li>
+          </ul>
+        </div>
+        <div class="feature-arrow">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </button>
+    </main>
+
+    <footer class="footer">
+      <div class="api-key-indicator" id="apiKeyIndicator">
+        <span class="indicator-dot" id="indicatorDot"></span>
+        <span id="indicatorLabel">Checking…</span>
+      </div>
+      <span>v1.0.0</span>
+    </footer>
+  </div>
+
+  <!-- ── MASTERSCAN WORKSPACE VIEW ──────────────────────────────────────── -->
+  <div id="masterScanView" class="hidden">
+    <header class="header ws-header">
+      <button class="back-btn" id="backBtn">
+        <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back
+      </button>
+
+      <!-- Tab switcher -->
+      <div class="ws-tabs">
+        <button class="ws-tab ws-tab-active" id="tabSmarty">
+          <svg viewBox="0 0 24 24" fill="none" width="12" height="12">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          Smarty
+        </button>
+        <button class="ws-tab" id="tabProfile">
+          <svg viewBox="0 0 24 24" fill="none" width="12" height="12">
+            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          My Profile
+          <span class="ws-tab-badge" id="profileTabBadge">Setup</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Smarty Panel ──────────────────────────────────────────────────── -->
+    <div id="panelSmarty" class="ws-panel">
+      <!-- Decorative bg orbs -->
+      <div class="ms-orb ms-orb-1" aria-hidden="true"></div>
+      <div class="ms-orb ms-orb-2" aria-hidden="true"></div>
+
+      <div class="ms-workspace-inner">
+
+        <!-- Brand row -->
+        <div class="ms-brand-row">
+          <div class="ms-brand-badge">
+            <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
+              <circle cx="12" cy="2.4" r="1.3" fill="currentColor"/>
+              <line x1="12" y1="3.7" x2="12" y2="6.2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+              <rect x="3.5" y="6.2" width="17" height="13" rx="4.5" stroke="currentColor" stroke-width="1.45" fill="currentColor" fill-opacity="0.1"/>
+              <circle cx="8.8" cy="11.4" r="2" fill="currentColor"/>
+              <circle cx="9.55" cy="10.65" r="0.72" fill="white"/>
+              <circle cx="15.2" cy="11.4" r="2" fill="currentColor"/>
+              <circle cx="15.95" cy="10.65" r="0.72" fill="white"/>
+              <path d="M8.5 15.2 Q12 17.5 15.5 15.2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" fill="none"/>
+            </svg>
+            Smarty AI
+          </div>
+          <div class="ms-brand-model">Llama 3.3 · 70B</div>
+        </div>
+
+        <!-- Search input -->
         <div class="ws-search-wrap">
           <div class="ws-search-icon">
             <svg viewBox="0 0 24 24" fill="none" width="15" height="15">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-              <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M20 20l-3-3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
             </svg>
           </div>
-          <textarea
-            id="smartyInput"
-            class="ws-search"
-            placeholder="Paste YouTube URL, article link, PDF link, or ask anything…"
-            rows="3"
-            spellcheck="false"
-          ></textarea>
+          <textarea id="smartyInput" class="ws-search" placeholder="Paste a YouTube URL, article, ask a question, or say &quot;build a startup roadmap for…&quot;" rows="3" spellcheck="false"></textarea>
         </div>
 
-        <!-- Example chips -->
-        <div class="ws-chips">
-          <span class="ws-chip-label">Try:</span>
-          <button class="ws-chip" data-example="youtube">
-            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><rect x="2" y="5" width="20" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 9l5 3-5 3V9z" fill="currentColor"/></svg>
-            YouTube URL
-          </button>
-          <button class="ws-chip" data-example="research">
-            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Research Paper
-          </button>
-          <button class="ws-chip" data-example="blog">
-            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Blog URL
-          </button>
-          <button class="ws-chip" data-example="ask">
-            <svg viewBox="0 0 24 24" fill="none" width="11" height="11"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M9 9a3 3 0 015.12 2.12c0 1.5-1.5 2.25-2.12 3M12 17h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Ask Smarty
-          </button>
-        </div>
-
-        <!-- Divider -->
-        <div class="ws-divider">
-          <span>Choose how to analyze</span>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="ws-actions">
-          <button class="ws-action-btn ws-action-primary" id="smartySearchBtn">
-            <div class="ws-action-icon ws-action-icon-primary">
-              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+        <div class="ms-actions">
+          <button class="ms-btn ms-btn-primary" id="smartySearchBtn">
+            <div class="ms-btn-icon ms-btn-icon-glow">
+              <svg viewBox="0 0 24 24" fill="none" width="17" height="17">
                 <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
                 <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
               </svg>
             </div>
-            <div class="ws-action-text">
-              <div class="ws-action-title">Search with Smarty</div>
-              <div class="ws-action-desc">Analyze URL, question, or pasted text</div>
+            <div class="ms-btn-text">
+              <div class="ms-btn-title">Analyze with Smarty</div>
+              <div class="ms-btn-desc">YouTube · Articles · Questions · Roadmaps</div>
             </div>
-            <svg class="ws-action-arrow" viewBox="0 0 24 24" fill="none" width="14" height="14">
-              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="ms-btn-arrow" viewBox="0 0 24 24" fill="none" width="14" height="14">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
 
-          <button class="ws-action-btn ws-action-secondary" id="scanScreenBtn">
-            <div class="ws-action-icon ws-action-icon-secondary">
-              <svg viewBox="0 0 24 24" fill="none" width="16" height="16">
+          <button class="ms-btn ms-btn-secondary" id="scanScreenBtn">
+            <div class="ms-btn-icon ms-btn-icon-scan">
+              <svg viewBox="0 0 24 24" fill="none" width="17" height="17">
                 <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <rect x="8" y="8" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.4"/>
+                <rect x="8" y="8" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.4"/>
               </svg>
             </div>
-            <div class="ws-action-text">
-              <div class="ws-action-title">Scan Screen</div>
-              <div class="ws-action-desc">Draw a box around any area on screen</div>
+            <div class="ms-btn-text">
+              <div class="ms-btn-title">Scan Screen</div>
+              <div class="ms-btn-desc">Draw a box around any area on screen</div>
             </div>
-            <svg class="ws-action-arrow" viewBox="0 0 24 24" fill="none" width="14" height="14">
-              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="ms-btn-arrow" viewBox="0 0 24 24" fill="none" width="14" height="14">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
         </div>
+
       </div>
     </div>
 
-  </div>
-  <script src="popup.js"></script>
+    <!-- ── My Profile Panel ──────────────────────────────────────────────── -->
+    <div id="panelProfile" class="ws-panel hidden">
+
+      <!-- Profile save bar -->
+      <div class="prof-save-bar">
+        <div class="prof-save-bar-left">
+          <span class="prof-completeness-label">Profile Completeness</span>
+          <span class="prof-completeness-pct" id="profPercent">0%</span>
+        </div>
+        <button class="prof-save-btn" id="profileSaveBtn">Save</button>
+      </div>
+
+      <!-- Completeness progress -->
+      <div class="prof-progress-wrap">
+        <div class="prof-progress-track">
+          <div class="prof-progress-fill" id="profProgressFill" style="width:0%"></div>
+        </div>
+        <div class="prof-missing-msg hidden" id="profMissingMsg"></div>
+      </div>
+
+      <!-- Import bar -->
+      <div class="prof-import-bar">
+        <button class="prof-import-btn prof-import-primary" id="scanPageBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="12" height="12">
+            <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M8 12h8M12 8v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Scan LinkedIn
+        </button>
+        <button class="prof-import-btn prof-import-secondary" id="pasteResumeBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="12" height="12">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Paste Resume
+        </button>
+      </div>
+
+      <!-- Autofill action bar -->
+      <div class="prof-autofill-bar">
+        <button class="prof-autofill-btn" id="autofillFormBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="14" height="14">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="19" cy="19" r="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M17.5 19l1 1 2-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="prof-autofill-text">Auto-fill Current Page's Form</span>
+          <span class="prof-autofill-tag">AI</span>
+        </button>
+      </div>
+
+      <!-- Paste area (hidden by default) -->
+      <div class="prof-paste-area hidden" id="pasteArea">
+        <textarea id="resumePasteInput" class="prof-paste-textarea" placeholder="Paste your full resume text here…" spellcheck="false"></textarea>
+        <div class="prof-paste-actions">
+          <button class="prof-extract-btn" id="parseResumeBtn">
+            <svg viewBox="0 0 24 24" fill="none" width="12" height="12"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            Extract with AI
+          </button>
+          <button class="prof-cancel-btn" id="cancelPasteBtn">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Scanning overlay status -->
+      <div class="prof-scan-status hidden" id="profScanStatus">
+        <div class="prof-scan-spinner"></div>
+        <span id="profScanMsg">Scanning page…</span>
+      </div>
+
+      <!-- Profile sections (scrollable) -->
+      <div class="prof-body" id="profBody">
+
+        <!-- PERSONAL INFO -->
+        <div class="prof-section" id="sec-personal">
+          <button class="prof-sec-header" data-sec="personal">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-personal"></span>
+              <span class="prof-sec-title">Personal Info</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body" id="body-personal">
+            <div class="prof-field-row">
+              <label class="prof-label" for="p-name">Full Name <span class="prof-required">*</span></label>
+              <input class="prof-input" id="p-name" type="text" placeholder="Jane Doe" autocomplete="off"/>
+            </div>
+            <div class="prof-field-row">
+              <label class="prof-label" for="p-email">Email <span class="prof-required">*</span></label>
+              <input class="prof-input" id="p-email" type="email" placeholder="jane@example.com" autocomplete="off"/>
+            </div>
+            <div class="prof-field-2col">
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-phone">Phone</label>
+                <input class="prof-input" id="p-phone" type="text" placeholder="+1 555-0100" autocomplete="off"/>
+              </div>
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-location">Location</label>
+                <input class="prof-input" id="p-location" type="text" placeholder="City, Country" autocomplete="off"/>
+              </div>
+            </div>
+            <div class="prof-field-row">
+              <label class="prof-label" for="p-linkedin">LinkedIn URL</label>
+              <input class="prof-input" id="p-linkedin" type="url" placeholder="https://linkedin.com/in/…" autocomplete="off"/>
+            </div>
+            <div class="prof-field-2col">
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-github">GitHub</label>
+                <input class="prof-input" id="p-github" type="text" placeholder="username" autocomplete="off"/>
+              </div>
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-website">Website</label>
+                <input class="prof-input" id="p-website" type="url" placeholder="https://…" autocomplete="off"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="prof-section" id="sec-summary">
+          <button class="prof-sec-header" data-sec="summary">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-summary"></span>
+              <span class="prof-sec-title">Professional Summary</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body hidden" id="body-summary">
+            <div class="prof-field-row">
+              <label class="prof-label" for="p-summary">2–3 sentence bio about yourself <span class="prof-required">*</span></label>
+              <textarea class="prof-input prof-textarea" id="p-summary" placeholder="Experienced software engineer with 4 years building scalable web applications…" rows="4" spellcheck="false"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SKILLS -->
+        <div class="prof-section" id="sec-skills">
+          <button class="prof-sec-header" data-sec="skills">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-skills"></span>
+              <span class="prof-sec-title">Skills</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body hidden" id="body-skills">
+            <div class="prof-field-row">
+              <label class="prof-label" for="p-skills-tech">Technical Skills <span class="prof-required">*</span><span class="prof-hint"> (comma-separated)</span></label>
+              <input class="prof-input" id="p-skills-tech" type="text" placeholder="JavaScript, Python, React, Node.js, SQL" autocomplete="off"/>
+            </div>
+            <div class="prof-field-row">
+              <label class="prof-label" for="p-skills-tools">Tools &amp; Frameworks <span class="prof-hint">(comma-separated)</span></label>
+              <input class="prof-input" id="p-skills-tools" type="text" placeholder="Git, Docker, AWS, Figma, Jira" autocomplete="off"/>
+            </div>
+            <div class="prof-field-2col">
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-skills-langs">Languages</label>
+                <input class="prof-input" id="p-skills-langs" type="text" placeholder="English, Spanish" autocomplete="off"/>
+              </div>
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-skills-soft">Soft Skills</label>
+                <input class="prof-input" id="p-skills-soft" type="text" placeholder="Leadership, Communication" autocomplete="off"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDUCATION -->
+        <div class="prof-section" id="sec-education">
+          <button class="prof-sec-header" data-sec="education">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-education"></span>
+              <span class="prof-sec-title">Education</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body hidden" id="body-education">
+            <div id="edu-entries"></div>
+            <button class="prof-add-btn" id="addEduBtn">+ Add Education</button>
+          </div>
+        </div>
+
+        <!-- EXPERIENCE -->
+        <div class="prof-section" id="sec-experience">
+          <button class="prof-sec-header" data-sec="experience">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-experience"></span>
+              <span class="prof-sec-title">Work Experience</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body hidden" id="body-experience">
+            <div id="exp-entries"></div>
+            <button class="prof-add-btn" id="addExpBtn">+ Add Experience</button>
+          </div>
+        </div>
+
+        <!-- PROJECTS -->
+        <div class="prof-section" id="sec-projects">
+          <button class="prof-sec-header" data-sec="projects">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-projects"></span>
+              <span class="prof-sec-title">Projects</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body hidden" id="body-projects">
+            <div id="proj-entries"></div>
+            <button class="prof-add-btn" id="addProjBtn">+ Add Project</button>
+          </div>
+        </div>
+
+        <!-- CERTIFICATIONS -->
+        <div class="prof-section" id="sec-certs">
+          <button class="prof-sec-header" data-sec="certs">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-certs"></span>
+              <span class="prof-sec-title">Certifications</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body hidden" id="body-certs">
+            <div id="cert-entries"></div>
+            <button class="prof-add-btn" id="addCertBtn">+ Add Certification</button>
+          </div>
+        </div>
+
+        <!-- CAREER PREFERENCES -->
+        <div class="prof-section" id="sec-prefs">
+          <button class="prof-sec-header" data-sec="prefs">
+            <div class="prof-sec-left">
+              <span class="prof-sec-dot" id="dot-prefs"></span>
+              <span class="prof-sec-title">Career Preferences</span>
+            </div>
+            <svg class="prof-sec-arrow" viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="prof-sec-body hidden" id="body-prefs">
+            <div class="prof-field-row">
+              <label class="prof-label" for="p-pref-role">Target Role</label>
+              <input class="prof-input" id="p-pref-role" type="text" placeholder="Senior Frontend Engineer" autocomplete="off"/>
+            </div>
+            <div class="prof-field-2col">
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-pref-industry">Industry</label>
+                <input class="prof-input" id="p-pref-industry" type="text" placeholder="Fintech, SaaS…" autocomplete="off"/>
+              </div>
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-pref-worktype">Work Type</label>
+                <select class="prof-input prof-select" id="p-pref-worktype">
+                  <option value="">Any</option>
+                  <option value="Remote">Remote</option>
+                  <option value="Hybrid">Hybrid</option>
+                  <option value="On-site">On-site</option>
+                </select>
+              </div>
+            </div>
+            <div class="prof-field-2col">
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-pref-salary">Expected Salary</label>
+                <input class="prof-input" id="p-pref-salary" type="text" placeholder="$120k – $150k" autocomplete="off"/>
+              </div>
+              <div class="prof-field-row">
+                <label class="prof-label" for="p-pref-avail">Availability</label>
+                <input class="prof-input" id="p-pref-avail" type="text" placeholder="Immediate, 2 weeks…" autocomplete="off"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /prof-body -->
+
+      <!-- Save toast -->
+      <div class="prof-toast hidden" id="profToast"></div>
+    </div><!-- /panelProfile -->
+
+  </div><!-- /masterScanView -->
+
+</div>
+<script src="popup.js"></script>
 </body>
 </html>
