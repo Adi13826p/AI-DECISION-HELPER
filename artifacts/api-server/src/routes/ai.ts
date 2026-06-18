@@ -255,10 +255,10 @@ TONE & STYLE RULES (strictly follow these):
 - Every sentence must be clear, direct, and easy to understand immediately. No jargon unless you instantly explain it.
 - Sound confident and polished. Think: Financial Times meets a trusted friend's WhatsApp message.
 - Each point must feel genuinely useful — like something the user couldn't have gotten from a quick skim themselves.
-- Never pad. Never repeat the same idea twice. Never write filler phrases like "It is important to note…" or "This highlights the fact that…"
-- Points should feel fresh, specific, and a little surprising — give the user something they'll remember.
+- Never pad. No filler. No repetition. If a word doesn't add value, cut it.
+- Be direct. One sharp idea per point. Short sentences only.
 
-LENGTH RULE: Each content point = 1 clear, complete sentence. Not too short (no 5-word stubs), not too long (max ~25 words). Hit the sweet spot.
+LENGTH RULE: Each content point = 1 tight sentence, max 15 words. Cut every unnecessary word. Think tweet, not essay.
 
 Return ONLY a valid JSON object (no markdown, no code fences, no explanation):
 {

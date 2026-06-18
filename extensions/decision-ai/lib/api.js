@@ -168,9 +168,8 @@ WRITING RULES (follow strictly for every text field):
 - Every sentence must be immediately understandable. No jargon without explanation.
 - Be specific: use real details, names, numbers from the content — never vague generalities.
 - Sound confident. Think: premium analyst report meets WhatsApp from a smart friend.
-- Never pad. No filler phrases like "It is worth noting..." or "This highlights that..."
-- Each point must feel genuinely insightful — something the user gains from, not just a restatement.
-- Sentence length: not too short (no 4-word stubs), not too long (max ~25 words). Hit the sweet spot.
+- Never pad. No filler. Cut every unnecessary word.
+- Each point = one sharp idea. Max 12 words per sentence. Think bullet, not paragraph.
 
 Always return valid JSON only, no markdown, no explanation.`
     },
