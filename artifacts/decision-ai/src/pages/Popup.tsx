@@ -24,9 +24,29 @@ export default function Popup() {
           <div style={s.logo}>
             <div style={s.logoIconWrap}>
               <svg style={s.logoIcon} viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
-                <path d="M2 17l10 5 10-5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
-                <path d="M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+                {/* antenna ball */}
+                <circle cx="12" cy="2.2" r="1.5" fill="currentColor"/>
+                <circle cx="11.2" cy="1.6" r="0.5" fill="white" fillOpacity="0.65"/>
+                {/* antenna stem */}
+                <line x1="12" y1="3.7" x2="12" y2="5.9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                {/* head — very round */}
+                <rect x="3" y="5.9" width="18" height="15" rx="7.5" stroke="currentColor" strokeWidth="1.4" fill="white" fillOpacity="0.38"/>
+                {/* left eye — big & sparkly */}
+                <circle cx="8.5" cy="11.6" r="2.5" fill="currentColor"/>
+                <circle cx="9.4" cy="10.65" r="0.96" fill="white"/>
+                <circle cx="10" cy="10.15" r="0.42" fill="white"/>
+                {/* right eye — big & sparkly */}
+                <circle cx="15.5" cy="11.6" r="2.5" fill="currentColor"/>
+                <circle cx="16.4" cy="10.65" r="0.96" fill="white"/>
+                <circle cx="17" cy="10.15" r="0.42" fill="white"/>
+                {/* rosy blush left */}
+                <ellipse cx="5.5" cy="15" rx="1.9" ry="1.35" fill="currentColor" fillOpacity="0.16"/>
+                {/* rosy blush right */}
+                <ellipse cx="18.5" cy="15" rx="1.9" ry="1.35" fill="currentColor" fillOpacity="0.16"/>
+                {/* big cute smile */}
+                <path d="M8.2 15.6 Q12 18.8 15.8 15.6" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" fill="none"/>
+                {/* tiny sparkle */}
+                <circle cx="19.8" cy="7.5" r="0.75" fill="currentColor" fillOpacity="0.55"/>
               </svg>
             </div>
             <span style={s.logoText}>

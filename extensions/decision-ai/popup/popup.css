@@ -28,19 +28,39 @@ html, body { background-color: #fff0f7 !important; color: #1a0810 !important; }
   --scan-accent: #f43f5e; --scan-mid: #f97316;
 }
 
-html, body {
-  width: 380px;
-  background: var(--bg-base);
+html {
+  width: 398px;
+  background: linear-gradient(160deg, #fce8f3 0%, #fdf4fa 100%);
+  border-radius: 26px;
+  overflow: hidden;
+  padding: 9px;
+}
+
+body {
+  width: 100%;
+  background: transparent;
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-size: 13px; line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  border-radius: 18px;
-  box-shadow: 0 8px 40px rgba(236,72,153,0.13), 0 2px 12px rgba(0,0,0,0.07);
   overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
-.app { display: flex; flex-direction: column; }
+.app {
+  display: flex; flex-direction: column;
+  border-radius: 20px;
+  border: 1px solid rgba(236,72,153,0.22);
+  background: var(--bg-base);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.85) inset,
+    0 20px 60px rgba(236,72,153,0.18),
+    0 8px 28px rgba(0,0,0,0.11),
+    0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
 .hidden { display: none !important; }
 
 /* ── View transitions ───────────────────────────────────────────────────────── */
@@ -168,14 +188,14 @@ html, body {
 .hero-tagline { font-size: 11.5px; color: var(--text-muted); }
 
 /* ── Feature cards ──────────────────────────────────────────────────────────── */
-.features { display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 16px; background: var(--bg-base); }
+.features { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 18px; background: var(--bg-base); }
 .feature-card {
   display: flex; align-items: flex-start; gap: 13px;
-  background: var(--bg-surface); border: 1px solid var(--border);
-  border-radius: 18px; padding: 16px 14px;
+  background: var(--bg-surface); border: 1px solid rgba(236,72,153,0.14);
+  border-radius: 16px; padding: 16px 15px;
   cursor: pointer; text-align: left; text-decoration: none; color: inherit;
   transition: all 0.18s; width: 100%; position: relative; overflow: hidden;
-  box-shadow: 0 1px 4px rgba(236,72,153,0.05), 0 0 0 0 rgba(236,72,153,0);
+  box-shadow: 0 2px 10px rgba(236,72,153,0.07), 0 1px 3px rgba(0,0,0,0.04);
 }
 .feature-card::before {
   content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.2s; pointer-events: none;
@@ -183,11 +203,11 @@ html, body {
 #truthLayerBtn::before { background: radial-gradient(ellipse at 0% 0%, rgba(236,72,153,0.12) 0%, transparent 60%); }
 #masterScanBtn::before { background: radial-gradient(ellipse at 0% 0%, rgba(244,63,94,0.10) 0%, transparent 60%); }
 #myProfileBtn::before  { background: radial-gradient(ellipse at 0% 0%, rgba(124,58,237,0.10) 0%, transparent 60%); }
-.feature-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(236,72,153,0.11), 0 1px 4px rgba(236,72,153,0.06); }
+.feature-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(236,72,153,0.13), 0 2px 8px rgba(0,0,0,0.06); }
 .feature-card:hover::before { opacity: 1; }
-#truthLayerBtn:hover { border-color: rgba(236,72,153,0.38); box-shadow: 0 6px 28px rgba(236,72,153,0.15), 0 1px 4px rgba(236,72,153,0.07); }
-#masterScanBtn:hover { border-color: rgba(244,63,94,0.33);  box-shadow: 0 6px 28px rgba(244,63,94,0.13), 0 1px 4px rgba(244,63,94,0.06); }
-#myProfileBtn:hover  { border-color: rgba(124,58,237,0.38); box-shadow: 0 6px 28px rgba(124,58,237,0.15), 0 1px 4px rgba(124,58,237,0.07); }
+#truthLayerBtn:hover { border-color: rgba(236,72,153,0.38); box-shadow: 0 8px 36px rgba(236,72,153,0.18), 0 2px 8px rgba(236,72,153,0.08); }
+#masterScanBtn:hover { border-color: rgba(244,63,94,0.33);  box-shadow: 0 8px 36px rgba(244,63,94,0.15), 0 2px 8px rgba(244,63,94,0.07); }
+#myProfileBtn:hover  { border-color: rgba(124,58,237,0.38); box-shadow: 0 8px 36px rgba(124,58,237,0.18), 0 2px 8px rgba(124,58,237,0.08); }
 .feature-card:active { transform: translateY(0); }
 
 .feature-icon-wrap {
@@ -250,8 +270,9 @@ html, body {
 /* ── Footer ─────────────────────────────────────────────────────────────────── */
 .footer {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px 12px; border-top: 1px solid var(--border);
-  font-size: 11px; color: var(--text-muted); background: var(--bg-surface);
+  padding: 10px 16px 13px; border-top: 1px solid rgba(236,72,153,0.1);
+  font-size: 11px; color: var(--text-muted);
+  background: linear-gradient(180deg, var(--bg-surface) 0%, #fff8fc 100%);
 }
 .api-key-indicator { display: flex; align-items: center; gap: 5px; }
 .indicator-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }

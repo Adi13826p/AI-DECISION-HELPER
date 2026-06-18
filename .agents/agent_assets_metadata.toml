@@ -12,3 +12,9 @@ id = "5sRly9HDaxR6RdpF9Idm-"
 uri = "file://decision-ai-extension.zip"
 type = "unspecified"
 title = "DecisionAI Extension — MasterScan Scan Fixed"
+
+[[outputs]]
+id = "6JRbdahlQWS929rivuVv9"
+uri = "file://extensions/decision-ai/icons/icon128.png"
+type = "image"
+title = "New Cute DecisionAI Icon (128×128)"
