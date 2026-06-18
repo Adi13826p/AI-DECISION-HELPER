@@ -372,6 +372,107 @@ function AnalyzingView({ mode, stepIdx }: { mode: Mode; stepIdx: number }) {
   );
 }
 
+/* ── Extension Download Card ────────────────────────── */
+function ExtensionDownloadCard() {
+  const [state, setState] = useState<"idle"|"loading"|"done">("idle");
+
+  async function handleDownload() {
+    if (state === "loading") return;
+    setState("loading");
+    try {
+      const res = await fetch("/api/extension/download");
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url; a.download = "decision-ai-extension.zip"; a.click();
+      URL.revokeObjectURL(url);
+      setState("done");
+      setTimeout(() => setState("idle"), 3500);
+    } catch { setState("idle"); }
+  }
+
+  return (
+    <div style={{
+      position:"relative", overflow:"hidden", borderRadius:16,
+      background:"linear-gradient(135deg,rgba(139,92,246,0.08) 0%,rgba(236,72,153,0.07) 50%,rgba(108,141,250,0.06) 100%)",
+      border:"1px solid rgba(139,92,246,0.22)",
+      padding:"16px 16px 14px",
+    }}>
+      {/* Decorative blobs */}
+      <div style={{position:"absolute",top:-24,right:-24,width:80,height:80,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,0.15),transparent 70%)",pointerEvents:"none"}} />
+      <div style={{position:"absolute",bottom:-20,left:-20,width:70,height:70,borderRadius:"50%",background:"radial-gradient(circle,rgba(236,72,153,0.1),transparent 70%)",pointerEvents:"none"}} />
+
+      <div style={{position:"relative",zIndex:1}}>
+        {/* Header row */}
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <div style={{
+            width:36,height:36,borderRadius:10,flexShrink:0,
+            background:"linear-gradient(135deg,rgba(139,92,246,0.22),rgba(236,72,153,0.14))",
+            border:"1px solid rgba(139,92,246,0.28)",
+            display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,
+          }}>🧩</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:800,color:"var(--text-primary)",letterSpacing:"-0.2px"}}>Get the Chrome Extension</div>
+            <div style={{fontSize:10.5,color:"var(--text-muted)",marginTop:1}}>Use DecisionAI on any website, instantly</div>
+          </div>
+        </div>
+
+        {/* Feature pills */}
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
+          {["🛍️ Truth Layer","📺 YouTube Notes","📄 MasterScan","🤖 Auto Job Apply"].map(f => (
+            <span key={f} style={{
+              fontSize:10,fontWeight:600,padding:"3px 8px",borderRadius:20,
+              background:"rgba(139,92,246,0.08)",
+              border:"1px solid rgba(139,92,246,0.16)",
+              color:"var(--text-secondary)",
+            }}>{f}</span>
+          ))}
+        </div>
+
+        {/* Download button */}
+        <button
+          onClick={handleDownload}
+          style={{
+            width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+            padding:"11px 16px", borderRadius:11, border:"none", cursor: state==="loading" ? "wait" : "pointer",
+            fontSize:12.5, fontWeight:700, color:"#fff", letterSpacing:"0.1px",
+            background: state==="done"
+              ? "linear-gradient(135deg,#10b981,#059669)"
+              : "linear-gradient(135deg,#8b5cf6,#ec4899,#6c8dfa)",
+            backgroundSize:"200%",
+            opacity: state==="loading" ? 0.8 : 1,
+            transition:"opacity 0.2s",
+            boxShadow: state==="done" ? "0 4px 18px rgba(16,185,129,0.3)" : "0 4px 18px rgba(139,92,246,0.35)",
+          }}
+        >
+          {state==="loading" ? (
+            <svg style={{width:14,height:14,animation:"spin 1s linear infinite"}} viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeDasharray="32" strokeDashoffset="10"/>
+            </svg>
+          ) : state==="done" ? (
+            <svg style={{width:14,height:14}} viewBox="0 0 24 24" fill="none">
+              <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg style={{width:14,height:14}} viewBox="0 0 24 24" fill="none">
+              <path d="M12 3v13M7 11l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 20h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          )}
+          <span>{state==="loading" ? "Packaging extension…" : state==="done" ? "Downloaded! Install from chrome://extensions" : "⬇ Download Extension (.zip)"}</span>
+        </button>
+
+        {state==="done" && (
+          <div style={{marginTop:8,fontSize:10.5,color:"var(--text-muted)",textAlign:"center",lineHeight:1.5}}>
+            Unzip → open <strong>chrome://extensions</strong> → enable Developer mode → Load unpacked
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── Result View ────────────────────────────────────── */
 function ResultView({ result, mode, onReset, onTranslateText }: { result: AnyResult; mode: Mode; onReset: () => void; onTranslateText: (text: string) => void }) {
   const [selTip, setSelTip] = useState<{ x: number; y: number; text: string } | null>(null);
@@ -413,6 +514,10 @@ function ResultView({ result, mode, onReset, onTranslateText }: { result: AnyRes
         {result.type === "smarty"    && <SmartyResultView data={result.data} mode={mode} />}
         {result.type === "resume"    && <ResumeResultView data={result.data} />}
         {result.type === "translate" && <TranslateResultView data={result.data} />}
+
+        {/* ── Download Extension CTA ── */}
+        <ExtensionDownloadCard />
+
         <button onClick={onReset} style={{display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"11px", background:"var(--bg-elevated)", border:"1px solid var(--border)", borderRadius:11, color:"var(--text-secondary)", fontSize:12.5, fontWeight:600, cursor:"pointer", marginTop:4}}>
           ↩ Analyze Another
         </button>
@@ -498,6 +603,18 @@ const SECTION_STYLES: Record<string, { accent: string; bg: string; border: strin
   insights:   { accent:"#a374ff", bg:"rgba(163,116,255,0.04)", border:"rgba(163,116,255,0.18)", numBg:"rgba(163,116,255,0.12)" },
   facts:      { accent:"#10b981", bg:"rgba(16,185,129,0.04)",  border:"rgba(16,185,129,0.18)",  numBg:"rgba(16,185,129,0.12)" },
   conclusion: { accent:"#f43f5e", bg:"rgba(244,63,94,0.04)",   border:"rgba(244,63,94,0.18)",   numBg:"rgba(244,63,94,0.12)" },
+  /* YouTube-specific */
+  overview:   { accent:"#f87171", bg:"rgba(248,113,113,0.04)", border:"rgba(248,113,113,0.18)", numBg:"rgba(248,113,113,0.12)" },
+  segments:   { accent:"#fb923c", bg:"rgba(251,146,60,0.04)",  border:"rgba(251,146,60,0.18)",  numBg:"rgba(251,146,60,0.12)" },
+  highlights: { accent:"#facc15", bg:"rgba(250,204,21,0.04)",  border:"rgba(250,204,21,0.18)",  numBg:"rgba(250,204,21,0.12)" },
+  notes:      { accent:"#38bdf8", bg:"rgba(56,189,248,0.04)",  border:"rgba(56,189,248,0.18)",  numBg:"rgba(56,189,248,0.12)" },
+  timestamps: { accent:"#fb923c", bg:"rgba(251,146,60,0.04)",  border:"rgba(251,146,60,0.18)",  numBg:"rgba(251,146,60,0.12)" },
+  verdict:    { accent:"#f43f5e", bg:"rgba(244,63,94,0.04)",   border:"rgba(244,63,94,0.18)",   numBg:"rgba(244,63,94,0.12)" },
+  /* Plan-specific */
+  goals:      { accent:"#6c8dfa", bg:"rgba(108,141,250,0.04)", border:"rgba(108,141,250,0.18)", numBg:"rgba(108,141,250,0.12)" },
+  timeline:   { accent:"#10b981", bg:"rgba(16,185,129,0.04)",  border:"rgba(16,185,129,0.18)",  numBg:"rgba(16,185,129,0.12)" },
+  steps:      { accent:"#a374ff", bg:"rgba(163,116,255,0.04)", border:"rgba(163,116,255,0.18)", numBg:"rgba(163,116,255,0.12)" },
+  risks:      { accent:"#f43f5e", bg:"rgba(244,63,94,0.04)",   border:"rgba(244,63,94,0.18)",   numBg:"rgba(244,63,94,0.12)" },
 };
 const DEFAULT_SECTION_STYLE = { accent:"#ec4899", bg:"rgba(236,72,153,0.04)", border:"rgba(236,72,153,0.18)", numBg:"rgba(236,72,153,0.12)" };
 
