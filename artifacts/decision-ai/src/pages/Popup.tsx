@@ -112,27 +112,10 @@ export default function Popup() {
           <div style={s.logo}>
             <div style={s.logoIconWrap}>
               <svg style={s.logoIcon} viewBox="0 0 24 24" fill="none">
-                {/* star antenna */}
-                <path d="M12 1.5 L12.6 3.2 L14.4 3.2 L13 4.3 L13.5 6 L12 4.9 L10.5 6 L11 4.3 L9.6 3.2 L11.4 3.2 Z" fill="white" fillOpacity="0.95"/>
-                {/* stem */}
-                <line x1="12" y1="6" x2="12" y2="7.8" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.85"/>
-                {/* face */}
-                <rect x="2.5" y="7.5" width="19" height="14.5" rx="7" fill="white" fillOpacity="0.18" stroke="white" strokeWidth="1.3" strokeOpacity="0.8"/>
-                {/* left eye */}
-                <circle cx="8.5" cy="13" r="2.6" fill="white"/>
-                <circle cx="9.5" cy="11.9" r="1.1" fill="#ec4899"/>
-                <circle cx="10" cy="11.4" r="0.5" fill="white"/>
-                {/* right eye */}
-                <circle cx="15.5" cy="13" r="2.6" fill="white"/>
-                <circle cx="16.5" cy="11.9" r="1.1" fill="#ec4899"/>
-                <circle cx="17" cy="11.4" r="0.5" fill="white"/>
-                {/* blush */}
-                <ellipse cx="5" cy="16.5" rx="1.8" ry="1.2" fill="white" fillOpacity="0.28"/>
-                <ellipse cx="19" cy="16.5" rx="1.8" ry="1.2" fill="white" fillOpacity="0.28"/>
-                {/* smile */}
-                <path d="M8.5 17.5 Q12 21 15.5 17.5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" strokeOpacity="0.95"/>
-                {/* sparkle */}
-                <path d="M21 8.5 L21.4 9.6 L22.5 10 L21.4 10.4 L21 11.5 L20.6 10.4 L19.5 10 L20.6 9.6 Z" fill="white" fillOpacity="0.75"/>
+                {/* 4-pointed AI sparkle — main */}
+                <path d="M12 1C10.8 6.8 6.8 10.8 1 12C6.8 13.2 10.8 17.2 12 23C13.2 17.2 17.2 13.2 23 12C17.2 10.8 13.2 6.8 12 1Z" fill="white"/>
+                {/* small accent sparkle */}
+                <path d="M19.5 3C19.2 4.6 18 5.8 16.5 6.1C18 6.4 19.2 7.6 19.5 9.2C19.8 7.6 21 6.4 22.5 6.1C21 5.8 19.8 4.6 19.5 3Z" fill="white" fillOpacity="0.65"/>
               </svg>
             </div>
             <span style={s.logoText}>
