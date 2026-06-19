@@ -2244,7 +2244,7 @@
       div1.style.cssText = 'width:1px;height:20px;background:rgba(236,72,153,0.2);margin:0 1px';
       const div2 = div1.cloneNode();
 
-      __selToolbar.append(listenBtn, div1, transBtn, div2, explBtn);
+      __selToolbar.append(transBtn, div1, explBtn, div2, listenBtn);
       document.documentElement.appendChild(__selToolbar);
     }, 10);
   }, true);
