@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Default empty profile ─────────────────────────────────────────────────────
   const EMPTY_PROFILE = () => ({
     name: '', email: '', phone: '', location: '', linkedin: '', github: '', website: '',
+    dob: '', nationality: '', postalCode: '', photo: '',
     summary: '',
     skills: { tech: '', tools: '', langs: '', soft: '' },
     education:      [{ inst: '', degree: '', field: '', years: '', gpa: '' }],
@@ -401,13 +402,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Collect values from DOM into profile object ───────────────────────────────
 
   function collectFromDOM() {
-    profile.name     = document.getElementById('p-name').value.trim();
-    profile.email    = document.getElementById('p-email').value.trim();
-    profile.phone    = document.getElementById('p-phone').value.trim();
-    profile.location = document.getElementById('p-location').value.trim();
-    profile.linkedin = document.getElementById('p-linkedin').value.trim();
-    profile.github   = document.getElementById('p-github').value.trim();
-    profile.website  = document.getElementById('p-website').value.trim();
+    profile.name        = document.getElementById('p-name').value.trim();
+    profile.email       = document.getElementById('p-email').value.trim();
+    profile.phone       = document.getElementById('p-phone').value.trim();
+    profile.location    = document.getElementById('p-location').value.trim();
+    profile.linkedin    = document.getElementById('p-linkedin').value.trim();
+    profile.github      = document.getElementById('p-github').value.trim();
+    profile.website     = document.getElementById('p-website').value.trim();
+    profile.dob         = document.getElementById('p-dob').value.trim();
+    profile.nationality = document.getElementById('p-nationality').value.trim();
+    profile.postalCode  = document.getElementById('p-postalCode').value.trim();
+    profile.photo       = document.getElementById('p-photo').value.trim();
     profile.summary  = document.getElementById('p-summary').value.trim();
     profile.skills.tech  = document.getElementById('p-skills-tech').value.trim();
     profile.skills.tools = document.getElementById('p-skills-tools').value.trim();
@@ -448,14 +453,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Populate DOM from profile object ─────────────────────────────────────────
 
   function populateDOM() {
-    document.getElementById('p-name').value     = profile.name || '';
-    document.getElementById('p-email').value    = profile.email || '';
-    document.getElementById('p-phone').value    = profile.phone || '';
-    document.getElementById('p-location').value = profile.location || '';
-    document.getElementById('p-linkedin').value = profile.linkedin || '';
-    document.getElementById('p-github').value   = profile.github || '';
-    document.getElementById('p-website').value  = profile.website || '';
-    document.getElementById('p-summary').value  = profile.summary || '';
+    document.getElementById('p-name').value        = profile.name || '';
+    document.getElementById('p-email').value       = profile.email || '';
+    document.getElementById('p-phone').value       = profile.phone || '';
+    document.getElementById('p-location').value    = profile.location || '';
+    document.getElementById('p-linkedin').value    = profile.linkedin || '';
+    document.getElementById('p-github').value      = profile.github || '';
+    document.getElementById('p-website').value     = profile.website || '';
+    document.getElementById('p-dob').value         = profile.dob || '';
+    document.getElementById('p-nationality').value = profile.nationality || '';
+    document.getElementById('p-postalCode').value  = profile.postalCode || '';
+    document.getElementById('p-photo').value       = profile.photo || '';
+    document.getElementById('p-summary').value     = profile.summary || '';
     document.getElementById('p-skills-tech').value  = profile.skills?.tech || '';
     document.getElementById('p-skills-tools').value = profile.skills?.tools || '';
     document.getElementById('p-skills-langs').value = profile.skills?.langs || '';

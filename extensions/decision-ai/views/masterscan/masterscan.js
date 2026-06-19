@@ -447,9 +447,57 @@ async function init() {
   runAnalysis();
 }
 
+// ── PDF Download ──────────────────────────────────────────────────────────────
+
+function downloadPDF() {
+  const scroll = $('resultsScroll');
+  const ctTitle = $('ctTitle')?.textContent || 'MasterScan Analysis';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>${ctTitle}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 40px; color: #1a1a2e; font-size: 14px; line-height: 1.6; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 12px; margin-bottom: 24px; }
+  .section-header { display: flex; align-items: center; gap: 8px; margin-top: 20px; margin-bottom: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; }
+  .section-title { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+  .section-emoji { font-size: 16px; }
+  .section-body { margin-left: 24px; color: #374151; font-size: 13px; }
+  ul { padding-left: 18px; margin: 6px 0; }
+  li { margin-bottom: 4px; }
+  pre { background: #f3f4f6; padding: 10px; border-radius: 6px; font-size: 12px; overflow-wrap: break-word; white-space: pre-wrap; }
+  .extracted-text { background: #f9fafb; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; }
+  @media print { body { margin: 20px; } }
+</style>
+</head>
+<body>
+<h1>DecisionAI — MasterScan</h1>
+<div class="sub">Generated ${new Date().toLocaleString()}</div>
+${scroll ? scroll.innerHTML : ''}
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `masterscan-${Date.now()}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  const btn = $('downloadPdfBtn');
+  const orig = btn.innerHTML;
+  btn.textContent = '✓ Downloaded!';
+  setTimeout(() => { btn.innerHTML = orig; }, 1800);
+}
+
 $('backBtn').addEventListener('click', () => window.close());
 $('retryBtn').addEventListener('click', () => runAnalysis());
 $('scanAgainBtn').addEventListener('click', () => window.close());
+$('downloadPdfBtn').addEventListener('click', downloadPDF);
 $('copyTextBtn').addEventListener('click', () => {
   if (extractedText) {
     navigator.clipboard.writeText(extractedText).then(() => {
