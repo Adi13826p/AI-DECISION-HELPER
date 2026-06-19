@@ -18,3 +18,9 @@ id = "6JRbdahlQWS929rivuVv9"
 uri = "file://extensions/decision-ai/icons/icon128.png"
 type = "image"
 title = "New Cute DecisionAI Icon (128×128)"
+
+[[outputs]]
+id = "_xIZnorYMsbUY-vJ1jDaA"
+uri = "file://decision-ai-extension-v1.2.0.zip"
+type = "unspecified"
+title = "DecisionAI Extension v1.2.0"
