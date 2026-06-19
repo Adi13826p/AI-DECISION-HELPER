@@ -37,7 +37,7 @@ body {
   background: var(--bg-base);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 6px 28px rgba(236,72,153,0.22), 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(236,72,153,0.12);
+  box-shadow: 0 6px 28px rgba(236,72,153,0.22), 0 2px 8px rgba(0,0,0,0.1);
 }
 .hidden { display: none !important; }
 

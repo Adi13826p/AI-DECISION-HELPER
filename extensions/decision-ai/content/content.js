@@ -135,58 +135,96 @@
     const productName = (extraction.name || extraction.brand || pageTitle || 'product').trim();
     const q = encodeURIComponent(productName + ' review');
 
-    // Step 2: Fetch real reviews from Reddit, YouTube, and Quora in parallel
-    let redditSnippets = '';
-    let ytSnippets     = '';
-    let quoraSnippets  = '';
+    // Step 2: Fetch real reviews via Reddit JSON API + DuckDuckGo (bot-friendly, no blocking)
+    let redditSnippets  = '';
+    let ytSnippets      = '';
+    let quoraSnippets   = '';
+    let generalSnippets = '';
+
+    function parseDDG(html, limit) {
+      const out = [];
+      // Extract result snippets from DuckDuckGo HTML search results
+      const re = /class="result__snippet[^"]*"[^>]*>([\s\S]{20,350}?)<\/a>/g;
+      let m;
+      while ((m = re.exec(html)) !== null && out.length < limit) {
+        const text = m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        if (text.length > 20) out.push('• ' + text);
+      }
+      return out.join('\n');
+    }
 
     try {
-      const [rdResp, ytResp, qrResp] = await Promise.allSettled([
-        chrome.runtime.sendMessage({ type: 'FETCH_URL', url: 'https://www.reddit.com/search.json?q=' + q + '&limit=8&sort=relevance&type=link' }),
-        chrome.runtime.sendMessage({ type: 'FETCH_URL', url: 'https://www.youtube.com/results?search_query=' + q }),
-        chrome.runtime.sendMessage({ type: 'FETCH_URL', url: 'https://www.quora.com/search?q=' + encodeURIComponent(productName + ' review') })
+      const qEnc    = encodeURIComponent(productName + ' review');
+      const qReddit = encodeURIComponent(productName + ' review site:reddit.com');
+      const qYT     = encodeURIComponent(productName + ' review site:youtube.com');
+      const qGen    = encodeURIComponent(productName + ' honest review pros cons');
+
+      const [rdResp, ddgReddit, ddgYT, ddgGen] = await Promise.allSettled([
+        // Reddit JSON API — direct, with proper JSON Accept header
+        chrome.runtime.sendMessage({
+          type: 'FETCH_URL',
+          url: 'https://www.reddit.com/search.json?q=' + qEnc + '&sort=top&t=all&limit=10&type=link,self',
+          acceptJson: true
+        }),
+        // DuckDuckGo: Reddit-specific snippets (most reliable)
+        chrome.runtime.sendMessage({
+          type: 'FETCH_URL',
+          url: 'https://html.duckduckgo.com/html/?q=' + qReddit
+        }),
+        // DuckDuckGo: YouTube review video titles & descriptions
+        chrome.runtime.sendMessage({
+          type: 'FETCH_URL',
+          url: 'https://html.duckduckgo.com/html/?q=' + qYT
+        }),
+        // DuckDuckGo: general reviews — Quora, blogs, review sites
+        chrome.runtime.sendMessage({
+          type: 'FETCH_URL',
+          url: 'https://html.duckduckgo.com/html/?q=' + qGen
+        })
       ]);
 
-      // Reddit — returns JSON from search.json endpoint
+      // Reddit JSON API — parse posts + selftext
       if (rdResp.status === 'fulfilled' && rdResp.value?.success) {
         try {
           const rj   = JSON.parse(rdResp.value.html);
           const rows = (rj?.data?.children || []).slice(0, 6).map(c => {
             const p = c.data;
-            return '• [r/' + p.subreddit + '] ' + p.title + (p.selftext ? ' — ' + p.selftext.slice(0, 120) : '');
-          });
+            return '• [r/' + p.subreddit + '] ' + p.title +
+              (p.selftext ? ' — ' + p.selftext.slice(0, 150) : '');
+          }).filter(Boolean);
           if (rows.length) redditSnippets = rows.join('\n');
         } catch (_) {}
       }
 
-      // YouTube — scrape video titles from results HTML
-      if (ytResp.status === 'fulfilled' && ytResp.value?.success) {
-        const html  = ytResp.value.html || '';
-        const titles = [];
-        const re    = /"title":\{"runs":\[\{"text":"([^"]{5,120})"\}/g;
-        let m;
-        while ((m = re.exec(html)) !== null && titles.length < 5) titles.push('• ' + m[1]);
-        if (titles.length) ytSnippets = titles.join('\n');
+      // DuckDuckGo Reddit — use as primary if JSON API didn't return enough
+      if (ddgReddit.status === 'fulfilled' && ddgReddit.value?.success) {
+        const ddgRd = parseDDG(ddgReddit.value.html || '', 5);
+        if (ddgRd) redditSnippets = (redditSnippets ? redditSnippets + '\n' : '') + ddgRd;
       }
 
-      // Quora — extract question titles
-      if (qrResp.status === 'fulfilled' && qrResp.value?.success) {
-        const html = qrResp.value.html || '';
-        const qs   = [];
-        const re   = /<span[^>]+class="[^"]*q_text[^"]*"[^>]*>([^<]{10,160})<\/span>/g;
-        let m;
-        while ((m = re.exec(html)) !== null && qs.length < 4) qs.push('• ' + m[1]);
-        if (qs.length) quoraSnippets = qs.join('\n');
+      // DuckDuckGo YouTube
+      if (ddgYT.status === 'fulfilled' && ddgYT.value?.success) {
+        ytSnippets = parseDDG(ddgYT.value.html || '', 5);
+      }
+
+      // DuckDuckGo general (Quora, blogs, review sites)
+      if (ddgGen.status === 'fulfilled' && ddgGen.value?.success) {
+        generalSnippets = parseDDG(ddgGen.value.html || '', 5);
+        // Split off Quora-looking snippets
+        const lines = generalSnippets.split('\n');
+        quoraSnippets   = lines.filter(l => l.toLowerCase().includes('quora') || l.includes('?')).slice(0, 3).join('\n');
+        generalSnippets = lines.filter(l => !l.toLowerCase().includes('quora')).join('\n');
       }
     } catch (_) {}
 
     // Step 3: Text model (json_object mode) synthesises real review data into structured analysis
     const extractedStr = JSON.stringify(extraction);
-    const reviewCtx    =
-      (redditSnippets ? '\nREDDIT POSTS:\n' + redditSnippets : '') +
-      (ytSnippets     ? '\nYOUTUBE REVIEW VIDEOS:\n' + ytSnippets : '') +
-      (quoraSnippets  ? '\nQUORA QUESTIONS:\n' + quoraSnippets : '') ||
-      '\n(No live review data retrieved — use your training knowledge.)';
+    const reviewCtx    = (
+      (redditSnippets  ? '\nREDDIT POSTS:\n'          + redditSnippets  : '') +
+      (ytSnippets      ? '\nYOUTUBE REVIEWS:\n'       + ytSnippets      : '') +
+      (quoraSnippets   ? '\nQUORA QUESTIONS:\n'       + quoraSnippets   : '') +
+      (generalSnippets ? '\nOTHER REVIEW SOURCES:\n'  + generalSnippets : '')
+    ) || '\n(No live review data retrieved — use your training knowledge.)';
 
     return groqCall([
       { role: 'system', content: 'You are DecisionAI Truth Layer — an expert product analyst. You are given screenshot data + real community content fetched live from Reddit, YouTube, and Quora. Synthesise everything into an honest, source-attributed analysis. Always return valid JSON only, no markdown.' },
