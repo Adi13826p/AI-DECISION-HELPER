@@ -37,6 +37,27 @@
       </div>
       <h2>Start with a Screen Selection</h2>
       <p>Click the DecisionAI extension icon, choose <strong>MasterScan</strong>, then drag to select any content — articles, math, job posts, research papers, and more.</p>
+
+      <!-- TTS Speak Panel (always available) -->
+      <div class="tts-speak-panel" id="ttsSpeakPanel">
+        <div class="tsp-header">
+          <div class="tsp-icon">🔊</div>
+          <div class="tsp-info">
+            <div class="tsp-title">Speak Selected Text</div>
+            <div class="tsp-sub">Paste any text — YouTube summary, article, notes — to hear it read aloud</div>
+          </div>
+          <span class="tsp-badge">TTS</span>
+        </div>
+        <textarea id="ttsTextInput" class="tts-textarea" placeholder="Paste text here to hear it read aloud in a natural voice…" rows="4"></textarea>
+        <div class="tts-controls">
+          <button id="ttsListenBtn" class="tts-listen-btn" disabled>
+            <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Listen Now
+          </button>
+          <button id="ttsClearBtn" class="tts-clear-btn hidden">Clear</button>
+        </div>
+        <div id="ttsCharCount" class="tts-char-count hidden"></div>
+      </div>
     </section>
 
     <!-- Loading -->
@@ -89,15 +110,19 @@
       <div class="results-footer">
         <button class="copy-text-btn" id="copyTextBtn">
           <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Copy extracted text
+          Copy text
+        </button>
+        <button class="listen-btn" id="listenBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Listen
         </button>
         <button class="download-pdf-btn" id="downloadPdfBtn">
           <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Download as PDF
+          PDF
         </button>
         <button class="scan-again-btn" id="scanAgainBtn">
           <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Scan again
+          Rescan
         </button>
       </div>
     </section>
@@ -109,6 +134,28 @@
       <p class="error-desc" id="errorDesc">Something went wrong. Please try again.</p>
       <button class="retry-btn" id="retryBtn">Try Again</button>
     </section>
+
+    <!-- Floating TTS Bar (shown while speaking) -->
+    <div class="tts-bar hidden" id="ttsBar">
+      <div class="tts-bar-waves" id="ttsBarWaves">
+        <span class="wave"></span><span class="wave"></span><span class="wave"></span>
+        <span class="wave"></span><span class="wave"></span><span class="wave"></span>
+        <span class="wave"></span>
+      </div>
+      <div class="tts-bar-text">
+        <div class="tts-bar-status" id="ttsBarStatus">Speaking…</div>
+        <div class="tts-bar-label" id="ttsBarLabel"></div>
+      </div>
+      <button class="tts-bar-btn tts-toggle-btn" id="ttsToggleBtn" title="Pause / Resume">⏸</button>
+      <button class="tts-bar-btn tts-stop-btn" id="ttsStopBtn" title="Stop">■</button>
+    </div>
+
+    <!-- Selection tooltip (appears on text selection) -->
+    <div class="sel-tooltip hidden" id="selTooltip">
+      <button class="sel-btn sel-listen" id="selListenBtn">🔊 Listen</button>
+      <button class="sel-btn sel-copy" id="selCopyBtn">📋</button>
+      <button class="sel-btn sel-close" id="selCloseBtn">✕</button>
+    </div>
   </div>
 
   <script type="module" src="masterscan.js"></script>

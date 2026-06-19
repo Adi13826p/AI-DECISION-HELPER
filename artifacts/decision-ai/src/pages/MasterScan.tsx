@@ -1,5 +1,139 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
+
+/* ── TTS Hook ───────────────────────────────────────── */
+function useTTS() {
+  const [speaking, setSpeaking]     = useState(false);
+  const [paused,   setPaused]       = useState(false);
+  const [label,    setLabel]        = useState("");
+  const uttRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const getBestVoice = useCallback((): SpeechSynthesisVoice | null => {
+    const voices = window.speechSynthesis?.getVoices() ?? [];
+    const priority = [
+      "Google UK English Female",
+      "Google US English Female",
+      "Microsoft Jenny Online (Natural) - English (United States)",
+      "Microsoft Aria Online (Natural) - English (United States)",
+      "Microsoft Zira - English (United States)",
+      "Samantha",
+      "Karen",
+      "Moira",
+    ];
+    for (const name of priority) {
+      const v = voices.find(v => v.name === name);
+      if (v) return v;
+    }
+    return (
+      voices.find(v => v.lang.startsWith("en") && /female|woman/i.test(v.name)) ||
+      voices.find(v => v.lang === "en-GB") ||
+      voices.find(v => v.lang.startsWith("en")) ||
+      voices[0] || null
+    );
+  }, []);
+
+  function speak(text: string, shortLabel?: string) {
+    window.speechSynthesis?.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    const doSpeak = () => {
+      const voice = getBestVoice();
+      if (voice) utt.voice = voice;
+      utt.rate   = 0.91;
+      utt.pitch  = 1.02;
+      utt.volume = 1.0;
+      utt.onstart  = () => { setSpeaking(true); setPaused(false); setLabel(shortLabel ?? text.slice(0, 48) + (text.length > 48 ? "…" : "")); };
+      utt.onend    = () => { setSpeaking(false); setPaused(false); setLabel(""); };
+      utt.onerror  = () => { setSpeaking(false); setPaused(false); setLabel(""); };
+      utt.onpause  = () => setPaused(true);
+      utt.onresume = () => setPaused(false);
+      uttRef.current = utt;
+      window.speechSynthesis.speak(utt);
+    };
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.addEventListener("voiceschanged", doSpeak, { once: true });
+    } else {
+      doSpeak();
+    }
+  }
+
+  function toggle() {
+    if (!speaking) return;
+    if (paused) { window.speechSynthesis?.resume(); setPaused(false); }
+    else        { window.speechSynthesis?.pause();  setPaused(true);  }
+  }
+
+  function stop() {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false); setPaused(false); setLabel("");
+  }
+
+  useEffect(() => () => { window.speechSynthesis?.cancel(); }, []);
+
+  return { speaking, paused, label, speak, toggle, stop };
+}
+
+/* ── TTS Bar ────────────────────────────────────────── */
+function TTSBar({ speaking, paused, label, onToggle, onStop }: {
+  speaking: boolean; paused: boolean; label: string;
+  onToggle: () => void; onStop: () => void;
+}) {
+  if (!speaking) return null;
+  return (
+    <div style={{
+      position:"absolute", bottom:0, left:0, right:0, zIndex:50,
+      background:"linear-gradient(135deg,rgba(163,116,255,0.97),rgba(236,72,153,0.97))",
+      backdropFilter:"blur(14px)",
+      padding:"10px 14px",
+      display:"flex", alignItems:"center", gap:10,
+      boxShadow:"0 -4px 24px rgba(163,116,255,0.35)",
+      borderTop:"1px solid rgba(255,255,255,0.15)",
+    }}>
+      {/* Waveform icon */}
+      <div style={{flexShrink:0, display:"flex", alignItems:"center", gap:2}}>
+        {[1,1.6,1,0.6,1.3,0.8,1.2].map((h, i) => (
+          <div key={i} style={{
+            width:3, borderRadius:2, background:"rgba(255,255,255,0.9)",
+            height: paused ? 6 : undefined,
+            minHeight:3,
+            animation: paused ? "none" : `tts-bar-${i} 0.6s ease-in-out ${i*0.08}s infinite alternate`,
+            transform:`scaleY(${h})`,
+          }} />
+        ))}
+      </div>
+      <style>{`
+        @keyframes tts-bar-0{from{transform:scaleY(1)}to{transform:scaleY(2)}}
+        @keyframes tts-bar-1{from{transform:scaleY(1.6)}to{transform:scaleY(0.5)}}
+        @keyframes tts-bar-2{from{transform:scaleY(1)}to{transform:scaleY(2.2)}}
+        @keyframes tts-bar-3{from{transform:scaleY(0.6)}to{transform:scaleY(1.8)}}
+        @keyframes tts-bar-4{from{transform:scaleY(1.3)}to{transform:scaleY(0.4)}}
+        @keyframes tts-bar-5{from{transform:scaleY(0.8)}to{transform:scaleY(2)}}
+        @keyframes tts-bar-6{from{transform:scaleY(1.2)}to{transform:scaleY(0.6)}}
+      `}</style>
+      <div style={{flex:1, minWidth:0}}>
+        <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.7px",marginBottom:1}}>
+          {paused ? "Paused" : "Speaking…"}
+        </div>
+        <div style={{fontSize:11.5,color:"#fff",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{label}</div>
+      </div>
+      <button onClick={onToggle} style={{
+        width:32,height:32,borderRadius:"50%",border:"1.5px solid rgba(255,255,255,0.4)",
+        background:"rgba(255,255,255,0.18)",color:"#fff",cursor:"pointer",
+        display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
+        fontSize:14, backdropFilter:"blur(6px)",
+      }}>
+        {paused ? "▶" : "⏸"}
+      </button>
+      <button onClick={onStop} style={{
+        width:32,height:32,borderRadius:"50%",border:"1.5px solid rgba(255,255,255,0.3)",
+        background:"rgba(255,255,255,0.12)",color:"rgba(255,255,255,0.85)",cursor:"pointer",
+        display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,
+        fontSize:12, backdropFilter:"blur(6px)",
+      }}>
+        ■
+      </button>
+    </div>
+  );
+}
 
 /* ── Types ─────────────────────────────────────────── */
 type Mode  = "product" | "article" | "youtube" | "planner" | "resume" | "translate";
@@ -76,6 +210,7 @@ export function MasterScanPanel({ onClose }: { onClose: () => void }) {
   const [error,   setError]   = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile>(loadProfile);
   const [lang,    setLang]    = useState("Spanish");
+  const tts = useTTS();
 
   async function analyze() {
     if (!query.trim() && mode !== "resume") return;
@@ -136,15 +271,16 @@ export function MasterScanPanel({ onClose }: { onClose: () => void }) {
       <div style={ms.dotGrid} />
       <div style={{ width:"100%", flex:1, display:"flex", flexDirection:"column", position:"relative", zIndex:1, overflow:"hidden" }}>
         <MSHeader
-          onBack={() => { if (stage==="result") { setStage("home"); setResult(null); } else if (stage==="profile") setStage("home"); else onClose(); }}
+          onBack={() => { if (stage==="result") { tts.stop(); setStage("home"); setResult(null); } else if (stage==="profile") setStage("home"); else { tts.stop(); onClose(); } }}
           stage={stage}
           onProfile={() => setStage("profile")}
           profileFilled={!!profile.name}
         />
-        {stage === "home"      && <HomeView mode={mode} setMode={m => { setMode(m); setQuery(""); }} query={query} setQuery={setQuery} onAnalyze={analyze} error={error} profile={profile} lang={lang} setLang={setLang} />}
+        {stage === "home"      && <HomeView mode={mode} setMode={m => { setMode(m); setQuery(""); }} query={query} setQuery={setQuery} onAnalyze={analyze} error={error} profile={profile} lang={lang} setLang={setLang} onSpeak={tts.speak} />}
         {stage === "analyzing" && <AnalyzingView mode={mode} stepIdx={stepIdx} />}
-        {stage === "result"    && result && <ResultView result={result} mode={mode} onReset={() => { setStage("home"); setResult(null); }} onTranslateText={handleTranslateText} />}
+        {stage === "result"    && result && <ResultView result={result} mode={mode} onReset={() => { tts.stop(); setStage("home"); setResult(null); }} onTranslateText={handleTranslateText} onSpeak={tts.speak} />}
         {stage === "profile"   && <ProfileView profile={profile} onSave={p => { saveProfile(p); setProfile(p); setStage("home"); }} onCancel={() => setStage("home")} />}
+        <TTSBar speaking={tts.speaking} paused={tts.paused} label={tts.label} onToggle={tts.toggle} onStop={tts.stop} />
       </div>
     </div>
   );
@@ -188,11 +324,12 @@ function MSHeader({ onBack, stage, onProfile, profileFilled }: { onBack: () => v
 }
 
 /* ── Home View ──────────────────────────────────────── */
-function HomeView({ mode, setMode, query, setQuery, onAnalyze, error, profile, lang, setLang }: {
+function HomeView({ mode, setMode, query, setQuery, onAnalyze, error, profile, lang, setLang, onSpeak }: {
   mode: Mode; setMode: (m: Mode) => void;
   query: string; setQuery: (q: string) => void;
   onAnalyze: () => void; error: string | null; profile: UserProfile;
   lang: string; setLang: (l: string) => void;
+  onSpeak: (text: string, label?: string) => void;
 }) {
   const info = MODES.find(m => m.id === mode)!;
   const canSubmit = query.trim() || mode === "resume";
@@ -312,6 +449,9 @@ function HomeView({ mode, setMode, query, setQuery, onAnalyze, error, profile, l
         {btnLabel}
       </button>
 
+      {/* YouTube TTS Panel */}
+      {mode === "youtube" && <TTSSpeakPanel onSpeak={onSpeak} accentColor="#f87171" />}
+
       {/* Quick examples */}
       {mode !== "planner" && EXAMPLES[mode].length > 0 && (
         <div>
@@ -335,6 +475,93 @@ function HomeView({ mode, setMode, query, setQuery, onAnalyze, error, profile, l
               </button>
             ))}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── TTS Speak Panel (YouTube mode) ─────────────────── */
+function TTSSpeakPanel({ onSpeak, accentColor }: { onSpeak: (text: string, label?: string) => void; accentColor: string }) {
+  const [text, setText] = useState("");
+  const canPlay = text.trim().length >= 3;
+
+  return (
+    <div style={{
+      padding:"14px 15px",
+      background:`linear-gradient(135deg,${accentColor}0a,rgba(255,255,255,0.8))`,
+      border:`1.5px solid ${accentColor}30`,
+      borderRadius:14,
+      display:"flex", flexDirection:"column", gap:10,
+    }}>
+      {/* Header */}
+      <div style={{display:"flex", alignItems:"center", gap:8}}>
+        <div style={{
+          width:30, height:30, borderRadius:9, flexShrink:0,
+          background:`linear-gradient(135deg,${accentColor}22,${accentColor}0e)`,
+          border:`1px solid ${accentColor}30`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:15,
+        }}>🔊</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:12,fontWeight:800,color:"var(--text-primary)",letterSpacing:"-0.2px"}}>Speak Selected Text</div>
+          <div style={{fontSize:10.5,color:"var(--text-muted)",marginTop:1}}>Paste any text to hear it read aloud in a natural voice</div>
+        </div>
+        <div style={{
+          fontSize:9, fontWeight:700, padding:"2px 8px", borderRadius:20,
+          background:`${accentColor}18`, color:accentColor,
+          border:`1px solid ${accentColor}30`,
+          letterSpacing:"0.5px", textTransform:"uppercase",
+        }}>TTS</div>
+      </div>
+
+      {/* Textarea */}
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="Paste selected text here to have it explained & read aloud…"
+        rows={3}
+        style={{
+          width:"100%", padding:"11px 13px",
+          background:"#fff",
+          border:`1.5px solid ${accentColor}28`,
+          borderRadius:11, color:"var(--text-primary)", fontSize:12.5,
+          fontFamily:"inherit", resize:"none", outline:"none",
+          boxSizing:"border-box", lineHeight:1.65,
+        } as React.CSSProperties}
+        onFocus={e => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.boxShadow = `0 0 0 3px ${accentColor}18`; }}
+        onBlur={e => { e.currentTarget.style.borderColor = `${accentColor}28`; e.currentTarget.style.boxShadow = "none"; }}
+      />
+
+      {/* Controls */}
+      <div style={{display:"flex", gap:7}}>
+        <button
+          onClick={() => { if (canPlay) onSpeak(text, "Selected text"); }}
+          disabled={!canPlay}
+          style={{
+            flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7,
+            padding:"10px 14px", borderRadius:10, border:"none",
+            fontSize:12.5, fontWeight:700, cursor: canPlay ? "pointer" : "not-allowed",
+            background: canPlay ? `linear-gradient(135deg,${accentColor},${accentColor}cc)` : "var(--bg-elevated)",
+            color: canPlay ? "#fff" : "var(--text-muted)",
+            boxShadow: canPlay ? `0 4px 16px ${accentColor}40` : "none",
+            transition:"all 0.18s",
+          }}
+        >
+          <span style={{fontSize:14}}>🔊</span> Listen Now
+        </button>
+        {text.length > 0 && (
+          <button onClick={() => setText("")} style={{
+            padding:"10px 12px", borderRadius:10,
+            background:"var(--bg-elevated)", border:"1px solid var(--border)",
+            color:"var(--text-muted)", fontSize:11.5, fontWeight:600, cursor:"pointer",
+          }}>Clear</button>
+        )}
+      </div>
+
+      {text.length > 0 && (
+        <div style={{fontSize:10,color:"var(--text-muted)",textAlign:"right",marginTop:-4}}>
+          {text.length} chars · ~{Math.ceil(text.split(/\s+/).length / 150)} min read
         </div>
       )}
     </div>
@@ -540,7 +767,7 @@ function ExtensionDownloadCard() {
 }
 
 /* ── Result View ────────────────────────────────────── */
-function ResultView({ result, mode, onReset, onTranslateText }: { result: AnyResult; mode: Mode; onReset: () => void; onTranslateText: (text: string) => void }) {
+function ResultView({ result, mode, onReset, onTranslateText, onSpeak }: { result: AnyResult; mode: Mode; onReset: () => void; onTranslateText: (text: string) => void; onSpeak: (text: string, label?: string) => void }) {
   const [selTip, setSelTip] = useState<{ x: number; y: number; text: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -577,7 +804,7 @@ function ResultView({ result, mode, onReset, onTranslateText }: { result: AnyRes
         }, 50)}
       >
         {result.type === "product"   && <ProductResultView data={result.data} />}
-        {result.type === "smarty"    && <SmartyResultView data={result.data} mode={mode} />}
+        {result.type === "smarty"    && <SmartyResultView data={result.data} mode={mode} onSpeak={onSpeak} />}
         {result.type === "resume"    && <ResumeResultView data={result.data} />}
         {result.type === "translate" && <TranslateResultView data={result.data} />}
 
@@ -589,18 +816,23 @@ function ResultView({ result, mode, onReset, onTranslateText }: { result: AnyRes
         </button>
       </div>
 
-      {/* Floating translate tooltip — appears on text selection */}
+      {/* Floating tooltip — appears on text selection */}
       {selTip && (
         <div style={{
-          position:"fixed", left: selTip.x - 80, top: selTip.y - 52,
+          position:"fixed", left: Math.max(4, selTip.x - 110), top: selTip.y - 52,
           zIndex:9999, display:"flex", borderRadius:9, overflow:"hidden",
           background:"var(--bg-surface)", border:"1px solid rgba(236,72,153,0.35)",
           boxShadow:"0 4px 24px rgba(0,0,0,0.18)", userSelect:"none",
         }}>
           <button
+            onClick={() => { onSpeak(selTip.text, "Selected text"); setSelTip(null); window.getSelection()?.removeAllRanges(); }}
+            style={{padding:"8px 13px", background:"linear-gradient(135deg,#a374ff,#ec4899)", color:"#fff", border:"none", fontSize:11.5, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5}}>
+            🔊 Listen
+          </button>
+          <button
             onClick={() => { onTranslateText(selTip.text); setSelTip(null); window.getSelection()?.removeAllRanges(); }}
-            style={{padding:"8px 14px", background:"var(--accent)", color:"#fff", border:"none", fontSize:11.5, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5}}>
-            🌐 Translate
+            style={{padding:"8px 12px", background:"var(--accent)", color:"#fff", border:"none", borderLeft:"1px solid rgba(255,255,255,0.2)", fontSize:11.5, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5}}>
+            🌐
           </button>
           <button onClick={() => { navigator.clipboard.writeText(selTip.text); setSelTip(null); }}
             style={{padding:"8px 10px", background:"transparent", border:"none", borderLeft:"1px solid rgba(236,72,153,0.2)", fontSize:11, color:"var(--text-secondary)", cursor:"pointer", fontWeight:600}}>
@@ -758,9 +990,18 @@ ${sectionsHtml}
   }, 400);
 }
 
-function SmartyResultView({ data, mode }: { data: SmartyResult; mode: Mode }) {
+function SmartyResultView({ data, mode, onSpeak }: { data: SmartyResult; mode: Mode; onSpeak: (text: string, label?: string) => void }) {
   const info = MODES.find(m => m.id === mode)!;
   const sections = data.sections ?? [];
+
+  function buildFullText() {
+    const lines: string[] = [data.title ?? `${info.label} Analysis`];
+    for (const sec of sections) {
+      lines.push(sec.label + ".");
+      for (const c of sec.content ?? []) lines.push(c);
+    }
+    return lines.join(" ");
+  }
 
   return (
     <>
@@ -815,6 +1056,22 @@ function SmartyResultView({ data, mode }: { data: SmartyResult; mode: Mode }) {
                 <path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
               Download as PDF
+            </button>
+            <button
+              onClick={() => onSpeak(buildFullText(), data.title ?? `${info.label} Summary`)}
+              style={{
+                display:"inline-flex",alignItems:"center",gap:6,
+                padding:"7px 13px",
+                background:"linear-gradient(135deg,rgba(163,116,255,0.14),rgba(163,116,255,0.08))",
+                border:"1px solid rgba(163,116,255,0.3)",
+                borderRadius:9,fontSize:11.5,fontWeight:700,
+                color:"#a374ff",cursor:"pointer",
+                transition:"background 0.15s,box-shadow 0.15s",
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background="linear-gradient(135deg,rgba(163,116,255,0.25),rgba(163,116,255,0.16))";e.currentTarget.style.boxShadow="0 2px 10px rgba(163,116,255,0.22)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="linear-gradient(135deg,rgba(163,116,255,0.14),rgba(163,116,255,0.08))";e.currentTarget.style.boxShadow="none";}}
+            >
+              🔊 Listen to Summary
             </button>
           </div>
         </div>
