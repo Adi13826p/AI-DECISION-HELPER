@@ -1843,6 +1843,7 @@
   // ══════════════════════════════════════════════════════════════════════════
 
   const TRANSLATE_LANGS = [
+    { code:'en', label:'English',    native:'English',    flag:'🇬🇧' },
     { code:'es', label:'Spanish',    native:'Español',    flag:'🇪🇸' },
     { code:'hi', label:'Hindi',      native:'हिंदी',      flag:'🇮🇳' },
     { code:'pt', label:'Portuguese', native:'Português',  flag:'🇧🇷' },

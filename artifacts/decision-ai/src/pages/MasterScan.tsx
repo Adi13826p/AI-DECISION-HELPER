@@ -64,7 +64,7 @@ const PLANNER_TEMPLATES = [
   { icon:"💼", label:"Job Interview Roadmap", color:"#34d399", query:"Create a 3-week intensive job interview preparation roadmap for a software engineering position — include daily DSA practice, system design study, behavioral question prep (STAR format), company research tasks, mock interview sessions, and final week polishing strategy." },
 ];
 
-const LANGUAGES = ["Spanish","French","German","Italian","Portuguese","Chinese (Simplified)","Chinese (Traditional)","Japanese","Korean","Arabic","Hindi","Russian","Dutch","Swedish","Polish","Turkish","Vietnamese","Thai","Indonesian","Malay","Greek","Hebrew","Bengali","Urdu"];
+const LANGUAGES = ["English","Spanish","French","German","Italian","Portuguese","Chinese (Simplified)","Chinese (Traditional)","Japanese","Korean","Arabic","Hindi","Russian","Dutch","Swedish","Polish","Turkish","Vietnamese","Thai","Indonesian","Malay","Greek","Hebrew","Bengali","Urdu"];
 
 /* ── Panel ─────────────────────────────────────────── */
 export function MasterScanPanel({ onClose }: { onClose: () => void }) {
