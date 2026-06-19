@@ -1,5 +1,10 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "CfABv2V2siMJmWODrEFBL"
+uri = "file://attached_assets/icon_generated.png"
+type = "image"
+title = "generated_image"
 
 [[outputs]]
 id = "8yp90fVSrcKyAd8jkYKoB"
@@ -29,4 +34,4 @@ title = "DecisionAI Extension v1.2.0"
 id = "oFc9GppRjRMrlnjyb2QQn"
 uri = "file://decision-ai-extension-v1.3.0.zip"
 type = "unspecified"
-title = "DecisionAI Extension v1.3.0 — Compact icon-only source badges"
+title = "DecisionAI Extension v1.3.0 — New cute brain icon"
