@@ -117,37 +117,166 @@
     throw new Error('AI returned invalid JSON. Please try again.');
   }
 
-  function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
+  async function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
+    // Step 1: Vision model extracts product info from screenshot (small, reliable response)
+    let extraction = {};
+    try {
+      extraction = await groqCall([
+        { role: 'system', content: 'You are a product data extractor. Extract all visible product info from the screenshot. Return ONLY compact JSON, no markdown.' },
+        { role: 'user', content: [
+          { type: 'image_url', image_url: { url: imageDataUrl } },
+          { type: 'text', text: 'Extract product info. Return ONLY JSON:\n{"name":"product name","brand":"brand","price":"price with currency","rating":"rating","reviewCount":"count","store":"store/site","model":"model if visible","inStock":true}' }
+        ]}
+      ], VISION_MODEL, 400);
+    } catch (_) {
+      extraction = { name: pageTitle || 'product', brand: '', price: '', rating: '', store: '' };
+    }
+
+    const productName = (extraction.name || extraction.brand || pageTitle || 'product').trim();
+    const q = encodeURIComponent(productName + ' review');
+
+    // Step 2: Fetch real reviews from Reddit, YouTube, and Quora in parallel
+    let redditSnippets = '';
+    let ytSnippets     = '';
+    let quoraSnippets  = '';
+
+    try {
+      const [rdResp, ytResp, qrResp] = await Promise.allSettled([
+        chrome.runtime.sendMessage({ type: 'FETCH_URL', url: 'https://www.reddit.com/search.json?q=' + q + '&limit=8&sort=relevance&type=link' }),
+        chrome.runtime.sendMessage({ type: 'FETCH_URL', url: 'https://www.youtube.com/results?search_query=' + q }),
+        chrome.runtime.sendMessage({ type: 'FETCH_URL', url: 'https://www.quora.com/search?q=' + encodeURIComponent(productName + ' review') })
+      ]);
+
+      // Reddit — returns JSON from search.json endpoint
+      if (rdResp.status === 'fulfilled' && rdResp.value?.success) {
+        try {
+          const rj   = JSON.parse(rdResp.value.html);
+          const rows = (rj?.data?.children || []).slice(0, 6).map(c => {
+            const p = c.data;
+            return '• [r/' + p.subreddit + '] ' + p.title + (p.selftext ? ' — ' + p.selftext.slice(0, 120) : '');
+          });
+          if (rows.length) redditSnippets = rows.join('\n');
+        } catch (_) {}
+      }
+
+      // YouTube — scrape video titles from results HTML
+      if (ytResp.status === 'fulfilled' && ytResp.value?.success) {
+        const html  = ytResp.value.html || '';
+        const titles = [];
+        const re    = /"title":\{"runs":\[\{"text":"([^"]{5,120})"\}/g;
+        let m;
+        while ((m = re.exec(html)) !== null && titles.length < 5) titles.push('• ' + m[1]);
+        if (titles.length) ytSnippets = titles.join('\n');
+      }
+
+      // Quora — extract question titles
+      if (qrResp.status === 'fulfilled' && qrResp.value?.success) {
+        const html = qrResp.value.html || '';
+        const qs   = [];
+        const re   = /<span[^>]+class="[^"]*q_text[^"]*"[^>]*>([^<]{10,160})<\/span>/g;
+        let m;
+        while ((m = re.exec(html)) !== null && qs.length < 4) qs.push('• ' + m[1]);
+        if (qs.length) quoraSnippets = qs.join('\n');
+      }
+    } catch (_) {}
+
+    // Step 3: Text model (json_object mode) synthesises real review data into structured analysis
+    const extractedStr = JSON.stringify(extraction);
+    const reviewCtx    =
+      (redditSnippets ? '\nREDDIT POSTS:\n' + redditSnippets : '') +
+      (ytSnippets     ? '\nYOUTUBE REVIEW VIDEOS:\n' + ytSnippets : '') +
+      (quoraSnippets  ? '\nQUORA QUESTIONS:\n' + quoraSnippets : '') ||
+      '\n(No live review data retrieved — use your training knowledge.)';
+
     return groqCall([
-      { role: 'system', content: 'You are DecisionAI Truth Layer — an expert product analyst AI. Analyze product screenshots and return comprehensive, honest assessments. Always return valid JSON only, no markdown. Do NOT wrap in markdown code fences.' },
-      { role: 'user', content: [
-        { type: 'image_url', image_url: { url: imageDataUrl } },
-        { type: 'text', text: 'Analyze this screenshot from: ' + (pageUrl || 'unknown page') + '\nTitle: ' + (pageTitle || 'unknown') + '\n\nReturn ONLY this JSON:\n{"product":{"name":"full product name","brand":"brand","model":"model if visible","price":"price as shown","currency":"currency","rating":"rating e.g. 4.2/5","reviewCount":"reviews count","store":"store name","inStock":true},"truthScore":75,"scoreLabel":"Good","verdict":{"type":"buy","label":"Recommended Buy","reasoning":"3-4 sentence explanation","emoji":"✅"},"reviews":{"summary":"2-3 sentence customer summary","pros":["Pro 1","Pro 2","Pro 3"],"cons":["Con 1","Con 2"],"hiddenComplaints":["Common hidden issue"]},"priceIntel":{"currentPrice":"visible price","fairPrice":"fair market value","dealRating":"Great Deal|Fair|Overpriced","alternatives":[{"store":"Amazon","estimatedPrice":"$XX","note":"note"}]},"buyTiming":{"recommendation":"buy-now","reason":"short reason"},"competitors":[{"name":"Competitor","why":"comparison","betterFor":"use case"}]}' }
-      ]}
-    ], VISION_MODEL, 3000);
+      { role: 'system', content: 'You are DecisionAI Truth Layer — an expert product analyst. You are given screenshot data + real community content fetched live from Reddit, YouTube, and Quora. Synthesise everything into an honest, source-attributed analysis. Always return valid JSON only, no markdown.' },
+      { role: 'user', content:
+        'PRODUCT FROM SCREENSHOT:\n' + extractedStr +
+        '\nPage URL: ' + (pageUrl || 'unknown') +
+        '\n\nLIVE COMMUNITY DATA:' + reviewCtx +
+        '\n\nReturn ONLY this JSON:\n' +
+        '{"product":{"name":"full name","brand":"brand","model":"model","price":"price","rating":"rating","reviewCount":"count","store":"store"},' +
+        '"truthScore":75,"scoreLabel":"Good",' +
+        '"verdict":{"type":"buy","label":"Recommended Buy","reasoning":"3-4 sentences — cite specific community sentiment from the data above","emoji":"✅"},' +
+        '"reviews":{' +
+          '"summary":"2-3 sentences summarising community consensus from Reddit/YouTube/Quora",' +
+          '"pros":[{"text":"specific pro cited from reviews","source":"Reddit"},{"text":"specific pro","source":"YouTube"},{"text":"specific pro","source":"Amazon"},{"text":"specific pro","source":"Google"}],' +
+          '"cons":[{"text":"specific con cited from community","source":"Reddit"},{"text":"specific con","source":"Quora"},{"text":"specific con","source":"Amazon"}],' +
+          '"hiddenComplaints":["issue that appears in community but not in star ratings"]' +
+        '},' +
+        '"priceIntel":{"currentPrice":"price from screenshot","fairPrice":"fair market value","dealRating":"Great Deal|Fair|Overpriced","alternatives":[{"store":"Amazon","estimatedPrice":"$XX","note":"check deals"},{"store":"Flipkart","estimatedPrice":"$XX","note":"compare"}]},' +
+        '"buyTiming":{"recommendation":"buy-now|wait|avoid","reason":"short reason"},' +
+        '"competitors":[{"name":"Competitor Name","why":"how it compares","betterFor":"specific use case"}],' +
+        '"sources":[' +
+          '{"name":"Reddit","insight":"what Reddit threads reveal"},' +
+          '{"name":"YouTube","insight":"what review videos say"},' +
+          '{"name":"Quora","insight":"common questions from buyers"},' +
+          '{"name":"Amazon","insight":"verified buyer patterns"},' +
+          '{"name":"Google","insight":"overall search consensus"}' +
+        ']}'
+      }
+    ], 'llama-3.3-70b-versatile', 3500);
   }
 
-  function analyzeMasterScan(imageDataUrl, pageUrl, pageTitle) {
+  async function analyzeMasterScan(imageDataUrl, pageUrl, pageTitle) {
+    // Step 1: Vision model detects content type and extracts visible text (small, fast, reliable)
+    let step1 = {};
+    try {
+      step1 = await groqCall([
+        { role: 'system', content: 'You are a content type detector. Identify the content type and extract all important visible text from the screenshot. Return ONLY compact JSON.' },
+        { role: 'user', content: [
+          { type: 'image_url', image_url: { url: imageDataUrl } },
+          { type: 'text', text:
+            'Page: ' + (pageUrl || 'unknown') + '\nTitle: ' + (pageTitle || 'unknown') + '\n\n' +
+            'Return ONLY JSON (keep extracted_text under 800 chars):\n' +
+            '{"contentType":"article|research_paper|math|job_posting|video|product|code|social_post|recipe|study_material|other","contentLabel":"Human readable label","title":"detected title or topic","confidence":90,"extracted_text":"copy all important visible text from the screenshot here"}'
+          }
+        ]}
+      ], VISION_MODEL, 600);
+    } catch (_) {
+      step1 = { contentType: 'other', contentLabel: 'Web Content', title: pageTitle || 'Unknown', confidence: 70, extracted_text: '' };
+    }
+
+    const ct        = (typeof step1 === 'object' && step1.contentType) ? step1.contentType : 'other';
+    const label     = (typeof step1 === 'object' && step1.contentLabel) ? step1.contentLabel : 'Web Content';
+    const title     = (typeof step1 === 'object' && step1.title) ? step1.title : (pageTitle || 'Unknown');
+    const extracted = (typeof step1 === 'object' && step1.extracted_text) ? step1.extracted_text : '';
+    const conf      = (typeof step1 === 'object' && step1.confidence) ? step1.confidence : 85;
+
+    // Step 2: Text model (json_object mode) generates full content-specific analysis
+    const sectionSchemas = {
+      article:        '"article":{"summary":"3-4 analytical sentences","keyPoints":["point1","point2","point3","point4"],"sentiment":"Positive|Neutral|Negative|Mixed","readingTime":"X min","topics":["t1","t2"],"flashcards":[{"q":"question?","a":"answer"}]}',
+      research_paper: '"research":{"abstract":"3-4 sentence summary","findings":["finding1","finding2","finding3"],"conclusions":"2 sentence synthesis","simplifiedExplanation":"plain English 2-3 sentences","methodology":"method used","flashcards":[{"q":"q?","a":"a"}]}',
+      math:           '"math":{"problem":"the exact problem","solution":"final answer","steps":[{"step":1,"description":"what was done","result":"result"}],"difficulty":"Easy|Medium|Hard","concepts":["concept1","concept2"]}',
+      job_posting:    '"job":{"company":"company","role":"exact title","location":"location","salary":"range if shown","requirements":["req1","req2","req3"],"skills":["s1","s2","s3"],"applicationTips":["tip1","tip2"],"redFlags":["flag1"]}',
+      video:          '"video":{"summary":"3-4 sentences","keyTopics":["topic1","topic2","topic3"],"studyNotes":["note1","note2","note3"]}',
+      product:        '"general":{"summary":"product overview — suggest using Truth Layer for deep analysis","keyInsights":["insight1","insight2"],"actionItems":["Use Truth Layer for fake review detection and price comparison"]}',
+      code:           '"code":{"language":"lang","explanation":"2-3 sentences what the code does","improvements":["improvement1","improvement2"],"bugs":["potential bug1"],"codeSnippet":"key snippet if visible"}',
+      social_post:    '"social_post":{"content":"post content","keyTakeaway":"main takeaway","sentiment":"Positive|Negative|Neutral","context":"background context"}',
+      recipe:         '"recipe":{"name":"dish name","ingredients":["i1","i2","i3"],"steps":["s1","s2","s3"],"prepTime":"X min","servings":"X servings"}',
+      study_material: '"study_material":{"subject":"subject name","summary":"2-3 sentences","keyTerms":[{"term":"term","definition":"definition"}],"flashcards":[{"q":"q?","a":"a"}],"practiceQuestions":["q1","q2"]}',
+      other:          '"general":{"summary":"3-4 analytical sentences","keyInsights":["insight1","insight2","insight3"],"actionItems":["action1","action2"]}'
+    };
+
+    const schema = sectionSchemas[ct] || sectionSchemas.other;
+
     return groqCall([
-      { role: 'system', content: 'You are MasterScan — a premium AI analyst by DecisionAI. Return ONLY raw JSON. No markdown. No code fences. No extra text. Start your response with { and end with }.' },
-      { role: 'user', content: [
-        { type: 'image_url', image_url: { url: imageDataUrl } },
-        { type: 'text', text:
-          'Analyze this screenshot from: ' + (pageUrl || 'unknown') + '\nTitle: ' + (pageTitle || 'unknown') + '\n\n' +
-          'Detect content type then return ONLY this JSON (fill ALL fields thoroughly — summaries must be 4-6 analytical sentences minimum):\n' +
-          '{"contentType":"article|research_paper|math|job_posting|video|product|code|social_post|other",' +
-          '"contentLabel":"Human-readable type label","title":"Full detected title","confidence":90,"topics":["topic1","topic2","topic3"],' +
-          '"quickOverview":"2-sentence executive teaser — the most important thing to know right now",' +
-          '"article":{"executiveSummary":"4-6 sentence analytical expert summary covering the core argument, evidence presented, and implications — no vague language","keyTakeaways":["Specific actionable takeaway with concrete detail","Another precise insight","Another precise insight","Another precise insight","Another precise insight"],"coreConcepts":[{"term":"Key concept","definition":"Precise definition in context"}],"expertPerspective":"What a domain expert would observe or critique about this piece — 2-3 sentences","actionItems":["What the reader should specifically do with this info","Another concrete next step"],"flashcards":[{"q":"Precise conceptual question?","a":"Thorough answer with context"},{"q":"Another question?","a":"Answer"}]},' +
-          '"research":{"abstract":"4-5 sentence summary of the study","methodology":"Research method and sample/data used","keyFindings":["Specific quantitative or qualitative finding","Another specific finding","Another finding"],"conclusions":"2-3 sentence synthesis of what this research means","simplifiedExplanation":"Plain-English explanation for a non-expert — 3-4 sentences","limitations":"1-2 sentences on study limitations","flashcards":[{"q":"What did this study find about X?","a":"Specific answer"},{"q":"How was this studied?","a":"Method answer"}]},' +
-          '"math":{"problem":"The exact problem as stated","solution":"Final answer with units","steps":[{"step":1,"description":"What was done","result":"Intermediate result"}],"difficulty":"Easy|Medium|Hard|Expert","concepts":["Concept used"]},' +
-          '"job":{"company":"Company name","role":"Exact job title","location":"Location or Remote","salary":"Salary range if shown","overview":"2-3 sentence role overview","requirements":["Specific requirement"],"skills":["Skill"],"applicationTips":["Specific strategic tip to stand out","Another tip"],"redFlags":["Specific concern if any"],"fitScore":"Strong|Moderate|Niche"},' +
-          '"video":{"channel":"Channel name","summary":"4-5 sentence overview of content","keyTopics":["Topic with brief detail"],"studyNotes":["Important note to remember"],"quotableInsights":["Memorable or important statement from the content"]},' +
-          '"code":{"language":"Language","explanation":"3-4 sentence explanation of what this code does and why","timeComplexity":"If applicable","improvements":["Specific improvement with reason"],"bugs":["Specific bug or risk"],"bestPractices":["Best practice being used or violated"]},' +
-          '"general":{"executiveSummary":"4-6 analytical sentences covering what this is, why it matters, and key context","keyInsights":["Specific substantive insight","Another insight","Another insight"],"actionItems":["Concrete action","Another action"]}}'
-        }
-      ]}
-    ], VISION_MODEL, 6000);
+      { role: 'system', content: 'You are MasterScan — a premium AI content analyst by DecisionAI. Given extracted content, produce a sharp, insightful analysis. Always return valid JSON only, no markdown.' },
+      { role: 'user', content:
+        'Content type: ' + ct + ' (' + label + ')\n' +
+        'Title: ' + title + '\n' +
+        'Source: ' + (pageUrl || 'unknown') + '\n\n' +
+        'EXTRACTED CONTENT:\n' + (extracted || '(content not available)') + '\n\n' +
+        'Return ONLY this JSON:\n' +
+        '{"contentType":"' + ct + '","contentLabel":"' + label.replace(/"/g,'\\"') + '",' +
+        '"title":"' + title.replace(/"/g,'\\"') + '",' +
+        '"confidence":' + conf + ',' +
+        '"topics":["topic1","topic2","topic3"],' +
+        '"quickOverview":"2-sentence executive summary of what this is and why it matters",' +
+        '"extractedText":"' + extracted.slice(0, 150).replace(/"/g,'\\"').replace(/\n/g,' ') + '",' +
+        schema + '}'
+      }
+    ], 'llama-3.3-70b-versatile', 3000);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -658,12 +787,11 @@
     overlayPanel = document.createElement('div');
     overlayPanel.id = '__dai-overlay-panel';
     sp(overlayPanel, {
-      position:'fixed', top:'18px', right:'18px', width:'540px',
+      position:'fixed', top:'18px', right:'18px', width:'min(540px, calc(100vw - 36px))',
       'max-height':'calc(100vh - 36px)',
       background:'#fff0f7',
-      border:'1px solid ' + accent + '44',
       'border-radius':'18px',
-      'box-shadow':'0 8px 40px rgba(236,72,153,0.12),0 2px 12px rgba(0,0,0,0.06),0 0 0 1px ' + accent + '22',
+      'box-shadow':'0 8px 40px rgba(236,72,153,0.12),0 2px 12px rgba(0,0,0,0.06)',
       display:'flex', 'flex-direction':'column', overflow:'hidden',
       animation:'__dai-slidein 0.35s cubic-bezier(0.16,1,0.3,1) both',
       'pointer-events':'all',
@@ -804,9 +932,9 @@
     const _conItems  = _normItems(r.cons, _AUTO_SRC_CON);
     const prosHTML   = _proItems.map(x => liSrc(x, '#10b981', _pName)).join('');
     const consHTML   = _conItems.map(x => liSrc(x, '#ef4444', _pName)).join('');
-    const hiddenHTML = (r.hiddenComplaints||[]).map(x => '<div style="font-size:11.5px;color:rgba(26,8,16,0.6);padding:4px 0;border-bottom:1px solid rgba(236,72,153,0.07)">' + esc(x) + '</div>').join('');
-    const altsHTML   = (pi.alternatives||[]).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(236,72,153,0.07)"><span style="font-size:12px;color:rgba(26,8,16,0.7)">' + esc(a.store) + '</span><div style="display:flex;align-items:center;gap:8px">' + (a.note ? '<span style="font-size:11px;color:rgba(26,8,16,0.4)">' + esc(a.note) + '</span>' : '') + '<span style="font-size:13px;font-weight:700;color:#1a0810">' + esc(a.estimatedPrice) + '</span></div></div>').join('');
-    const compsHTML  = comps.map(c => '<div style="padding:10px 12px;background:rgba(236,72,153,0.04);border-radius:10px;border:1px solid rgba(236,72,153,0.08)"><div style="font-size:12.5px;font-weight:600;color:#1a0810;margin-bottom:3px">' + esc(c.name) + '</div><div style="font-size:11.5px;color:rgba(26,8,16,0.5)">' + esc(c.why) + (c.betterFor ? ' · Better for: ' + esc(c.betterFor) : '') + '</div></div>').join('');
+    const hiddenHTML = (r.hiddenComplaints||[]).map(x => '<div style="font-size:11.5px;color:#1a0810;padding:4px 0;border-bottom:1px solid rgba(236,72,153,0.07)">' + esc(x) + '</div>').join('');
+    const altsHTML   = (pi.alternatives||[]).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(236,72,153,0.07)"><span style="font-size:12px;color:#1a0810;font-weight:500">' + esc(a.store) + '</span><div style="display:flex;align-items:center;gap:8px">' + (a.note ? '<span style="font-size:11px;color:rgba(26,8,16,0.65)">' + esc(a.note) + '</span>' : '') + '<span style="font-size:13px;font-weight:700;color:#1a0810">' + esc(a.estimatedPrice) + '</span></div></div>').join('');
+    const compsHTML  = comps.map(c => '<div style="padding:10px 12px;background:rgba(236,72,153,0.04);border-radius:10px;border:1px solid rgba(236,72,153,0.08)"><div style="font-size:12.5px;font-weight:600;color:#1a0810;margin-bottom:3px">' + esc(c.name) + '</div><div style="font-size:11.5px;color:#1a0810">' + esc(c.why) + (c.betterFor ? ' · Better for: ' + esc(c.betterFor) : '') + '</div></div>').join('');
 
     return '<div style="padding:16px 16px 20px;display:flex;flex-direction:column;gap:14px">' +
 
@@ -815,12 +943,12 @@
         '<div style="display:flex;flex-direction:column;align-items:center;padding:12px 16px;background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.14);border-radius:14px;flex-shrink:0;min-width:80px">' +
           '<div style="font-size:36px;font-weight:800;color:' + scColor + ';line-height:1">' + sc + '</div>' +
           '<div style="font-size:10px;font-weight:600;color:' + scColor + ';letter-spacing:0.5px;margin-top:3px;text-transform:uppercase">' + esc(d.scoreLabel||'') + '</div>' +
-          '<div style="font-size:9.5px;color:rgba(26,8,16,0.35);margin-top:2px">Truth Score</div>' +
+          '<div style="font-size:9.5px;color:rgba(26,8,16,0.65);margin-top:2px">Truth Score</div>' +
         '</div>' +
         '<div style="flex:1;background:' + vc.bg + ';border:1px solid ' + vc.border + ';border-radius:14px;padding:12px 14px">' +
           '<div style="font-size:18px;margin-bottom:4px">' + esc(v.emoji||'') + '</div>' +
           '<div style="font-size:13px;font-weight:700;color:' + vc.text + ';margin-bottom:5px">' + esc(v.label||'See below') + '</div>' +
-          '<div style="font-size:11.5px;color:rgba(26,8,16,0.55);line-height:1.55">' + esc(v.reasoning||'') + '</div>' +
+          '<div style="font-size:11.5px;color:#1a0810;line-height:1.6">' + esc(v.reasoning||'') + '</div>' +
         '</div>' +
       '</div>' +
 
@@ -833,17 +961,17 @@
           '<div><div style="font-size:10px;font-weight:700;color:#10b981;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px">Pros</div><ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + (prosHTML||'<li style="font-size:11.5px;color:rgba(26,8,16,0.35)">—</li>') + '</ul></div>' +
           '<div><div style="font-size:10px;font-weight:700;color:#ef4444;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:6px">Cons</div><ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px">' + (consHTML||'<li style="font-size:11.5px;color:rgba(26,8,16,0.35)">—</li>') + '</ul></div>' +
         '</div>' +
-        (r.summary ? '<p style="font-size:11.5px;color:rgba(26,8,16,0.5);line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid rgba(236,72,153,0.12)">' + esc(r.summary) + '</p>' : '') +
+        (r.summary ? '<p style="font-size:11.5px;color:#1a0810;line-height:1.6;margin-top:10px;padding-top:10px;border-top:1px solid rgba(236,72,153,0.12)">' + esc(r.summary) + '</p>' : '') +
         (hiddenHTML ? '<div style="margin-top:10px;padding:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px"><div style="font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">⚠ Hidden Complaints</div>' + hiddenHTML + '</div>' : '')
       ) : '') +
 
       // Price intel
       ((pi.currentPrice||altsHTML) ? sec('Price Intelligence', accent,
         '<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid rgba(236,72,153,0.12)">' +
-          '<div><div style="font-size:10.5px;color:rgba(26,8,16,0.4);text-transform:uppercase;letter-spacing:0.5px">Current Price</div><div style="font-size:20px;font-weight:800;color:#1a0810">' + esc(pi.currentPrice||'—') + '</div>' + (pi.fairPrice ? '<div style="font-size:11px;color:rgba(26,8,16,0.4)">Fair value: ' + esc(pi.fairPrice) + '</div>' : '') + '</div>' +
+          '<div><div style="font-size:10.5px;color:rgba(26,8,16,0.7);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Current Price</div><div style="font-size:20px;font-weight:800;color:#1a0810">' + esc(pi.currentPrice||'—') + '</div>' + (pi.fairPrice ? '<div style="font-size:11px;color:rgba(26,8,16,0.7)">Fair value: ' + esc(pi.fairPrice) + '</div>' : '') + '</div>' +
           (pi.dealRating ? '<div style="padding:5px 12px;background:' + (pi.dealRating==='Great Deal'?'rgba(16,185,129,0.15)':pi.dealRating==='Overpriced'?'rgba(239,68,68,0.15)':'rgba(245,158,11,0.15)') + ';border:1px solid ' + (pi.dealRating==='Great Deal'?'rgba(16,185,129,0.3)':pi.dealRating==='Overpriced'?'rgba(239,68,68,0.3)':'rgba(245,158,11,0.3)') + ';border-radius:100px;font-size:11.5px;font-weight:700;color:' + (pi.dealRating==='Great Deal'?'#10b981':pi.dealRating==='Overpriced'?'#ef4444':'#f59e0b') + '">' + esc(pi.dealRating) + '</div>' : '') +
         '</div>' + altsHTML +
-        (d.buyTiming ? '<div style="margin-top:8px;font-size:11.5px;color:rgba(26,8,16,0.5)"><span style="color:rgba(26,8,16,0.7);font-weight:600">Buy timing:</span> ' + esc(d.buyTiming.reason) + '</div>' : '')
+        (d.buyTiming ? '<div style="margin-top:8px;font-size:11.5px;color:#1a0810"><span style="color:#1a0810;font-weight:700">Buy timing:</span> ' + esc(d.buyTiming.reason) + '</div>' : '')
       ) : '') +
 
       // Competitors
