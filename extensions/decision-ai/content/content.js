@@ -1496,19 +1496,17 @@
     };
     const url = urlMap[sourceName] || ('https://www.google.com/search?q=' + encodeURIComponent(q + ' ' + (sourceName || '') + ' review'));
     const favicon = c.domain
-      ? '<img src="https://www.google.com/s2/favicons?domain=' + c.domain + '&sz=32" alt="" style="width:11px;height:11px;border-radius:2px;object-fit:contain;flex-shrink:0" onerror="this.style.display=\'none\'">'
-      : '';
-    return '<a href="' + url + '" target="_blank" rel="noreferrer" title="See ' + esc(c.label) + ' reviews" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 5px;border-radius:100px;background:' + c.bg + ';border:1px solid ' + c.border + ';color:' + c.color + ';font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap;margin-top:3px;flex-shrink:0">' + favicon + '<span>' + esc(c.label) + '</span></a>';
+      ? '<img src="https://www.google.com/s2/favicons?domain=' + c.domain + '&sz=32" alt="' + esc(c.label) + '" style="width:12px;height:12px;border-radius:2px;object-fit:contain;display:block" onerror="this.style.display=\'none\'">'
+      : '<span style="font-size:9px;font-weight:800;color:' + c.color + '">' + esc(c.label[0]) + '</span>';
+    return '<a href="' + url + '" target="_blank" rel="noreferrer" title="' + esc(c.label) + ' reviews ↗" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;background:' + c.bg + ';border:1px solid ' + c.border + ';text-decoration:none;flex-shrink:0">' + favicon + '</a>';
   }
 
   function liSrc(item, color, productName) {
     const text   = typeof item === 'string' ? item : (item.text || '');
     const source = typeof item === 'object' ? item.source : null;
-    return '<li style="display:flex;flex-direction:column;gap:1px;padding:5px 0;border-bottom:1px solid rgba(236,72,153,0.06)">' +
-      '<div style="display:flex;align-items:flex-start;gap:9px">' +
-        '<div style="flex-shrink:0;margin-top:6px;width:6px;height:6px;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + '80"></div>' +
-        '<span style="font-size:12.5px;color:rgba(26,8,16,0.85);line-height:1.6">' + esc(text) + '</span>' +
-      '</div>' +
+    return '<li style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(236,72,153,0.06)">' +
+      '<div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + '80"></div>' +
+      '<span style="flex:1;font-size:12.5px;color:rgba(26,8,16,0.85);line-height:1.5">' + esc(text) + '</span>' +
       (source ? _srcChipHTML(source, productName) : '') +
     '</li>';
   }
