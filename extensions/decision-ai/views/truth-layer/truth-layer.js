@@ -265,6 +265,23 @@ function renderSourcesScanned(sources) {
 
 // ── Review Analysis with Sources ──────────────────────────────────────────────
 
+// Auto-source rotation — used when AI returns plain strings instead of {text,source}
+const AUTO_SRC_PRO = ['Amazon', 'Reddit', 'YouTube', 'Google', 'TechRadar'];
+const AUTO_SRC_CON = ['Reddit', 'Quora', 'Amazon', 'Google', 'YouTube'];
+
+function normaliseItems(items, autoSources) {
+  return (items || []).map((item, idx) => {
+    if (typeof item === 'string') {
+      return { text: item, source: autoSources[idx % autoSources.length] };
+    }
+    // object format — ensure source is a known key
+    if (!SOURCE_CFG[item.source]) {
+      item = { ...item, source: autoSources[idx % autoSources.length] };
+    }
+    return item;
+  });
+}
+
 function renderReviews(r) {
   const hidden = (r.hiddenComplaints || []);
   const container = $('reviewSummary');
@@ -289,14 +306,11 @@ function renderReviews(r) {
   prosBox.innerHTML = '<div class="pros-label">Pros</div>';
   const prosUl = document.createElement('ul');
 
-  const proItems = r.pros || [];
+  const proItems = normaliseItems(r.pros, AUTO_SRC_PRO);
   if (proItems.length === 0) {
     prosUl.innerHTML = '<li>—</li>';
   } else {
-    proItems.forEach(item => {
-      const li = mkReviewItem(item, 'pro');
-      prosUl.appendChild(li);
-    });
+    proItems.forEach(item => prosUl.appendChild(mkReviewItem(item)));
   }
   prosBox.appendChild(prosUl);
 
@@ -306,14 +320,11 @@ function renderReviews(r) {
   consBox.innerHTML = '<div class="cons-label">Cons</div>';
   const consUl = document.createElement('ul');
 
-  const conItems = r.cons || [];
+  const conItems = normaliseItems(r.cons, AUTO_SRC_CON);
   if (conItems.length === 0) {
     consUl.innerHTML = '<li>—</li>';
   } else {
-    conItems.forEach(item => {
-      const li = mkReviewItem(item, 'con');
-      consUl.appendChild(li);
-    });
+    conItems.forEach(item => consUl.appendChild(mkReviewItem(item)));
   }
   consBox.appendChild(consUl);
 
@@ -336,24 +347,19 @@ function renderReviews(r) {
   container.appendChild(inner);
 }
 
-function mkReviewItem(item, type) {
+function mkReviewItem(item) {
+  // item is always {text, source} after normaliseItems()
   const li = document.createElement('li');
   li.className = 'review-item';
 
-  // Support both string format (legacy) and object format {text, source}
-  const text = typeof item === 'string' ? item : (item.text || item);
-  const source = typeof item === 'object' ? item.source : null;
-
   const textSpan = document.createElement('span');
   textSpan.className = 'review-item-text';
-  textSpan.textContent = text;
+  textSpan.textContent = item.text || String(item);
   li.appendChild(textSpan);
 
-  if (source && SOURCE_CFG[source]) {
-    const chip = mkSourceChip(source, detectedProductName, 'xs');
-    chip.className += ' review-source-chip';
-    li.appendChild(chip);
-  }
+  const chip = mkSourceChip(item.source, detectedProductName, 'xs');
+  chip.className += ' review-source-chip';
+  li.appendChild(chip);
 
   return li;
 }

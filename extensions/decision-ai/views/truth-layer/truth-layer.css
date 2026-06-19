@@ -128,10 +128,16 @@ body { min-height: 100vh; display: flex; justify-content: center; }
 .pros-label, .cons-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
 .pros-label { color: var(--green); }
 .cons-label { color: var(--red); }
-.pros-box ul, .cons-box ul { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.pros-box ul, .cons-box ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .pros-box li, .cons-box li { font-size: 11px; color: var(--text-secondary); padding-left: 10px; position: relative; }
-.pros-box li::before { content: '+'; position: absolute; left: 0; color: var(--green); }
-.cons-box li::before { content: '−'; position: absolute; left: 0; color: var(--red); }
+.pros-box li::before { content: '+'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+.cons-box li::before { content: '−'; position: absolute; left: 0; color: var(--red); font-weight: 700; }
+
+/* review-item overrides — flex row with source chip, no legacy padding/pseudo */
+.pros-box li.review-item,
+.cons-box li.review-item { padding-left: 0; display: flex; align-items: flex-start; gap: 6px; margin-bottom: 0; }
+.pros-box li.review-item::before,
+.cons-box li.review-item::before { display: none; }
 .hidden-complaints { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15); border-radius: var(--radius-sm); padding: 8px 10px; }
 .hc-label { font-size: 11px; font-weight: 600; color: var(--yellow); display: block; margin-bottom: 4px; }
 .hidden-complaints p { font-size: 11px; color: var(--text-secondary); }
