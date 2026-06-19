@@ -15,21 +15,18 @@
 
 html {
   color-scheme: light;
-  width: 398px;
+  width: 412px;
   background: transparent;
-  overflow: hidden;
-  border-radius: 20px;
 }
 
 body {
-  width: 398px;
+  width: 412px;
+  padding: 7px;
   background: transparent;
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-size: 13px; line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-  border-radius: 20px;
 }
 
 /* Single premium card — the one and only container */
@@ -40,7 +37,7 @@ body {
   background: var(--bg-base);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(236,72,153,0.18), 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 28px rgba(236,72,153,0.22), 0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(236,72,153,0.12);
 }
 .hidden { display: none !important; }
 
