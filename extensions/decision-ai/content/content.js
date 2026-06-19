@@ -1485,6 +1485,7 @@
   function buildBottomBarHTML(accent) {
     const b = 'display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity 0.15s';
     return '<button id="__dai-copy" style="' + b + ';background:' + accent + '18;border-color:' + accent + '44;color:' + accent + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.8"/></svg>Copy</button>' +
+      '<button id="__dai-pdf" style="' + b + ';background:rgba(16,185,129,0.09);border-color:rgba(16,185,129,0.3);color:#059669"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF</button>' +
       '<button id="__dai-rescan" style="' + b + ';background:rgba(236,72,153,0.07);border-color:rgba(236,72,153,0.18);color:rgba(26,8,16,0.6)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan again</button>' +
       '<div style="flex:1"></div>' +
       '<button id="__dai-close2" style="' + b + ';background:rgba(236,72,153,0.06);border-color:rgba(236,72,153,0.18);color:rgba(26,8,16,0.4)">Close</button>';
@@ -1492,6 +1493,7 @@
 
   function wireBottomBar(bar, result, mode) {
     const copyBtn   = bar.querySelector('#__dai-copy');
+    const pdfBtn    = bar.querySelector('#__dai-pdf');
     const rescanBtn = bar.querySelector('#__dai-rescan');
     const closeBtn  = bar.querySelector('#__dai-close2');
 
@@ -1504,6 +1506,37 @@
         }).catch(() => {});
       });
     }
+
+    if (pdfBtn) {
+      pdfBtn.addEventListener('click', () => {
+        const contentEl = document.getElementById('__dai-content');
+        const title = result.title || result.contentLabel || 'DecisionAI Analysis';
+        const bodyHTML = contentEl ? contentEl.innerHTML : '<p>No content</p>';
+        const page = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>' +
+          '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;color:#1a0810;line-height:1.6;padding:32px 40px;max-width:800px;margin:0 auto}' +
+          'h1{font-size:20px;font-weight:800;margin-bottom:4px}' +
+          '.generated{font-size:11px;color:#888;margin-bottom:28px}' +
+          '@media print{body{padding:20px}button{display:none!important}}' +
+          '</style></head><body>' +
+          '<h1>DecisionAI — ' + title + '</h1>' +
+          '<div class="generated">Generated ' + new Date().toLocaleString() + '</div>' +
+          bodyHTML +
+          '<script>window.onload=function(){window.print();}<\/script>' +
+          '</body></html>';
+        const blob = new Blob([page], { type: 'text/html' });
+        const url  = URL.createObjectURL(blob);
+        const win  = window.open(url, '_blank');
+        if (!win) {
+          // fallback: download as HTML file
+          const a = document.createElement('a');
+          a.href = url; a.download = 'decisionai-' + Date.now() + '.html'; a.click();
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        pdfBtn.textContent = '✓ Opening…';
+        setTimeout(() => { pdfBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF'; }, 2500);
+      });
+    }
+
     if (rescanBtn) {
       rescanBtn.addEventListener('click', () => {
         removeOverlay();
