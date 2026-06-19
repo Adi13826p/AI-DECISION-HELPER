@@ -2126,6 +2126,42 @@
     } else { doSpeak(); }
   }
 
+  // TTS Summary — summarise via Groq then speak
+  // ══════════════════════════════════════════════════════════════════════════
+  async function __daiSpeakSummary(text) {
+    const toast = document.createElement('div');
+    toast.id = '__dai-tts-toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
+      'background:#1a0810;color:#f9a8d4;font-size:12.5px;font-weight:700;' +
+      'padding:9px 18px;border-radius:100px;z-index:2147483647;' +
+      'box-shadow:0 4px 20px rgba(236,72,153,0.25);' +
+      'display:flex;align-items:center;gap:8px;white-space:nowrap;' +
+      'animation:__dai-fadein 0.2s ease both';
+    toast.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="animation:__dai-spin 0.9s linear infinite;flex-shrink:0"><circle cx="12" cy="12" r="10" stroke="rgba(249,168,212,0.3)" stroke-width="2"/><path d="M12 2a10 10 0 0110 10" stroke="#f9a8d4" stroke-width="2" stroke-linecap="round"/></svg>Summarising…';
+    document.documentElement.appendChild(toast);
+
+    try {
+      const result = await groqCall([
+        { role: 'system', content: 'You are a concise summariser. Given any text, return a natural-sounding spoken summary in exactly 2–4 sentences. Focus on the key points only. Write it as if being read aloud — no bullet points, no markdown, no headers. Return only the summary text, nothing else.' },
+        { role: 'user', content: 'Summarise this:\n\n' + text }
+      ], 'llama-3.3-70b-versatile', 200);
+      const summary = (result?.choices?.[0]?.message?.content || '').trim();
+      toast.remove();
+      if (summary) __daiSpeak(summary);
+    } catch (err) {
+      toast.remove();
+      const errToast = document.createElement('div');
+      errToast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
+        'background:#1a0810;color:#f87171;font-size:12.5px;font-weight:700;' +
+        'padding:9px 18px;border-radius:100px;z-index:2147483647;' +
+        'box-shadow:0 4px 20px rgba(239,68,68,0.2);white-space:nowrap;' +
+        'animation:__dai-fadein 0.2s ease both';
+      errToast.textContent = 'Could not summarise — check API key';
+      document.documentElement.appendChild(errToast);
+      setTimeout(() => errToast.remove(), 3000);
+    }
+  }
+
   // TEXT SELECTION TOOLBAR — Listen · Translate · Explain
   // ══════════════════════════════════════════════════════════════════════════
 
@@ -2202,7 +2238,7 @@
 
       const transBtn  = mkBtn('#06b6d4', transIcon,  'Translate', 'rgba(6,182,212,0.13)',  () => showLangPicker(text));
       const explBtn   = mkBtn('#a855f7', explainIcon, 'Explain',   'rgba(168,85,247,0.11)', () => { removeSelectionUI(); handleExplainText(text); });
-      const listenBtn = mkBtn('#f43f5e', listenIcon,  'Listen',    'rgba(244,63,94,0.10)',  () => { removeSelectionUI(); __daiSpeak(text); });
+      const listenBtn = mkBtn('#f43f5e', listenIcon,  'Listen',    'rgba(244,63,94,0.10)',  () => { removeSelectionUI(); __daiSpeakSummary(text); });
 
       const div1 = document.createElement('div');
       div1.style.cssText = 'width:1px;height:20px;background:rgba(236,72,153,0.2);margin:0 1px';
