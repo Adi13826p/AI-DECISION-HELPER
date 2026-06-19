@@ -2141,11 +2141,33 @@
     document.documentElement.appendChild(toast);
 
     try {
-      const result = await groqCall([
-        { role: 'system', content: 'You are a concise summariser. Given any text, return a natural-sounding spoken summary in exactly 2–4 sentences. Focus on the key points only. Write it as if being read aloud — no bullet points, no markdown, no headers. Return only the summary text, nothing else.' },
-        { role: 'user', content: 'Summarise this:\n\n' + text }
-      ], 'llama-3.3-70b-versatile', 200);
-      const summary = (result?.choices?.[0]?.message?.content || '').trim();
+      const apiKey = await getApiKey();
+      if (!apiKey) throw new Error('NO_API_KEY');
+
+      const resp = await fetch(GROQ_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: 'You are a concise summariser. Given any text, write a natural spoken summary in 2–4 sentences. Focus on key points only. Write as if being read aloud — no bullet points, no markdown, no headers. Return only the summary text, nothing else.' },
+            { role: 'user', content: 'Summarise this:\n\n' + text }
+          ],
+          temperature: 0.3,
+          max_tokens: 200
+        })
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => resp.statusText);
+        throw new Error('Groq ' + resp.status + ': ' + errText);
+      }
+
+      const data = await resp.json();
+      const summary = (data?.choices?.[0]?.message?.content || '').trim();
       toast.remove();
       if (summary) __daiSpeak(summary);
     } catch (err) {
@@ -2156,9 +2178,11 @@
         'padding:9px 18px;border-radius:100px;z-index:2147483647;' +
         'box-shadow:0 4px 20px rgba(239,68,68,0.2);white-space:nowrap;' +
         'animation:__dai-fadein 0.2s ease both';
-      errToast.textContent = 'Could not summarise — check API key';
+      errToast.textContent = err.message === 'NO_API_KEY'
+        ? 'No API key set — open the extension and add your Groq key'
+        : 'Could not summarise — try again';
       document.documentElement.appendChild(errToast);
-      setTimeout(() => errToast.remove(), 3000);
+      setTimeout(() => errToast.remove(), 3500);
     }
   }
 

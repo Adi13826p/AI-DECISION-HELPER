@@ -22,7 +22,7 @@ title = "DecisionAI Chrome Extension"
 id = "5sRly9HDaxR6RdpF9Idm-"
 uri = "file://decision-ai-extension.zip"
 type = "unspecified"
-title = "DecisionAI v1.4.0 — mic button fixed"
+title = "DecisionAI v1.5.0 — mic summarise fixed"
 
 [[outputs]]
 id = "6JRbdahlQWS929rivuVv9"
