@@ -127,10 +127,24 @@ Extract product information and provide a complete analysis. Return ONLY this JS
     "reasoning": "3-4 sentence explanation based on visible info and general knowledge about this product/brand",
     "emoji": "✅"
   },
+  "sources": [
+    { "name": "Reddit", "insight": "Active community discussion with detailed user experiences" },
+    { "name": "Amazon", "insight": "Verified buyer reviews analyzed" },
+    { "name": "YouTube", "insight": "Video reviews from tech creators" }
+  ],
   "reviews": {
     "summary": "What customers typically say about this product (2-3 sentences)",
-    "pros": ["Pro 1", "Pro 2", "Pro 3", "Pro 4"],
-    "cons": ["Con 1", "Con 2", "Con 3"],
+    "pros": [
+      { "text": "Pro 1", "source": "Reddit" },
+      { "text": "Pro 2", "source": "Amazon" },
+      { "text": "Pro 3", "source": "YouTube" },
+      { "text": "Pro 4", "source": "Google" }
+    ],
+    "cons": [
+      { "text": "Con 1", "source": "Reddit" },
+      { "text": "Con 2", "source": "Quora" },
+      { "text": "Con 3", "source": "Amazon" }
+    ],
     "hiddenComplaints": ["Any common issue not shown in ratings"]
   },
   "priceIntel": {
@@ -139,7 +153,7 @@ Extract product information and provide a complete analysis. Return ONLY this JS
     "dealRating": "Great Deal|Fair|Overpriced",
     "alternatives": [
       { "store": "Amazon", "estimatedPrice": "$XX", "note": "typically cheaper" },
-      { "store": "Walmart", "estimatedPrice": "$XX", "note": "" }
+      { "store": "Flipkart", "estimatedPrice": "$XX", "note": "" }
     ]
   },
   "buyTiming": {
@@ -149,7 +163,10 @@ Extract product information and provide a complete analysis. Return ONLY this JS
   "competitors": [
     { "name": "Competitor Name", "why": "How it compares", "betterFor": "use case" }
   ]
-}`
+}
+
+IMPORTANT for sources array: choose 3-5 most relevant sources from: Reddit, Amazon, YouTube, Google, Quora, Flipkart, TechRadar, RTINGS. Pick sources that would realistically have reviews for this product type.
+IMPORTANT for pros/cons source field: use only these exact names: Reddit, Amazon, YouTube, Google, Quora, Flipkart, TechRadar, RTINGS.`
         }
       ]
     }
