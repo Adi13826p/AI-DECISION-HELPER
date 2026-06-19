@@ -2098,7 +2098,35 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // TEXT SELECTION TOOLBAR — Translate & Explain
+  // TTS — Best-voice speak helper (reused by selection toolbar + masterscan)
+  // ══════════════════════════════════════════════════════════════════════════
+  function __daiSpeak(text) {
+    if (!window.speechSynthesis || !text) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.91; utt.pitch = 1.02; utt.volume = 1.0;
+    const PRIORITY = [
+      'Google UK English Female','Google US English Female',
+      'Microsoft Jenny Online (Natural) - English (United States)',
+      'Microsoft Aria Online (Natural) - English (United States)',
+      'Microsoft Zira - English (United States)',
+      'Samantha','Karen','Moira','Victoria',
+    ];
+    function pickVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      for (const name of PRIORITY) { const v = voices.find(v => v.name === name); if (v) return v; }
+      return voices.find(v => v.lang.startsWith('en') && /female|woman/i.test(v.name))
+          || voices.find(v => v.lang === 'en-GB')
+          || voices.find(v => v.lang.startsWith('en'))
+          || voices[0] || null;
+    }
+    function doSpeak() { const v = pickVoice(); if (v) utt.voice = v; window.speechSynthesis.speak(utt); }
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
+    } else { doSpeak(); }
+  }
+
+  // TEXT SELECTION TOOLBAR — Listen · Translate · Explain
   // ══════════════════════════════════════════════════════════════════════════
 
   const TRANSLATE_LANGS = [
@@ -2168,19 +2196,19 @@
         return b;
       };
 
-      const transIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 5h8M7 3v2M10 5a11 11 0 01-2.5 6.5M6 11a8.5 8.5 0 005 2" stroke="#06b6d4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="10" width="11" height="11" rx="2" stroke="#06b6d4" stroke-width="1.5"/><path d="M15 18l2-4 2 4M15.8 17h2.4" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"/></svg>';
+      const transIcon  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 5h8M7 3v2M10 5a11 11 0 01-2.5 6.5M6 11a8.5 8.5 0 005 2" stroke="#06b6d4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="10" width="11" height="11" rx="2" stroke="#06b6d4" stroke-width="1.5"/><path d="M15 18l2-4 2 4M15.8 17h2.4" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"/></svg>';
       const explainIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#a855f7" stroke-width="1.5"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke="#a855f7" stroke-width="1.7" stroke-linecap="round"/></svg>';
+      const listenIcon  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H2v6h4l5 4V5z" fill="#f43f5e" opacity="0.9"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="#f43f5e" stroke-width="1.7" stroke-linecap="round"/></svg>';
 
-      const transBtn = mkBtn('#06b6d4', transIcon, 'Translate', 'rgba(6,182,212,0.13)', () => showLangPicker(text));
-      const explBtn  = mkBtn('#a855f7', explainIcon, 'Explain', 'rgba(168,85,247,0.11)', () => {
-        removeSelectionUI();
-        handleExplainText(text);
-      });
+      const transBtn  = mkBtn('#06b6d4', transIcon,  'Translate', 'rgba(6,182,212,0.13)',  () => showLangPicker(text));
+      const explBtn   = mkBtn('#a855f7', explainIcon, 'Explain',   'rgba(168,85,247,0.11)', () => { removeSelectionUI(); handleExplainText(text); });
+      const listenBtn = mkBtn('#f43f5e', listenIcon,  'Listen',    'rgba(244,63,94,0.10)',  () => { removeSelectionUI(); __daiSpeak(text); });
 
-      const divider = document.createElement('div');
-      divider.style.cssText = 'width:1px;height:20px;background:rgba(236,72,153,0.2);margin:0 1px';
+      const div1 = document.createElement('div');
+      div1.style.cssText = 'width:1px;height:20px;background:rgba(236,72,153,0.2);margin:0 1px';
+      const div2 = div1.cloneNode();
 
-      __selToolbar.append(transBtn, divider, explBtn);
+      __selToolbar.append(listenBtn, div1, transBtn, div2, explBtn);
       document.documentElement.appendChild(__selToolbar);
     }, 10);
   }, true);
