@@ -799,8 +799,11 @@
     const pi = d.priceIntel || {};
     const comps = d.competitors || [];
 
-    const prosHTML   = (r.pros||[]).map(x => li(x,'#10b981')).join('');
-    const consHTML   = (r.cons||[]).map(x => li(x,'#ef4444')).join('');
+    const _pName     = p.name || p.brand || '';
+    const _proItems  = _normItems(r.pros, _AUTO_SRC_PRO);
+    const _conItems  = _normItems(r.cons, _AUTO_SRC_CON);
+    const prosHTML   = _proItems.map(x => liSrc(x, '#10b981', _pName)).join('');
+    const consHTML   = _conItems.map(x => liSrc(x, '#ef4444', _pName)).join('');
     const hiddenHTML = (r.hiddenComplaints||[]).map(x => '<div style="font-size:11.5px;color:rgba(26,8,16,0.6);padding:4px 0;border-bottom:1px solid rgba(236,72,153,0.07)">' + esc(x) + '</div>').join('');
     const altsHTML   = (pi.alternatives||[]).map(a => '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(236,72,153,0.07)"><span style="font-size:12px;color:rgba(26,8,16,0.7)">' + esc(a.store) + '</span><div style="display:flex;align-items:center;gap:8px">' + (a.note ? '<span style="font-size:11px;color:rgba(26,8,16,0.4)">' + esc(a.note) + '</span>' : '') + '<span style="font-size:13px;font-weight:700;color:#1a0810">' + esc(a.estimatedPrice) + '</span></div></div>').join('');
     const compsHTML  = comps.map(c => '<div style="padding:10px 12px;background:rgba(236,72,153,0.04);border-radius:10px;border:1px solid rgba(236,72,153,0.08)"><div style="font-size:12.5px;font-weight:600;color:#1a0810;margin-bottom:3px">' + esc(c.name) + '</div><div style="font-size:11.5px;color:rgba(26,8,16,0.5)">' + esc(c.why) + (c.betterFor ? ' · Better for: ' + esc(c.betterFor) : '') + '</div></div>').join('');
@@ -1451,6 +1454,62 @@
     return '<li style="display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(26,8,16,0.85);line-height:1.6;padding:3px 0">' +
       '<div style="flex-shrink:0;margin-top:5px;width:6px;height:6px;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + '80"></div>' +
       '<span>' + esc(text) + '</span>' +
+    '</li>';
+  }
+
+  // ── Source Citation System (inline HTML version) ───────────────────────────
+
+  const _SRC_CFG = {
+    Reddit:    { domain:'reddit.com',    color:'#FF4500', bg:'rgba(255,69,0,0.09)',    border:'rgba(255,69,0,0.28)',    label:'Reddit' },
+    Amazon:    { domain:'amazon.com',    color:'#FF9900', bg:'rgba(255,153,0,0.09)',   border:'rgba(255,153,0,0.28)',   label:'Amazon' },
+    YouTube:   { domain:'youtube.com',   color:'#FF0000', bg:'rgba(255,0,0,0.08)',     border:'rgba(255,0,0,0.24)',     label:'YouTube' },
+    Google:    { domain:'google.com',    color:'#4285F4', bg:'rgba(66,133,244,0.09)',  border:'rgba(66,133,244,0.28)',  label:'Google' },
+    Quora:     { domain:'quora.com',     color:'#B92B27', bg:'rgba(185,43,39,0.09)',   border:'rgba(185,43,39,0.28)',   label:'Quora' },
+    Flipkart:  { domain:'flipkart.com',  color:'#2874F0', bg:'rgba(40,116,240,0.09)', border:'rgba(40,116,240,0.28)',  label:'Flipkart' },
+    TechRadar: { domain:'techradar.com', color:'#7C3AED', bg:'rgba(124,58,237,0.09)', border:'rgba(124,58,237,0.28)', label:'TechRadar' },
+    RTINGS:    { domain:'rtings.com',    color:'#10B981', bg:'rgba(16,185,129,0.09)', border:'rgba(16,185,129,0.28)', label:'RTINGS' },
+  };
+  const _AUTO_SRC_PRO = ['Amazon', 'Reddit', 'YouTube', 'Google', 'TechRadar'];
+  const _AUTO_SRC_CON = ['Reddit', 'Quora', 'Amazon', 'Google', 'YouTube'];
+
+  function _normItems(items, auto) {
+    const known = Object.keys(_SRC_CFG);
+    return (items || []).map((item, i) => {
+      if (typeof item === 'string') return { text: item, source: auto[i % auto.length] };
+      if (!known.includes(item.source)) return { text: item.text || String(item), source: auto[i % auto.length] };
+      return item;
+    });
+  }
+
+  function _srcChipHTML(sourceName, productName) {
+    const c = _SRC_CFG[sourceName] || { domain:'', color:'#7a3358', bg:'rgba(122,51,88,0.08)', border:'rgba(122,51,88,0.22)', label: sourceName || 'Source' };
+    const q = productName || 'product';
+    const urlMap = {
+      Reddit:    'https://www.reddit.com/search/?q=' + encodeURIComponent(q + ' review'),
+      Amazon:    'https://www.amazon.com/s?k=' + encodeURIComponent(q + ' reviews'),
+      YouTube:   'https://www.youtube.com/results?search_query=' + encodeURIComponent(q + ' review'),
+      Google:    'https://www.google.com/search?q=' + encodeURIComponent(q + ' reviews'),
+      Quora:     'https://www.quora.com/search?q=' + encodeURIComponent(q + ' review'),
+      Flipkart:  'https://www.flipkart.com/search?q=' + encodeURIComponent(q),
+      TechRadar: 'https://www.techradar.com/search?searchTerm=' + encodeURIComponent(q),
+      RTINGS:    'https://www.rtings.com/search#' + encodeURIComponent(q),
+    };
+    const url = urlMap[sourceName] || ('https://www.google.com/search?q=' + encodeURIComponent(q + ' ' + (sourceName || '') + ' review'));
+    const favicon = c.domain
+      ? '<img src="https://www.google.com/s2/favicons?domain=' + c.domain + '&sz=32" alt="" style="width:11px;height:11px;border-radius:2px;object-fit:contain;flex-shrink:0" onerror="this.style.display=\'none\'">'
+      : '';
+    return '<a href="' + url + '" target="_blank" rel="noreferrer" title="See ' + esc(c.label) + ' reviews" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 5px;border-radius:100px;background:' + c.bg + ';border:1px solid ' + c.border + ';color:' + c.color + ';font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap;margin-top:3px;flex-shrink:0">' + favicon + '<span>' + esc(c.label) + '</span></a>';
+  }
+
+  function liSrc(item, color, productName) {
+    const text   = typeof item === 'string' ? item : (item.text || '');
+    const source = typeof item === 'object' ? item.source : null;
+    return '<li style="display:flex;flex-direction:column;gap:1px;padding:5px 0;border-bottom:1px solid rgba(236,72,153,0.06)">' +
+      '<div style="display:flex;align-items:flex-start;gap:9px">' +
+        '<div style="flex-shrink:0;margin-top:6px;width:6px;height:6px;border-radius:50%;background:' + color + ';box-shadow:0 0 6px ' + color + '80"></div>' +
+        '<span style="font-size:12.5px;color:rgba(26,8,16,0.85);line-height:1.6">' + esc(text) + '</span>' +
+      '</div>' +
+      (source ? _srcChipHTML(source, productName) : '') +
     '</li>';
   }
 
