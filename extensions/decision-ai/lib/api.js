@@ -87,92 +87,133 @@ export async function groqCall(messages, model, json = true, maxTokens = 4096) {
 }
 
 // ── Truth Layer ───────────────────────────────────────────────────────────────
+// Two-call pipeline:
+//   1. Vision model  → extract raw product data from screenshot (no JSON mode needed)
+//   2. Text model    → generate full source-attributed analysis (JSON mode enforced)
 
 export async function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
-  const messages = [
+
+  // ── Step 1: Vision extraction ──────────────────────────────────────────────
+  const visionMessages = [
     {
       role: 'system',
-      content: `You are DecisionAI Truth Layer — an expert product analyst AI. Analyze product screenshots and return comprehensive, honest assessments. Always return valid JSON only, no markdown.`
+      content: 'You are a product data extractor. Extract all visible product information from the screenshot and return it as plain text. Be concise and factual.'
     },
     {
       role: 'user',
       content: [
-        {
-          type: 'image_url',
-          image_url: { url: imageDataUrl }
-        },
+        { type: 'image_url', image_url: { url: imageDataUrl } },
         {
           type: 'text',
-          text: `Analyze this screenshot from: ${pageUrl || 'unknown page'}
-Title: ${pageTitle || 'unknown'}
+          text: `Page URL: ${pageUrl || 'unknown'}
+Page title: ${pageTitle || 'unknown'}
 
-Extract product information and provide a complete analysis. Return ONLY this JSON structure:
+Extract all visible product information from this screenshot:
+- Product name and brand
+- Model / variant
+- Price (with currency)
+- Rating and review count
+- Store / website
+- Any visible specs or features
+- Any visible reviews or customer quotes
+- Stock status
+
+Reply in plain text only. Be factual and complete.`
+        }
+      ]
+    }
+  ];
+
+  const rawExtraction = await groqCall(visionMessages, VISION_MODEL, false, 1500);
+
+  // ── Step 2: Text model full analysis ──────────────────────────────────────
+  const analysisMessages = [
+    {
+      role: 'system',
+      content: `You are DecisionAI Truth Layer — an expert product analyst. You receive raw product data extracted from a screenshot and return a comprehensive JSON analysis.
+
+SOURCE RULES (critical — follow exactly):
+- Valid source names: Reddit, Amazon, YouTube, Google, Quora, Flipkart, TechRadar, RTINGS
+- Every pro and con MUST have a "source" field set to one of these exact names
+- Choose the source that would most realistically surface that specific insight
+- The "sources" array must list 5-6 platforms with short insights about what each platform says about this product type
+- Assign sources based on product type: electronics → TechRadar/RTINGS; consumer goods → Reddit/Amazon; budget products → Flipkart; all → Google/YouTube
+
+Always return valid JSON only, no markdown.`
+    },
+    {
+      role: 'user',
+      content: `Product data extracted from screenshot:
+---
+${rawExtraction}
+---
+Page URL: ${pageUrl || 'unknown'}
+
+Return ONLY this JSON (no extra text):
 {
   "product": {
     "name": "full product name",
     "brand": "brand name",
-    "model": "model/version if visible",
+    "model": "model/version",
     "price": "price as shown",
-    "currency": "currency symbol or code",
-    "rating": "rating as shown (e.g. 4.2/5)",
+    "rating": "rating as shown",
     "reviewCount": "number of reviews",
-    "store": "website/store name",
-    "inStock": true
+    "store": "website/store name"
   },
   "truthScore": 75,
   "scoreLabel": "Good",
   "verdict": {
     "type": "buy",
     "label": "Recommended Buy",
-    "reasoning": "3-4 sentence explanation based on visible info and general knowledge about this product/brand",
+    "reasoning": "3-4 sentences using your knowledge of this product/brand",
     "emoji": "✅"
   },
   "sources": [
-    { "name": "Reddit", "insight": "Active community discussion with detailed user experiences" },
-    { "name": "Amazon", "insight": "Verified buyer reviews analyzed" },
-    { "name": "YouTube", "insight": "Video reviews from tech creators" }
+    { "name": "Reddit", "insight": "What Reddit users typically say about this product" },
+    { "name": "Amazon", "insight": "What Amazon verified buyers highlight" },
+    { "name": "YouTube", "insight": "What tech reviewers say on YouTube" },
+    { "name": "Google", "insight": "Top search result consensus" },
+    { "name": "Quora", "insight": "Common questions and answers on Quora" },
+    { "name": "TechRadar", "insight": "Expert review verdict" }
   ],
   "reviews": {
-    "summary": "What customers typically say about this product (2-3 sentences)",
+    "summary": "2-3 sentence overview of what customers say",
     "pros": [
-      { "text": "Pro 1", "source": "Reddit" },
-      { "text": "Pro 2", "source": "Amazon" },
-      { "text": "Pro 3", "source": "YouTube" },
-      { "text": "Pro 4", "source": "Google" }
+      { "text": "specific pro point", "source": "Reddit" },
+      { "text": "specific pro point", "source": "Amazon" },
+      { "text": "specific pro point", "source": "YouTube" },
+      { "text": "specific pro point", "source": "Google" }
     ],
     "cons": [
-      { "text": "Con 1", "source": "Reddit" },
-      { "text": "Con 2", "source": "Quora" },
-      { "text": "Con 3", "source": "Amazon" }
+      { "text": "specific con point", "source": "Reddit" },
+      { "text": "specific con point", "source": "Quora" },
+      { "text": "specific con point", "source": "Amazon" }
     ],
-    "hiddenComplaints": ["Any common issue not shown in ratings"]
+    "hiddenComplaints": ["issue not obvious from star ratings"]
   },
   "priceIntel": {
-    "currentPrice": "visible price",
+    "currentPrice": "price from screenshot",
     "fairPrice": "estimated fair market value",
-    "dealRating": "Great Deal|Fair|Overpriced",
+    "dealRating": "Great Deal",
     "alternatives": [
-      { "store": "Amazon", "estimatedPrice": "$XX", "note": "typically cheaper" },
-      { "store": "Flipkart", "estimatedPrice": "$XX", "note": "" }
+      { "store": "Amazon", "estimatedPrice": "$XX", "note": "check for deals" },
+      { "store": "Flipkart", "estimatedPrice": "$XX", "note": "compare prices" }
     ]
   },
   "buyTiming": {
     "recommendation": "buy-now",
-    "reason": "Short reason for timing recommendation"
+    "reason": "Short reason"
   },
   "competitors": [
     { "name": "Competitor Name", "why": "How it compares", "betterFor": "use case" }
   ]
 }
 
-IMPORTANT for sources array: choose 3-5 most relevant sources from: Reddit, Amazon, YouTube, Google, Quora, Flipkart, TechRadar, RTINGS. Pick sources that would realistically have reviews for this product type.
-IMPORTANT for pros/cons source field: use only these exact names: Reddit, Amazon, YouTube, Google, Quora, Flipkart, TechRadar, RTINGS.`
-        }
-      ]
+CRITICAL: Every single pro and con object MUST have a "source" field. Use ONLY these names: Reddit, Amazon, YouTube, Google, Quora, Flipkart, TechRadar, RTINGS.`
     }
   ];
 
-  return groqCall(messages, VISION_MODEL, true, 6000);
+  return groqCall(analysisMessages, TEXT_MODEL, true, 4096);
 }
 
 // ── Master Scan ───────────────────────────────────────────────────────────────
