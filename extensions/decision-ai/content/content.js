@@ -1708,15 +1708,18 @@
           bodyHTML +
           '<script>window.onload=function(){window.print();}<\/script>' +
           '</body></html>';
-        const blob = new Blob([page], { type: 'text/html' });
-        const url  = URL.createObjectURL(blob);
-        const win  = window.open(url, '_blank');
-        if (!win) {
-          // fallback: download as HTML file
-          const a = document.createElement('a');
-          a.href = url; a.download = 'decisionai-' + Date.now() + '.html'; a.click();
-        }
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none';
+        document.body.appendChild(iframe);
+        const iWin = iframe.contentWindow;
+        iWin.document.open();
+        iWin.document.write(page);
+        iWin.document.close();
+        setTimeout(function() {
+          iWin.focus();
+          iWin.print();
+          setTimeout(function() { iframe.remove(); }, 2000);
+        }, 400);
         pdfBtn.textContent = '✓ Opening…';
         setTimeout(() => { pdfBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF'; }, 2500);
       });

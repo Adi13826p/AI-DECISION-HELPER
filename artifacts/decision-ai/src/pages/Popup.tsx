@@ -112,29 +112,27 @@ export default function Popup() {
           <div style={s.logo}>
             <div style={s.logoIconWrap}>
               <svg style={s.logoIcon} viewBox="0 0 24 24" fill="none">
-                {/* antenna ball */}
-                <circle cx="12" cy="2.2" r="1.5" fill="currentColor"/>
-                <circle cx="11.2" cy="1.6" r="0.5" fill="white" fillOpacity="0.65"/>
-                {/* antenna stem */}
-                <line x1="12" y1="3.7" x2="12" y2="5.9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-                {/* head — very round */}
-                <rect x="3" y="5.9" width="18" height="15" rx="7.5" stroke="currentColor" strokeWidth="1.4" fill="white" fillOpacity="0.38"/>
-                {/* left eye — big & sparkly */}
-                <circle cx="8.5" cy="11.6" r="2.5" fill="currentColor"/>
-                <circle cx="9.4" cy="10.65" r="0.96" fill="white"/>
-                <circle cx="10" cy="10.15" r="0.42" fill="white"/>
-                {/* right eye — big & sparkly */}
-                <circle cx="15.5" cy="11.6" r="2.5" fill="currentColor"/>
-                <circle cx="16.4" cy="10.65" r="0.96" fill="white"/>
-                <circle cx="17" cy="10.15" r="0.42" fill="white"/>
-                {/* rosy blush left */}
-                <ellipse cx="5.5" cy="15" rx="1.9" ry="1.35" fill="currentColor" fillOpacity="0.16"/>
-                {/* rosy blush right */}
-                <ellipse cx="18.5" cy="15" rx="1.9" ry="1.35" fill="currentColor" fillOpacity="0.16"/>
-                {/* big cute smile */}
-                <path d="M8.2 15.6 Q12 18.8 15.8 15.6" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" fill="none"/>
-                {/* tiny sparkle */}
-                <circle cx="19.8" cy="7.5" r="0.75" fill="currentColor" fillOpacity="0.55"/>
+                {/* star antenna */}
+                <path d="M12 1.5 L12.6 3.2 L14.4 3.2 L13 4.3 L13.5 6 L12 4.9 L10.5 6 L11 4.3 L9.6 3.2 L11.4 3.2 Z" fill="white" fillOpacity="0.95"/>
+                {/* stem */}
+                <line x1="12" y1="6" x2="12" y2="7.8" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.85"/>
+                {/* face */}
+                <rect x="2.5" y="7.5" width="19" height="14.5" rx="7" fill="white" fillOpacity="0.18" stroke="white" strokeWidth="1.3" strokeOpacity="0.8"/>
+                {/* left eye */}
+                <circle cx="8.5" cy="13" r="2.6" fill="white"/>
+                <circle cx="9.5" cy="11.9" r="1.1" fill="#ec4899"/>
+                <circle cx="10" cy="11.4" r="0.5" fill="white"/>
+                {/* right eye */}
+                <circle cx="15.5" cy="13" r="2.6" fill="white"/>
+                <circle cx="16.5" cy="11.9" r="1.1" fill="#ec4899"/>
+                <circle cx="17" cy="11.4" r="0.5" fill="white"/>
+                {/* blush */}
+                <ellipse cx="5" cy="16.5" rx="1.8" ry="1.2" fill="white" fillOpacity="0.28"/>
+                <ellipse cx="19" cy="16.5" rx="1.8" ry="1.2" fill="white" fillOpacity="0.28"/>
+                {/* smile */}
+                <path d="M8.5 17.5 Q12 21 15.5 17.5" stroke="white" strokeWidth="1.4" strokeLinecap="round" fill="none" strokeOpacity="0.95"/>
+                {/* sparkle */}
+                <path d="M21 8.5 L21.4 9.6 L22.5 10 L21.4 10.4 L21 11.5 L20.6 10.4 L19.5 10 L20.6 9.6 Z" fill="white" fillOpacity="0.75"/>
               </svg>
             </div>
             <span style={s.logoText}>
@@ -516,14 +514,14 @@ const s: Record<string, React.CSSProperties> = {
   },
   logo: { display: "flex", alignItems: "center", gap: 10 },
   logoIconWrap: {
-    width: 32, height: 32,
-    background: "linear-gradient(135deg, rgba(236,72,153,0.2), rgba(244,63,94,0.12))",
-    border: "1px solid rgba(236,72,153,0.3)",
-    borderRadius: 10,
+    width: 36, height: 36,
+    background: "linear-gradient(145deg, #f472b6 0%, #ec4899 45%, #f43f5e 100%)",
+    borderRadius: 11,
     display: "flex", alignItems: "center", justifyContent: "center",
-    boxShadow: "0 0 16px rgba(236,72,153,0.2)",
+    boxShadow: "0 4px 18px rgba(236,72,153,0.55), 0 1px 4px rgba(244,63,94,0.3), inset 0 1px 0 rgba(255,255,255,0.35)",
+    flexShrink: 0,
   },
-  logoIcon: { width: 15, height: 15, color: "#ec4899" },
+  logoIcon: { width: 20, height: 20 },
   logoText: { fontSize: 17, fontWeight: 800, letterSpacing: "-0.6px", color: "var(--text-primary)" },
   logoAccent: {
     background: "linear-gradient(135deg, #ec4899, #f43f5e)",
