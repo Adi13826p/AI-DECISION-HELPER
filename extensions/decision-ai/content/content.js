@@ -19,14 +19,42 @@
   const GROQ_ENDPOINT  = 'https://api.groq.com/openai/v1/chat/completions';
   const VISION_MODEL   = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
+  function isContextValid() {
+    try { return !!(chrome && chrome.storage && chrome.storage.local); }
+    catch (_) { return false; }
+  }
+
+  function showRefreshToast() {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
+      'background:#1a0810;color:#fca5a5;font-size:12.5px;font-weight:700;' +
+      'padding:10px 20px;border-radius:100px;z-index:2147483647;' +
+      'box-shadow:0 4px 20px rgba(239,68,68,0.25);white-space:nowrap;' +
+      'display:flex;align-items:center;gap:8px';
+    t.innerHTML = '⚠ Extension reloaded — please refresh this page';
+    document.documentElement.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  }
+
   function getApiKey() {
-    return new Promise((resolve) => {
-      chrome.storage.local.get('groqApiKey', (d) => resolve(d.groqApiKey || null));
+    return new Promise((resolve, reject) => {
+      if (!isContextValid()) { reject(new Error('CONTEXT_INVALID')); return; }
+      try {
+        chrome.storage.local.get('groqApiKey', (d) => {
+          if (chrome.runtime.lastError) { reject(new Error('CONTEXT_INVALID')); return; }
+          resolve(d.groqApiKey || null);
+        });
+      } catch (_) { reject(new Error('CONTEXT_INVALID')); }
     });
   }
 
   async function groqCall(messages, model, maxTokens) {
-    const apiKey = await getApiKey();
+    let apiKey;
+    try { apiKey = await getApiKey(); }
+    catch (e) {
+      if (e.message === 'CONTEXT_INVALID') { showRefreshToast(); throw e; }
+      throw e;
+    }
     if (!apiKey) throw new Error('NO_API_KEY');
 
     const isVision = model === VISION_MODEL;
