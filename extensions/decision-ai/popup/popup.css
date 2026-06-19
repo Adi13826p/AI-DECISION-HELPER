@@ -18,6 +18,7 @@ html {
   width: 398px;
   background: transparent;
   overflow: hidden;
+  border-radius: 20px;
 }
 
 body {
@@ -28,6 +29,7 @@ body {
   font-size: 13px; line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  border-radius: 20px;
 }
 
 /* Single premium card — the one and only container */
@@ -36,7 +38,9 @@ body {
   flex-direction: column;
   width: 398px;
   background: var(--bg-base);
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 8px 30px rgba(236,72,153,0.18), 0 2px 8px rgba(0,0,0,0.08);
 }
 .hidden { display: none !important; }
 
