@@ -211,6 +211,30 @@ export function MasterScanPanel({ onClose }: { onClose: () => void }) {
   const [profile, setProfile] = useState<UserProfile>(loadProfile);
   const [lang,    setLang]    = useState("Spanish");
   const tts = useTTS();
+  const [selTip, setSelTip]   = useState<{ x: number; y: number; text: string } | null>(null);
+
+  useEffect(() => {
+    function onMouseUp(e: MouseEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "BUTTON" || tag === "INPUT" || tag === "TEXTAREA") return;
+      if ((e.target as HTMLElement).closest("[data-sel-tooltip]")) return;
+      setTimeout(() => {
+        const sel  = window.getSelection();
+        const text = sel?.toString().trim() ?? "";
+        if (text.length >= 8) {
+          setSelTip({
+            x: Math.max(4, Math.min(e.clientX - 110, window.innerWidth - 220)),
+            y: Math.max(4, e.clientY - 56),
+            text,
+          });
+        } else {
+          setSelTip(null);
+        }
+      }, 20);
+    }
+    document.addEventListener("mouseup", onMouseUp);
+    return () => document.removeEventListener("mouseup", onMouseUp);
+  }, []);
 
   async function analyze() {
     if (!query.trim() && mode !== "resume") return;
@@ -281,6 +305,35 @@ export function MasterScanPanel({ onClose }: { onClose: () => void }) {
         {stage === "result"    && result && <ResultView result={result} mode={mode} onReset={() => { tts.stop(); setStage("home"); setResult(null); }} onTranslateText={handleTranslateText} onSpeak={tts.speak} />}
         {stage === "profile"   && <ProfileView profile={profile} onSave={p => { saveProfile(p); setProfile(p); setStage("home"); }} onCancel={() => setStage("home")} />}
         <TTSBar speaking={tts.speaking} paused={tts.paused} label={tts.label} onToggle={tts.toggle} onStop={tts.stop} />
+
+        {/* Global selection tooltip — works on any text anywhere in MasterScan */}
+        {selTip && (
+          <div data-sel-tooltip="1" style={{
+            position:"fixed", left: selTip.x, top: selTip.y,
+            zIndex:9999, display:"flex", borderRadius:9, overflow:"hidden",
+            background:"var(--bg-surface)", border:"1px solid rgba(163,116,255,0.4)",
+            boxShadow:"0 4px 24px rgba(0,0,0,0.18)", userSelect:"none",
+          }}>
+            <button
+              onClick={() => { tts.speak(selTip.text, "Selected text"); setSelTip(null); window.getSelection()?.removeAllRanges(); }}
+              style={{padding:"8px 13px", background:"linear-gradient(135deg,#a374ff,#ec4899)", color:"#fff", border:"none", fontSize:11.5, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5}}>
+              🔊 Listen
+            </button>
+            <button
+              onClick={() => { handleTranslateText(selTip.text); setSelTip(null); window.getSelection()?.removeAllRanges(); }}
+              style={{padding:"8px 12px", background:"var(--accent)", color:"#fff", border:"none", borderLeft:"1px solid rgba(255,255,255,0.2)", fontSize:11.5, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5}}>
+              🌐
+            </button>
+            <button onClick={() => { navigator.clipboard.writeText(selTip.text); setSelTip(null); }}
+              style={{padding:"8px 10px", background:"transparent", border:"none", borderLeft:"1px solid rgba(163,116,255,0.2)", fontSize:11, color:"var(--text-secondary)", cursor:"pointer", fontWeight:600}}>
+              📋
+            </button>
+            <button onClick={() => setSelTip(null)}
+              style={{padding:"8px 9px", background:"transparent", border:"none", borderLeft:"1px solid rgba(163,116,255,0.15)", fontSize:11, color:"var(--text-muted)", cursor:"pointer"}}>
+              ✕
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -449,8 +502,8 @@ function HomeView({ mode, setMode, query, setQuery, onAnalyze, error, profile, l
         {btnLabel}
       </button>
 
-      {/* YouTube TTS Panel */}
-      {mode === "youtube" && <TTSSpeakPanel onSpeak={onSpeak} accentColor="#f87171" />}
+      {/* TTS Speak Panel — available in all modes */}
+      {mode !== "resume" && mode !== "translate" && <TTSSpeakPanel onSpeak={onSpeak} accentColor={info.color} />}
 
       {/* Quick examples */}
       {mode !== "planner" && EXAMPLES[mode].length > 0 && (
@@ -768,40 +821,12 @@ function ExtensionDownloadCard() {
 
 /* ── Result View ────────────────────────────────────── */
 function ResultView({ result, mode, onReset, onTranslateText, onSpeak }: { result: AnyResult; mode: Mode; onReset: () => void; onTranslateText: (text: string) => void; onSpeak: (text: string, label?: string) => void }) {
-  const [selTip, setSelTip] = useState<{ x: number; y: number; text: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  function handleMouseUp(e: React.MouseEvent) {
-    setTimeout(() => {
-      const sel = window.getSelection();
-      const text = sel?.toString().trim() ?? "";
-      if (text.length >= 8) {
-        const rect = (e.target as HTMLElement).closest("[data-result-scroll]")?.getBoundingClientRect();
-        const baseLeft = rect ? rect.left : 0;
-        setSelTip({
-          x: Math.max(baseLeft + 4, Math.min(e.clientX, (rect ? rect.right : window.innerWidth) - 180)),
-          y: e.clientY,
-          text,
-        });
-      } else {
-        setSelTip(null);
-      }
-    }, 20);
-  }
 
   return (
     <div style={{flex:1, display:"flex", flexDirection:"column", overflow:"hidden", position:"relative"}}>
       <div ref={scrollRef} data-result-scroll="1"
         style={{flex:1, overflowY:"auto", padding:"14px 14px 32px", display:"flex", flexDirection:"column", gap:10}}
-        onMouseUp={handleMouseUp}
-        onTouchEnd={() => setTimeout(() => {
-          const sel = window.getSelection();
-          const text = sel?.toString().trim() ?? "";
-          if (text.length >= 8) {
-            const r = sel!.getRangeAt(0).getBoundingClientRect();
-            setSelTip({ x: r.left + r.width / 2, y: r.top - 2, text });
-          }
-        }, 50)}
       >
         {result.type === "product"   && <ProductResultView data={result.data} />}
         {result.type === "smarty"    && <SmartyResultView data={result.data} mode={mode} onSpeak={onSpeak} />}
@@ -815,35 +840,6 @@ function ResultView({ result, mode, onReset, onTranslateText, onSpeak }: { resul
           ↩ Analyze Another
         </button>
       </div>
-
-      {/* Floating tooltip — appears on text selection */}
-      {selTip && (
-        <div style={{
-          position:"fixed", left: Math.max(4, selTip.x - 110), top: selTip.y - 52,
-          zIndex:9999, display:"flex", borderRadius:9, overflow:"hidden",
-          background:"var(--bg-surface)", border:"1px solid rgba(236,72,153,0.35)",
-          boxShadow:"0 4px 24px rgba(0,0,0,0.18)", userSelect:"none",
-        }}>
-          <button
-            onClick={() => { onSpeak(selTip.text, "Selected text"); setSelTip(null); window.getSelection()?.removeAllRanges(); }}
-            style={{padding:"8px 13px", background:"linear-gradient(135deg,#a374ff,#ec4899)", color:"#fff", border:"none", fontSize:11.5, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5}}>
-            🔊 Listen
-          </button>
-          <button
-            onClick={() => { onTranslateText(selTip.text); setSelTip(null); window.getSelection()?.removeAllRanges(); }}
-            style={{padding:"8px 12px", background:"var(--accent)", color:"#fff", border:"none", borderLeft:"1px solid rgba(255,255,255,0.2)", fontSize:11.5, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:5}}>
-            🌐
-          </button>
-          <button onClick={() => { navigator.clipboard.writeText(selTip.text); setSelTip(null); }}
-            style={{padding:"8px 10px", background:"transparent", border:"none", borderLeft:"1px solid rgba(236,72,153,0.2)", fontSize:11, color:"var(--text-secondary)", cursor:"pointer", fontWeight:600}}>
-            📋
-          </button>
-          <button onClick={() => setSelTip(null)}
-            style={{padding:"8px 9px", background:"transparent", border:"none", borderLeft:"1px solid rgba(236,72,153,0.15)", fontSize:11, color:"var(--text-muted)", cursor:"pointer"}}>
-            ✕
-          </button>
-        </div>
-      )}
     </div>
   );
 }
