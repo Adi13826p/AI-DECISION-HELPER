@@ -497,6 +497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('p-zipcode').value     = profile.zipCode || '';
     document.getElementById('p-postalCode').value  = profile.postalCode || '';
     document.getElementById('p-photo').value       = profile.photo || '';
+    updatePhotoPreview(profile.photo || '');
     document.getElementById('p-summary').value     = profile.summary || '';
     document.getElementById('p-skills-tech').value  = profile.skills?.tech || '';
     document.getElementById('p-skills-tools').value = profile.skills?.tools || '';
@@ -632,6 +633,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('profBody').addEventListener('input', () => {
     clearTimeout(autoSaveTimer);
     autoSaveTimer = setTimeout(() => { updateCompleteness(); }, 600);
+  });
+
+  // ── Photo upload ──────────────────────────────────────────────────────────────
+
+  function updatePhotoPreview(src) {
+    const el = document.getElementById('photoPreview');
+    if (!el) return;
+    if (src && src.length > 5) {
+      el.style.backgroundImage = `url(${src})`;
+      el.innerHTML = '';
+    } else {
+      el.style.backgroundImage = '';
+      el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" width="22" height="22"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    }
+  }
+
+  document.getElementById('photoUploadBtn').addEventListener('click', () => {
+    document.getElementById('photoFileInput').click();
+  });
+
+  document.getElementById('photoFileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 220;
+        const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        document.getElementById('p-photo').value = dataUrl;
+        updatePhotoPreview(dataUrl);
+        saveProfile();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('p-photo').addEventListener('input', (e) => {
+    updatePhotoPreview(e.target.value.trim());
   });
 
   // ── Paste resume ──────────────────────────────────────────────────────────────
