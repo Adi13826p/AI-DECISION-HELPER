@@ -95,11 +95,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return false;
 
     case 'GET_SETTINGS':
-      chrome.storage.local.get(['settings', 'groqApiKey'], (data) => {
+      chrome.storage.local.get(['settings', 'groqApiKey', 'serverUrl'], (data) => {
         sendResponse({
           success: true,
           settings: data.settings || {},
-          hasApiKey: !!(data.groqApiKey && data.groqApiKey.length > 10)
+          hasApiKey: !!(data.groqApiKey && data.groqApiKey.length > 10),
+          hasServerUrl: !!(data.serverUrl && data.serverUrl.length > 5)
         });
       });
       return true;

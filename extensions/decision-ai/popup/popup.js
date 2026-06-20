@@ -33,11 +33,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const profProgressFill = document.getElementById('profProgressFill');
   const profMissingMsg   = document.getElementById('profMissingMsg');
   const profToast        = document.getElementById('profToast');
+  const serverUrlInput   = document.getElementById('serverUrlInput');
+  const saveServerBtn    = document.getElementById('saveServerBtn');
+  const serverStatus     = document.getElementById('serverStatus');
 
-  // ── API key status ───────────────────────────────────────────────────────────
+  // ── API key + server status ──────────────────────────────────────────────────
   async function refreshKeyStatus() {
     const resp = await chrome.runtime.sendMessage({ type: 'GET_SETTINGS' });
-    if (resp.hasApiKey) {
+    if (resp.hasServerUrl && resp.hasApiKey) {
+      indicatorDot.className     = 'indicator-dot dot-ok';
+      indicatorLabel.textContent = 'Server API + personal key fallback';
+    } else if (resp.hasServerUrl) {
+      indicatorDot.className     = 'indicator-dot dot-ok';
+      indicatorLabel.textContent = 'Using server API';
+    } else if (resp.hasApiKey) {
       indicatorDot.className     = 'indicator-dot dot-ok';
       indicatorLabel.textContent = 'API key configured';
     } else {
@@ -46,8 +55,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   await refreshKeyStatus();
-  chrome.storage.local.get('groqApiKey', (d) => {
+  chrome.storage.local.get(['groqApiKey', 'serverUrl'], (d) => {
     if (d.groqApiKey) apiKeyInput.placeholder = '••••••••' + d.groqApiKey.slice(-4);
+    if (d.serverUrl)  serverUrlInput.value = d.serverUrl;
   });
 
   settingsBtn.addEventListener('click', () => {
@@ -77,6 +87,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     keyStatus.textContent = msg;
     keyStatus.className = `key-status key-status-${type}`;
     setTimeout(() => { keyStatus.className = 'key-status hidden'; }, 2500);
+  }
+
+  saveServerBtn.addEventListener('click', () => {
+    const val = serverUrlInput.value.trim();
+    if (val && !val.startsWith('http')) { showServerStatus('Enter a valid URL (starts with http)', 'error'); return; }
+    saveServerBtn.textContent = 'Saving…';
+    saveServerBtn.disabled = true;
+    chrome.storage.local.set({ serverUrl: val || null }, async () => {
+      saveServerBtn.disabled = false;
+      saveServerBtn.textContent = 'Save';
+      showServerStatus(val ? '✓ Server URL saved!' : '✓ Cleared', 'ok');
+      await refreshKeyStatus();
+    });
+  });
+  serverUrlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveServerBtn.click(); });
+  function showServerStatus(msg, type) {
+    serverStatus.textContent = msg;
+    serverStatus.className = `key-status key-status-${type}`;
+    setTimeout(() => { serverStatus.className = 'key-status hidden'; }, 2500);
   }
 
   // ── View switching ────────────────────────────────────────────────────────────

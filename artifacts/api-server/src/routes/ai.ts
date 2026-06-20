@@ -437,6 +437,42 @@ Rules:
   }
 });
 
+router.post("/proxy", async (req, res) => {
+  try {
+    const { messages, model, maxTokens, responseFormat, temperature } = req.body as {
+      messages: Array<{ role: string; content: unknown }>;
+      model: string;
+      maxTokens?: number;
+      responseFormat?: { type: string };
+      temperature?: number;
+    };
+    if (!messages || !model) {
+      res.status(400).json({ error: "messages and model are required" });
+      return;
+    }
+    const groq = getGroq();
+    const params: Parameters<typeof groq.chat.completions.create>[0] = {
+      model,
+      messages: messages as Parameters<typeof groq.chat.completions.create>[0]["messages"],
+      temperature: temperature ?? 0.3,
+      max_tokens: maxTokens ?? 7000,
+    };
+    if (responseFormat) {
+      params.response_format = responseFormat as { type: "json_object" };
+    }
+    const completion = await groq.chat.completions.create(params);
+    const content = completion.choices[0]?.message?.content ?? "";
+    const wasTruncated = completion.choices[0]?.finish_reason === "length";
+    res.json({ content, wasTruncated });
+  } catch (err: unknown) {
+    const status = (err as { status?: number; statusCode?: number }).status
+      || (err as { status?: number; statusCode?: number }).statusCode
+      || 500;
+    console.error("Proxy error:", err);
+    res.status(status).json({ error: String(err) });
+  }
+});
+
 router.post("/resume", async (req, res) => {
   try {
     const { profile, jobContext } = req.body as { profile?: string; jobContext?: string };

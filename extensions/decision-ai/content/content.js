@@ -18,6 +18,7 @@
 
   const GROQ_ENDPOINT  = 'https://api.groq.com/openai/v1/chat/completions';
   const VISION_MODEL   = 'meta-llama/llama-4-scout-17b-16e-instruct';
+  const SERVER_PROXY   = '/api/ai/proxy';
 
   function isContextValid() {
     try { return !!(chrome && chrome.storage && chrome.storage.local); }
@@ -48,15 +49,61 @@
     });
   }
 
-  async function groqCall(messages, model, maxTokens) {
-    let apiKey;
-    try { apiKey = await getApiKey(); }
-    catch (e) {
-      if (e.message === 'CONTEXT_INVALID') { showRefreshToast(); throw e; }
-      throw e;
-    }
-    if (!apiKey) throw new Error('NO_API_KEY');
+  function getServerUrl() {
+    return new Promise((resolve) => {
+      if (!isContextValid()) { resolve(null); return; }
+      try {
+        chrome.storage.local.get('serverUrl', (d) => {
+          if (chrome.runtime.lastError) { resolve(null); return; }
+          const url = d.serverUrl ? d.serverUrl.replace(/\/$/, '') : null;
+          resolve(url && url.length > 5 ? url : null);
+        });
+      } catch (_) { resolve(null); }
+    });
+  }
 
+  function parseGroqResponse(rawText, wasTruncated) {
+    const stripped = rawText.trim();
+    const fenceMatch = stripped.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/);
+    let jsonStr = fenceMatch ? fenceMatch[1].trim() : stripped;
+
+    try { return JSON.parse(jsonStr); } catch (_) {}
+
+    const objStart = jsonStr.indexOf('{');
+    const objEnd   = jsonStr.lastIndexOf('}');
+    if (objStart !== -1 && objEnd > objStart) {
+      try { return JSON.parse(jsonStr.slice(objStart, objEnd + 1)); } catch (_) {}
+    }
+
+    if (wasTruncated && objStart !== -1) {
+      try {
+        let partial = jsonStr.slice(objStart);
+        let inStr = false, escape = false;
+        for (let i = 0; i < partial.length; i++) {
+          const c = partial[i];
+          if (escape) { escape = false; continue; }
+          if (c === '\\' && inStr) { escape = true; continue; }
+          if (c === '"') { inStr = !inStr; continue; }
+          if (inStr) continue;
+        }
+        partial = partial.replace(/,\s*$/, '').replace(/:\s*$/, ':null');
+        if (inStr) partial += '"';
+        const stack = [];
+        for (let i = 0; i < partial.length; i++) {
+          const c = partial[i];
+          if (c === '{') stack.push('}');
+          else if (c === '[') stack.push(']');
+          else if (c === '}' || c === ']') stack.pop();
+        }
+        partial += stack.reverse().join('');
+        return JSON.parse(partial);
+      } catch (_) {}
+    }
+
+    throw new Error('AI returned invalid JSON. Please try again.');
+  }
+
+  async function groqCall(messages, model, maxTokens) {
     const isVision = model === VISION_MODEL;
     const body = {
       model,
@@ -64,9 +111,42 @@
       temperature: 0.3,
       max_tokens: maxTokens || (isVision ? 2048 : 7000),
     };
-    // Vision models do NOT support response_format — text models do
-    if (!isVision) {
-      body.response_format = { type: 'json_object' };
+    if (!isVision) body.response_format = { type: 'json_object' };
+
+    // ── 1. Try server proxy first ──────────────────────────────────────────
+    let serverUrl = null;
+    try { serverUrl = await getServerUrl(); } catch (_) {}
+
+    if (serverUrl) {
+      try {
+        const resp = await fetch(serverUrl + SERVER_PROXY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(60000),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.content) return parseGroqResponse(data.content, !!data.wasTruncated);
+        }
+        // 429 = rate limited → fall through to user key
+        // Other errors → also fall through (best-effort fallback)
+      } catch (_) {
+        // Network error or timeout → fall through to user key
+      }
+    }
+
+    // ── 2. Fall back to user's own Groq key ───────────────────────────────
+    let apiKey;
+    try { apiKey = await getApiKey(); }
+    catch (e) {
+      if (e.message === 'CONTEXT_INVALID') { showRefreshToast(); throw e; }
+      throw e;
+    }
+
+    if (!apiKey) {
+      if (serverUrl) throw new Error('RATE_LIMITED');
+      throw new Error('NO_API_KEY');
     }
 
     const resp = await fetch(GROQ_ENDPOINT, {
@@ -88,61 +168,7 @@
     const choice = data.choices && data.choices[0];
     const rawText = choice && choice.message && choice.message.content;
     if (!rawText) throw new Error('Empty response from AI');
-
-    // If the model was cut off due to token limit, attempt auto-repair before giving up
-    const wasTruncated = choice.finish_reason === 'length';
-
-    // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
-    const stripped = rawText.trim();
-    const fenceMatch = stripped.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/);
-    let jsonStr = fenceMatch ? fenceMatch[1].trim() : stripped;
-
-    // Try direct parse first
-    try { return JSON.parse(jsonStr); }
-    catch (_) {}
-
-    // Extract the outermost { … } block
-    const objStart = jsonStr.indexOf('{');
-    const objEnd   = jsonStr.lastIndexOf('}');
-    if (objStart !== -1 && objEnd > objStart) {
-      try { return JSON.parse(jsonStr.slice(objStart, objEnd + 1)); }
-      catch (_) {}
-    }
-
-    // If truncated, try to auto-close open brackets/braces so we still get usable data
-    if (wasTruncated && objStart !== -1) {
-      try {
-        let partial = jsonStr.slice(objStart);
-        // Count unmatched open brackets
-        let depth = 0, inStr = false, escape = false;
-        for (let i = 0; i < partial.length; i++) {
-          const c = partial[i];
-          if (escape) { escape = false; continue; }
-          if (c === '\\' && inStr) { escape = true; continue; }
-          if (c === '"') { inStr = !inStr; continue; }
-          if (inStr) continue;
-          if (c === '{' || c === '[') depth++;
-          else if (c === '}' || c === ']') depth--;
-        }
-        // Strip trailing incomplete token (comma, colon, partial string)
-        partial = partial.replace(/,\s*$/, '').replace(/:\s*$/, ':null');
-        // Close any open string
-        if (inStr) partial += '"';
-        // Close open arrays/objects in reverse order
-        // We do a second pass to close correctly
-        let depth2 = 0; const stack = [];
-        for (let i = 0; i < partial.length; i++) {
-          const c = partial[i];
-          if (c === '{') stack.push('}');
-          else if (c === '[') stack.push(']');
-          else if (c === '}' || c === ']') stack.pop();
-        }
-        partial += stack.reverse().join('');
-        return JSON.parse(partial);
-      } catch (_) {}
-    }
-
-    throw new Error('AI returned invalid JSON. Please try again.');
+    return parseGroqResponse(rawText, choice.finish_reason === 'length');
   }
 
   async function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
@@ -976,6 +1002,9 @@
     } else if (errMsg === 'INVALID_API_KEY') {
       title = 'Invalid API key';
       desc  = 'Your Groq API key is invalid. Please check it in extension Settings (⚙).';
+    } else if (errMsg === 'RATE_LIMITED') {
+      title = 'Server rate limit reached';
+      desc  = 'The server\'s Groq quota is temporarily full. Add your own Groq API key in ⚙ Settings to keep going — get one free at console.groq.com';
     }
     content.innerHTML = '<div style="padding:32px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;animation:__dai-fadein 0.25s ease both"><div style="width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8v4M12 16h.01" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#ef4444" stroke-width="1.5"/></svg></div><div><div style="font-size:15px;font-weight:700;color:#1a0810;margin-bottom:6px">' + esc(title) + '</div><div style="font-size:12px;color:rgba(26,8,16,0.5);line-height:1.6;max-width:340px">' + esc(desc) + '</div></div></div>';
   }

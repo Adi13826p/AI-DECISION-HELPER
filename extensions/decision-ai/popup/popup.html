@@ -67,6 +67,22 @@
         <button class="save-key-btn" id="saveKeyBtn">Save</button>
       </div>
       <div class="key-status hidden" id="keyStatus"></div>
+
+      <div style="height:1px;background:rgba(236,72,153,0.15);margin:12px 0"></div>
+
+      <div class="settings-title">
+        <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+          <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Server URL <span style="font-size:10px;font-weight:500;color:rgba(26,8,16,0.4);margin-left:4px">(optional)</span>
+      </div>
+      <div class="settings-desc">AI calls go through your server first. Falls back to your personal key when rate limited.</div>
+      <div class="settings-input-row">
+        <input type="url" id="serverUrlInput" class="api-key-input" placeholder="https://your-server.replit.app" autocomplete="off" spellcheck="false" />
+        <button class="save-key-btn" id="saveServerBtn">Save</button>
+      </div>
+      <div class="key-status hidden" id="serverStatus"></div>
     </div>
 
     <main class="features">
