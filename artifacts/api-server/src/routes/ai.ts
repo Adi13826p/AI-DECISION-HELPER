@@ -465,6 +465,14 @@ router.post("/proxy", async (req, res) => {
     const wasTruncated = completion.choices[0]?.finish_reason === "length";
     res.json({ content, wasTruncated });
   } catch (err: unknown) {
+    // Groq json_validate_failed: the model generated content but it failed JSON schema validation.
+    // The actual generated text is in err.error.failed_generation — extract and return it so the
+    // client can parse it with its own JSON recovery logic.
+    const errBody = (err as { error?: { code?: string; failed_generation?: string } }).error;
+    if (errBody?.code === "json_validate_failed" && errBody?.failed_generation) {
+      res.json({ content: errBody.failed_generation, wasTruncated: false });
+      return;
+    }
     const status = (err as { status?: number; statusCode?: number }).status
       || (err as { status?: number; statusCode?: number }).statusCode
       || 500;

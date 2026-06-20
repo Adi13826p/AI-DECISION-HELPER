@@ -161,6 +161,15 @@
     if (!resp.ok) {
       const errText = await resp.text().catch(() => resp.statusText);
       if (resp.status === 401) throw new Error('INVALID_API_KEY');
+      // Groq json_validate_failed: model generated content but JSON schema check failed.
+      // The actual generated text lives in error.failed_generation — salvage it.
+      if (resp.status === 400) {
+        try {
+          const errObj = JSON.parse(errText);
+          const fg = errObj && errObj.error && errObj.error.failed_generation;
+          if (fg) return parseGroqResponse(fg, false);
+        } catch (_) {}
+      }
       throw new Error('Groq API error ' + resp.status + ': ' + errText);
     }
 
