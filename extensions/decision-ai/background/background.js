@@ -172,6 +172,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true;
     }
 
+    case 'OPEN_TAB':
+      if (message.url) {
+        chrome.tabs.create({ url: message.url });
+      }
+      sendResponse({ success: true });
+      return false;
+
     case 'GET_ACTIVE_TAB':
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         sendResponse({ success: true, tab: tabs[0] || null });

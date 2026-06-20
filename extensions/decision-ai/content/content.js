@@ -1799,31 +1799,49 @@
         const contentEl = document.getElementById('__dai-content');
         const title = result.title || result.contentLabel || 'DecisionAI Analysis';
         const bodyHTML = contentEl ? contentEl.innerHTML : '<p>No content</p>';
-        const page = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title>' +
-          '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;color:#1a0810;line-height:1.6;padding:32px 40px;max-width:800px;margin:0 auto}' +
-          'h1{font-size:20px;font-weight:800;margin-bottom:4px}' +
-          '.generated{font-size:11px;color:#888;margin-bottom:28px}' +
-          '@media print{body{padding:20px}button{display:none!important}}' +
+        const page = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + esc(title) + '</title>' +
+          '<style>' +
+          '*{box-sizing:border-box;margin:0;padding:0}' +
+          'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;color:#1a0810;line-height:1.65;padding:36px 44px;max-width:820px;margin:0 auto;background:#fff}' +
+          'h1{font-size:21px;font-weight:800;margin-bottom:5px;color:#1a0810}' +
+          '.generated{font-size:11px;color:#888;margin-bottom:30px;border-bottom:1px solid #eee;padding-bottom:14px}' +
+          'h2,h3{margin:18px 0 6px;font-size:14px;font-weight:700;color:#1a0810}' +
+          'p,li{margin-bottom:6px;font-size:13px;color:#2d1020}' +
+          'ul,ol{padding-left:18px;margin-bottom:10px}' +
+          'svg{display:none!important}' +
+          '@media print{' +
+          '  body{padding:20px}' +
+          '  button,#__dai-bottom-bar,[id^="__dai-"]{display:none!important}' +
+          '  a{text-decoration:none;color:inherit}' +
+          '}' +
           '</style></head><body>' +
-          '<h1>DecisionAI — ' + title + '</h1>' +
-          '<div class="generated">Generated ' + new Date().toLocaleString() + '</div>' +
+          '<h1>DecisionAI — ' + esc(title) + '</h1>' +
+          '<div class="generated">Generated ' + new Date().toLocaleString() + ' · DecisionAI MasterScan</div>' +
           bodyHTML +
-          '<script>window.onload=function(){window.print();}<\/script>' +
+          '<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script>' +
           '</body></html>';
-        const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none';
-        document.body.appendChild(iframe);
-        const iWin = iframe.contentWindow;
-        iWin.document.open();
-        iWin.document.write(page);
-        iWin.document.close();
-        setTimeout(function() {
-          iWin.focus();
-          iWin.print();
-          setTimeout(function() { iframe.remove(); }, 2000);
-        }, 400);
+
+        // Open as a blob URL in a new tab — iframe printing is blocked in Chrome extensions
+        try {
+          const blob = new Blob([page], { type: 'text/html' });
+          const url  = URL.createObjectURL(blob);
+          const tab  = window.open(url, '_blank');
+          // Revoke the blob URL after the tab has loaded
+          if (tab) {
+            setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
+          } else {
+            // Popup blocked — fall back to sending via background
+            chrome.runtime.sendMessage({ type: 'OPEN_TAB', url: url });
+            setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
+          }
+        } catch (e) {
+          // Last resort: data URI (works in all contexts)
+          const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(page);
+          window.open(dataUrl, '_blank');
+        }
+
         pdfBtn.textContent = '✓ Opening…';
-        setTimeout(() => { pdfBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF'; }, 2500);
+        setTimeout(() => { pdfBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF'; }, 3000);
       });
     }
 
