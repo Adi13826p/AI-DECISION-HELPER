@@ -111,8 +111,6 @@
       temperature: 0.3,
       max_tokens: maxTokens || (isVision ? 2048 : 7000),
     };
-    if (!isVision) body.response_format = { type: 'json_object' };
-
     // ── 1. Try server proxy first ──────────────────────────────────────────
     let serverUrl = null;
     try { serverUrl = await getServerUrl(); } catch (_) {}
