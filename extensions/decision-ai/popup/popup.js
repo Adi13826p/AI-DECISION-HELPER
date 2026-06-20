@@ -753,9 +753,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (result?.success) {
         if (result.filled > 0) {
-          showToast('✓ Auto-filled ' + result.filled + ' field' + (result.filled > 1 ? 's' : '') + ' on the page!');
+          showToast('✓ Auto-filled ' + result.filled + ' field' + (result.filled > 1 ? 's' : '') + '!');
         } else {
-          showToast('No empty matching fields found on that page.');
+          showToast('No empty matching fields found.');
         }
         window.close();
       } else if (result?.error === 'NO_PROFILE') {

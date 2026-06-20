@@ -2034,7 +2034,6 @@
         el.getAttribute('autocomplete'),
         el.title,
       ];
-      // Associated <label> text
       if (el.id) {
         const lbl = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
         if (lbl) identifiers.push(lbl.textContent);
@@ -2071,47 +2070,132 @@
           }
           return false;
         }
-
-        // Use native setter to bypass React/Vue/Angular controlled-input guard
         const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
         const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-        if (nativeSetter) {
-          nativeSetter.call(el, value);
-        } else {
-          el.value = value;
-        }
-        ['input', 'change', 'keyup'].forEach(evt =>
-          el.dispatchEvent(new Event(evt, { bubbles: true }))
-        );
+        if (nativeSetter) { nativeSetter.call(el, value); } else { el.value = value; }
+        ['input', 'change', 'keyup'].forEach(evt => el.dispatchEvent(new Event(evt, { bubbles: true })));
         el.dispatchEvent(new InputEvent('input', { bubbles: true, data: value }));
         return true;
       } catch (_) { return false; }
     }
 
     const SKIP_TYPES = new Set(['hidden','submit','button','reset','file','checkbox','radio','image']);
-    const fields = Array.from(document.querySelectorAll('input, textarea, select'));
-    let filled = 0, skipped = 0;
-    const filledLabels = [];
 
-    for (const el of fields) {
-      if (el.disabled || el.readOnly) { skipped++; continue; }
-      if (el.type && SKIP_TYPES.has(el.type.toLowerCase())) continue;
-      if (!el.offsetParent && el.style.display === 'none') { skipped++; continue; }
-      if (el.value && el.value.trim().length > 0) { skipped++; continue; }
-
-      const value = getMatchedValue(el);
-      if (value && fillField(el, value)) {
-        filled++;
-        const lbl = el.placeholder || el.name || el.id || 'field';
-        filledLabels.push(lbl.replace(/_/g, ' '));
+    // Fill all currently visible empty matching fields; return filled count + labels
+    function fillVisibleFields() {
+      const fields = Array.from(document.querySelectorAll('input, textarea, select'));
+      let filled = 0;
+      const labels = [];
+      for (const el of fields) {
+        if (el.disabled || el.readOnly) continue;
+        if (el.type && SKIP_TYPES.has(el.type.toLowerCase())) continue;
+        if (!el.offsetParent && el.style.display === 'none') continue;
+        if (el.value && el.value.trim().length > 0) continue;
+        const value = getMatchedValue(el);
+        if (value && fillField(el, value)) {
+          filled++;
+          labels.push((el.placeholder || el.name || el.id || 'field').replace(/_/g, ' '));
+        }
       }
+      return { filled, labels };
     }
 
-    showAutofillToast(filled, filledLabels, null);
-    sendResponse({ success: true, filled, skipped });
+    // Find the "Next / Continue" button on the current step
+    function findNextButton() {
+      const NEXT_TEXTS = ['next','continue','proceed','next step','next page','save & continue','save and continue','go to next','forward','continue to','move to next'];
+      const SKIP_TEXTS = ['back','previous','prev','cancel','skip','exit','close'];
+      const els = Array.from(document.querySelectorAll(
+        'button:not([disabled]), input[type="button"]:not([disabled]), input[type="submit"]:not([disabled]), [role="button"]'
+      ));
+      for (const el of els) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) continue;
+        const text = (el.textContent || el.value || el.getAttribute('aria-label') || '').toLowerCase().trim();
+        if (!text) continue;
+        if (SKIP_TEXTS.some(s => text === s || text.startsWith(s))) continue;
+        if (NEXT_TEXTS.some(n => text.includes(n))) return el;
+      }
+      return null;
+    }
+
+    // Wait for SPA DOM to settle after clicking Next
+    function waitForDOMSettle(timeout) {
+      return new Promise(resolve => {
+        let settleTimer = null;
+        const hardTimer = setTimeout(() => { obs.disconnect(); resolve(); }, timeout);
+        let mutations = 0;
+        const obs = new MutationObserver((list) => {
+          const significant = list.some(m => m.addedNodes.length > 1 || m.removedNodes.length > 1);
+          if (!significant) return;
+          mutations++;
+          clearTimeout(settleTimer);
+          settleTimer = setTimeout(() => {
+            clearTimeout(hardTimer);
+            obs.disconnect();
+            resolve();
+          }, 700);
+        });
+        obs.observe(document.body, { childList: true, subtree: true });
+      });
+    }
+
+    // ── Show live progress toast ──────────────────────────────────────────────
+    function showProgressToast(step) {
+      let toast = document.getElementById('__dai-autofill-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = '__dai-autofill-toast';
+        sp(toast, {
+          position:'fixed', bottom:'24px', right:'24px', 'z-index':'2147483647',
+          background:'#ffffff', border:'1px solid rgba(236,72,153,0.35)',
+          'border-radius':'16px', padding:'14px 18px', 'min-width':'260px',
+          'box-shadow':'0 8px 32px rgba(236,72,153,0.12),0 2px 8px rgba(0,0,0,0.06)',
+          'font-family':'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          animation: '__dai-slidein 0.35s cubic-bezier(0.16,1,0.3,1) both',
+        });
+        document.documentElement.appendChild(toast);
+      }
+      toast.innerHTML =
+        '<div style="display:flex;align-items:center;gap:12px">' +
+          '<div style="width:34px;height:34px;border-radius:50%;background:rgba(236,72,153,0.12);border:1px solid rgba(236,72,153,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="animation:__dai-spin 0.9s linear infinite"><circle cx="12" cy="12" r="10" stroke="rgba(236,72,153,0.25)" stroke-width="2"/><path d="M12 2a10 10 0 0110 10" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/></svg>' +
+          '</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-size:13.5px;font-weight:700;color:#1a0810">Filling page ' + step + '…</div>' +
+            '<div style="font-size:12px;color:rgba(26,8,16,0.5);margin-top:2px">Auto-advancing to next step</div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    // ── Multi-step autofill loop ──────────────────────────────────────────────
+    const MAX_STEPS = 15;
+    let totalFilled = 0;
+    const allLabels = [];
+    let pagesVisited = 0;
+
+    for (let step = 0; step < MAX_STEPS; step++) {
+      pagesVisited++;
+      showProgressToast(pagesVisited);
+
+      const { filled, labels } = fillVisibleFields();
+      totalFilled += filled;
+      allLabels.push(...labels);
+
+      // Small pause to let React/Angular process the fills
+      await new Promise(r => setTimeout(r, 300));
+
+      const nextBtn = findNextButton();
+      if (!nextBtn) break; // No more pages — we're done
+
+      nextBtn.click();
+      await waitForDOMSettle(3500);
+    }
+
+    showAutofillToast(totalFilled, allLabels, null, pagesVisited);
+    sendResponse({ success: true, filled: totalFilled });
   }
 
-  function showAutofillToast(filled, labels, customMsg) {
+  function showAutofillToast(filled, labels, customMsg, pagesVisited) {
     const existing = document.getElementById('__dai-autofill-toast');
     if (existing) existing.remove();
 
@@ -2136,7 +2220,11 @@
     const iconSvg   = ok
       ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#10b981" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
       : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 8v4M12 16h.01" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#f59e0b" stroke-width="1.6"/></svg>';
-    const title = ok ? 'Auto-filled ' + filled + ' field' + (filled > 1 ? 's' : '') : 'No fields filled';
+
+    const multiPage = pagesVisited && pagesVisited > 1;
+    const title = ok
+      ? 'Auto-filled ' + filled + ' field' + (filled > 1 ? 's' : '') + (multiPage ? ' across ' + pagesVisited + ' steps' : '')
+      : 'No fields filled';
     const desc  = customMsg || (ok
       ? labels.slice(0, 4).join(', ') + (labels.length > 4 ? ' +' + (labels.length - 4) + ' more' : '')
       : 'No empty matching fields found on this page.');
