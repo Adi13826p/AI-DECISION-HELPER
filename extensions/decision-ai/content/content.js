@@ -1997,7 +1997,14 @@
       { keys: ['fullname','full_name','name','yourname','applicantname','candidatename','contactname'], value: p => p.name },
       { keys: ['email','emailaddress','email_address','mail','emailid'], value: p => p.email },
       { keys: ['phone','telephone','tel','mobile','cell','phonenumber','phone_number','contactnumber','mobilenumber'], value: p => p.phone },
-      { keys: ['location','city','address','region','country','hometown','currentlocation','currentcity'], value: p => p.location },
+      { keys: ['location','city','region','country','hometown','currentlocation','currentcity'], value: p => p.location },
+      { keys: ['address','streetaddress','street','addressline','fulladdress','mailingaddress','homeaddress','residentialaddress'], value: p => p.address || p.location },
+      { keys: ['zip','zipcode','postalcode','postcode','pincode','postal'], value: p => p.zipCode || p.postalCode },
+      { keys: ['photo','avatar','profilephoto','profilepic','picture','profileimage','photourl','avatarurl','profilepicture','userphoto'], value: p => {
+        if (!p.photo) return '';
+        if (p.photo.startsWith('data:')) return '';
+        return p.photo;
+      }},
       { keys: ['linkedin','linkedinurl','linkedinprofile','linkedinlink'], value: p => p.linkedin },
       { keys: ['github','githuburl','githubprofile','githubusername','githublink'], value: p => {
         if (!p.github) return '';
