@@ -225,7 +225,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     experience:     [{ company: '', role: '', period: '', bullets: '' }],
     projects:       [{ name: '', desc: '', tech: '', url: '' }],
     certifications: [{ name: '', issuer: '', date: '' }],
-    prefs: { role: '', industry: '', workType: '', salary: '', availability: '' }
+    prefs: { role: '', industry: '', workType: '', salary: '', availability: '' },
+    customSections: []
   });
 
   let profile = EMPTY_PROFILE();
@@ -350,6 +351,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>`;
   }
 
+  function makeCustomEntry(idx, data) {
+    const d = data || {};
+    return `
+      <div class="prof-entry" id="custom-${idx}">
+        <div class="prof-entry-header">
+          <span class="prof-entry-num">Section ${idx + 1}</span>
+          <button class="prof-entry-remove" data-type="custom" data-idx="${idx}" title="Remove">×</button>
+        </div>
+        <div class="prof-field-row">
+          <label class="prof-label">Title</label>
+          <input class="prof-input" data-field="custom-title-${idx}" placeholder="e.g. Volunteering, Publications, Awards…" value="${esc(d.title||'')}" autocomplete="off"/>
+        </div>
+        <div class="prof-field-row">
+          <label class="prof-label">Description</label>
+          <textarea class="prof-input prof-textarea" data-field="custom-desc-${idx}" placeholder="Describe this section…" rows="3" spellcheck="false">${esc(d.desc||'')}</textarea>
+        </div>
+      </div>`;
+  }
+
   function esc(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
@@ -357,10 +377,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Render dynamic lists ──────────────────────────────────────────────────────
 
   function renderEntries() {
-    document.getElementById('edu-entries').innerHTML  = profile.education.map((d,i)      => makeEduEntry(i,d)).join('');
-    document.getElementById('exp-entries').innerHTML  = profile.experience.map((d,i)     => makeExpEntry(i,d)).join('');
-    document.getElementById('proj-entries').innerHTML = profile.projects.map((d,i)       => makeProjEntry(i,d)).join('');
-    document.getElementById('cert-entries').innerHTML = profile.certifications.map((d,i) => makeCertEntry(i,d)).join('');
+    document.getElementById('edu-entries').innerHTML    = profile.education.map((d,i)      => makeEduEntry(i,d)).join('');
+    document.getElementById('exp-entries').innerHTML    = profile.experience.map((d,i)     => makeExpEntry(i,d)).join('');
+    document.getElementById('proj-entries').innerHTML   = profile.projects.map((d,i)       => makeProjEntry(i,d)).join('');
+    document.getElementById('cert-entries').innerHTML   = profile.certifications.map((d,i) => makeCertEntry(i,d)).join('');
+    document.getElementById('custom-entries').innerHTML = profile.customSections.map((d,i) => makeCustomEntry(i,d)).join('');
     bindEntryRemove();
   }
 
@@ -373,6 +394,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else if (type === 'exp'  && profile.experience.length > 1)    { profile.experience.splice(idx,1); }
         else if (type === 'proj' && profile.projects.length > 1)      { profile.projects.splice(idx,1); }
         else if (type === 'cert' && profile.certifications.length > 1){ profile.certifications.splice(idx,1); }
+        else if (type === 'custom')                                    { profile.customSections.splice(idx,1); }
         renderEntries();
         updateCompleteness();
       });
@@ -405,6 +427,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     profile.certifications.push({ name:'', issuer:'', date:'' });
     renderEntries();
     openSection('certs');
+    updateCompleteness();
+  });
+  document.getElementById('addCustomBtn').addEventListener('click', () => {
+    collectFromDOM();
+    profile.customSections.push({ title:'', desc:'' });
+    renderEntries();
+    openSection('custom');
     updateCompleteness();
   });
 
@@ -478,6 +507,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       name:   (document.querySelector(`[data-field="cert-name-${i}"]`)?.value||'').trim(),
       issuer: (document.querySelector(`[data-field="cert-issuer-${i}"]`)?.value||'').trim(),
       date:   (document.querySelector(`[data-field="cert-date-${i}"]`)?.value||'').trim(),
+    }));
+    profile.customSections = profile.customSections.map((_, i) => ({
+      title: (document.querySelector(`[data-field="custom-title-${i}"]`)?.value||'').trim(),
+      desc:  (document.querySelector(`[data-field="custom-desc-${i}"]`)?.value||'').trim(),
     }));
   }
 
@@ -562,6 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDot('projects',  profile.projects.some(p => p.name || p.desc));
     updateDot('certs',     profile.certifications.some(c => c.name));
     updateDot('prefs',     !!(profile.prefs.role || profile.prefs.industry));
+    updateDot('custom',    profile.customSections.some(s => s.title || s.desc));
 
     if (missing.length > 0) {
       profMissingMsg.textContent = '⚠ Missing: ' + missing.join(', ');
@@ -604,6 +638,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!profile.experience?.length)     profile.experience     = [{ company:'', role:'', period:'', bullets:'' }];
         if (!profile.projects?.length)       profile.projects       = [{ name:'', desc:'', tech:'', url:'' }];
         if (!profile.certifications?.length) profile.certifications = [{ name:'', issuer:'', date:'' }];
+        if (!Array.isArray(profile.customSections)) profile.customSections = [];
       } else {
         profile = EMPTY_PROFILE();
       }
