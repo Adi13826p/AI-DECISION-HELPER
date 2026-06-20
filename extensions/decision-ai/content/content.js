@@ -337,38 +337,38 @@
 
     // Step 2: Text model (json_object mode) generates full content-specific analysis
     const sectionSchemas = {
-      article:        '"article":{"summary":"3-4 analytical sentences","keyPoints":["point1","point2","point3","point4"],"sentiment":"Positive|Neutral|Negative|Mixed","readingTime":"X min","topics":["t1","t2"],"flashcards":[{"q":"question?","a":"answer"}]}',
-      research_paper: '"research":{"abstract":"3-4 sentence summary","findings":["finding1","finding2","finding3"],"conclusions":"2 sentence synthesis","simplifiedExplanation":"plain English 2-3 sentences","methodology":"method used","flashcards":[{"q":"q?","a":"a"}]}',
-      math:           '"math":{"problem":"the exact problem","solution":"final answer","steps":[{"step":1,"description":"what was done","result":"result"}],"difficulty":"Easy|Medium|Hard","concepts":["concept1","concept2"]}',
-      job_posting:    '"job":{"company":"company","role":"exact title","location":"location","salary":"range if shown","requirements":["req1","req2","req3"],"skills":["s1","s2","s3"],"applicationTips":["tip1","tip2"],"redFlags":["flag1"]}',
-      video:          '"video":{"summary":"3-4 sentences","keyTopics":["topic1","topic2","topic3"],"studyNotes":["note1","note2","note3"]}',
-      product:        '"general":{"summary":"product overview — suggest using Truth Layer for deep analysis","keyInsights":["insight1","insight2"],"actionItems":["Use Truth Layer for fake review detection and price comparison"]}',
-      code:           '"code":{"language":"lang","explanation":"2-3 sentences what the code does","improvements":["improvement1","improvement2"],"bugs":["potential bug1"],"codeSnippet":"key snippet if visible"}',
-      social_post:    '"social_post":{"content":"post content","keyTakeaway":"main takeaway","sentiment":"Positive|Negative|Neutral","context":"background context"}',
-      recipe:         '"recipe":{"name":"dish name","ingredients":["i1","i2","i3"],"steps":["s1","s2","s3"],"prepTime":"X min","servings":"X servings"}',
-      study_material: '"study_material":{"subject":"subject name","summary":"2-3 sentences","keyTerms":[{"term":"term","definition":"definition"}],"flashcards":[{"q":"q?","a":"a"}],"practiceQuestions":["q1","q2"]}',
-      other:          '"general":{"summary":"3-4 analytical sentences","keyInsights":["insight1","insight2","insight3"],"actionItems":["action1","action2"]}'
+      article:        '"article":{"summary":"5-6 thorough analytical sentences covering the main argument, supporting evidence, and implications","keyPoints":["Specific detailed point 1","Specific detailed point 2","Specific detailed point 3","Specific detailed point 4","Specific detailed point 5","Specific detailed point 6"],"sentiment":"Positive|Neutral|Negative|Mixed","readingTime":"X min","topics":["t1","t2","t3"],"flashcards":[{"q":"Specific question based on the content?","a":"Detailed answer"},{"q":"Another specific question?","a":"Detailed answer"},{"q":"Third question?","a":"Detailed answer"}]}',
+      research_paper: '"research":{"abstract":"5-6 sentence summary covering the research question, methodology, and findings","findings":["Specific finding with details","Another finding","Third finding","Fourth finding","Fifth finding"],"conclusions":"3-4 sentence synthesis of what the findings mean","simplifiedExplanation":"4-5 plain English sentences explaining the research to a non-expert","methodology":"2-3 sentences describing the method used","flashcards":[{"q":"q?","a":"detailed answer"},{"q":"q?","a":"detailed answer"},{"q":"q?","a":"detailed answer"}]}',
+      math:           '"math":{"problem":"the exact problem as stated","solution":"final answer with units","steps":[{"step":1,"description":"what was done and why","result":"result of this step"},{"step":2,"description":"next step","result":"result"}],"difficulty":"Easy|Medium|Hard","concepts":["concept1","concept2","concept3"]}',
+      job_posting:    '"job":{"company":"company name","role":"exact title","location":"location","salary":"range if shown, else Not specified","requirements":["Specific requirement 1","Specific requirement 2","Specific requirement 3","Specific requirement 4","Specific requirement 5"],"skills":["skill1","skill2","skill3","skill4","skill5"],"applicationTips":["Specific actionable tip 1","Specific actionable tip 2","Specific actionable tip 3"],"redFlags":["Any red flag 1","Any red flag 2"]}',
+      video:          '"video":{"summary":"5-6 detailed sentences covering the video\'s main topic, key arguments, and takeaways","keyTopics":["Specific topic 1","Specific topic 2","Specific topic 3","Specific topic 4","Specific topic 5"],"studyNotes":["Detailed study note 1","Detailed study note 2","Detailed study note 3","Detailed study note 4","Detailed study note 5"]}',
+      product:        '"general":{"summary":"4-5 sentences about the product and its key features — suggest using Truth Layer for deeper analysis","keyInsights":["Insight 1","Insight 2","Insight 3"],"actionItems":["Use Truth Layer for fake review detection and price comparison","Specific action 2"]}',
+      code:           '"code":{"language":"lang","explanation":"4-5 detailed sentences explaining what the code does, how it works, and its purpose","improvements":["Specific improvement 1","Specific improvement 2","Specific improvement 3"],"bugs":["Potential bug or issue 1","Potential bug or issue 2"],"codeSnippet":"key snippet if visible"}',
+      social_post:    '"social_post":{"content":"the post content verbatim","keyTakeaway":"2-3 sentence main takeaway and significance","sentiment":"Positive|Negative|Neutral","context":"3-4 sentences of background context and why this matters"}',
+      recipe:         '"recipe":{"name":"dish name","ingredients":["ingredient with amount","ingredient with amount","ingredient with amount","ingredient with amount"],"steps":["Detailed step 1","Detailed step 2","Detailed step 3","Detailed step 4"],"prepTime":"X min","servings":"X servings","tips":["Cooking tip 1","Cooking tip 2"]}',
+      study_material: '"study_material":{"subject":"subject name","summary":"4-5 detailed sentences covering what is being studied and key concepts","keyTerms":[{"term":"term","definition":"detailed definition"},{"term":"term2","definition":"detailed definition"},{"term":"term3","definition":"detailed definition"}],"flashcards":[{"q":"specific question?","a":"detailed answer"},{"q":"specific question?","a":"detailed answer"},{"q":"specific question?","a":"detailed answer"},{"q":"specific question?","a":"detailed answer"}],"practiceQuestions":["Specific practice question 1","Specific practice question 2","Specific practice question 3"]}',
+      other:          '"general":{"summary":"5-6 thorough analytical sentences covering what this is, why it matters, and key takeaways","keyInsights":["Specific insight 1 with detail","Specific insight 2 with detail","Specific insight 3 with detail","Specific insight 4 with detail"],"actionItems":["Specific actionable item 1","Specific actionable item 2","Specific actionable item 3"]}'
     };
 
     const schema = sectionSchemas[ct] || sectionSchemas.other;
 
     return groqCall([
-      { role: 'system', content: 'You are MasterScan — a premium AI content analyst by DecisionAI. Given extracted content, produce a sharp, insightful analysis. Always return valid JSON only, no markdown.' },
+      { role: 'system', content: 'You are MasterScan — a premium AI content analyst by DecisionAI. Produce thorough, detailed, insightful analysis. Be specific — never vague or generic. Fill every field with real content from the source material. Always return valid JSON only, no markdown.' },
       { role: 'user', content:
         'Content type: ' + ct + ' (' + label + ')\n' +
         'Title: ' + title + '\n' +
         'Source: ' + (pageUrl || 'unknown') + '\n\n' +
         'EXTRACTED CONTENT:\n' + (extracted || '(content not available)') + '\n\n' +
-        'Return ONLY this JSON:\n' +
+        'Return ONLY this JSON (be detailed and thorough in every field):\n' +
         '{"contentType":"' + ct + '","contentLabel":"' + label.replace(/"/g,'\\"') + '",' +
         '"title":"' + title.replace(/"/g,'\\"') + '",' +
         '"confidence":' + conf + ',' +
-        '"topics":["topic1","topic2","topic3"],' +
-        '"quickOverview":"2-sentence executive summary of what this is and why it matters",' +
+        '"topics":["topic1","topic2","topic3","topic4"],' +
+        '"quickOverview":"4-5 sentence executive summary covering what this content is about, its main argument or purpose, why it matters, and what the reader will learn",' +
         '"extractedText":"' + extracted.slice(0, 150).replace(/"/g,'\\"').replace(/\n/g,' ') + '",' +
         schema + '}'
       }
-    ], 'llama-3.3-70b-versatile', 3000);
+    ], 'llama-3.3-70b-versatile', 6000);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -636,24 +636,24 @@
 
   function analyzeArticle(articleData) {
     return groqCall([
-      { role: 'system', content: 'You are DecisionAI Article Intelligence — a professional content analyst. Extract only the most valuable information. Be thorough yet concise. No filler. Always return valid JSON only, no markdown.' },
+      { role: 'system', content: 'You are DecisionAI Article Intelligence — a professional content analyst. Produce thorough, detailed, specific analysis. Every field must contain real content from the article — never placeholder text. Always return valid JSON only, no markdown.' },
       { role: 'user', content:
         'ARTICLE URL: ' + articleData.url + '\n' +
         'TITLE: ' + articleData.title + '\n\n' +
         'CONTENT:\n' + articleData.text + '\n\n' +
-        'Analyze this article. Return ONLY this JSON:\n' +
+        'Analyze this article thoroughly. Return ONLY this JSON:\n' +
         '{"contentType":"article_url","contentLabel":"Article Analysis","title":' + JSON.stringify(articleData.title) + ',' +
-        '"topics":["topic1","topic2"],' +
-        '"quickOverview":"2-sentence executive summary of the core message",' +
-        '"articleData":{"mainIdea":"2-3 sentences capturing the central argument or thesis",' +
-        '"importantHighlights":["Most valuable point — specific, not vague","Another high-value insight","Another","Another","Another"],' +
-        '"keyFacts":["Concrete fact or data point stated in the article","Another fact"],' +
-        '"importantData":["Any numbers, percentages, statistics, or measurements — exact values","Another data point"],' +
-        '"pros":["If the article reviews or compares — pros"],' +
-        '"cons":["Cons if applicable, or empty array"],' +
-        '"finalSummary":"3-4 sentence synthesis — what the reader should take away and why this matters"}}'
+        '"topics":["topic1","topic2","topic3","topic4"],' +
+        '"quickOverview":"4-5 sentence executive summary covering: what the article is about, its central argument, key evidence presented, and why it matters to the reader",' +
+        '"articleData":{"mainIdea":"4-5 sentences capturing the central argument, its context, and how the article supports it",' +
+        '"importantHighlights":["Specific detailed insight 1 with context","Specific detailed insight 2 with context","Specific detailed insight 3 with context","Specific detailed insight 4 with context","Specific detailed insight 5 with context","Specific detailed insight 6 with context"],' +
+        '"keyFacts":["Concrete fact or data point from the article — exact phrasing","Another concrete fact","Another concrete fact","Another concrete fact"],' +
+        '"importantData":["Exact number, percentage, or statistic from the article","Another exact data point","Another exact data point"],' +
+        '"pros":["Strength or positive point raised in the article","Another strength","Another strength"],' +
+        '"cons":["Limitation or counterpoint raised in the article","Another limitation"],' +
+        '"finalSummary":"4-5 sentence synthesis — what the reader should take away, what action they might take, and why this article matters"}}'
       }
-    ], 'llama-3.3-70b-versatile');
+    ], 'llama-3.3-70b-versatile', 6000);
   }
 
   function analyzeProblem(query) {
@@ -1763,12 +1763,12 @@
   // ── Bottom bar ────────────────────────────────────────────────────────────
 
   function buildBottomBarHTML(accent) {
-    const b = 'display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:9px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity 0.15s';
-    return '<button id="__dai-copy" style="' + b + ';background:' + accent + '18;border-color:' + accent + '44;color:' + accent + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.8"/></svg>Copy</button>' +
-      '<button id="__dai-pdf" style="' + b + ';background:rgba(16,185,129,0.09);border-color:rgba(16,185,129,0.3);color:#059669"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF</button>' +
-      '<button id="__dai-rescan" style="' + b + ';background:rgba(236,72,153,0.07);border-color:rgba(236,72,153,0.18);color:rgba(26,8,16,0.6)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan again</button>' +
+    const b = 'display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid;transition:opacity 0.15s,transform 0.1s';
+    return '<button id="__dai-copy" style="' + b + ';background:' + accent + ';border-color:' + accent + ';color:#fff;box-shadow:0 2px 8px ' + accent + '55"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.8"/></svg>Copy</button>' +
+      '<button id="__dai-pdf" style="' + b + ';background:#059669;border-color:#059669;color:#fff;box-shadow:0 2px 8px rgba(5,150,105,0.4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF</button>' +
+      '<button id="__dai-rescan" style="' + b + ';background:#1a0810;border-color:#1a0810;color:#fff;box-shadow:0 2px 8px rgba(26,8,16,0.25)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan again</button>' +
       '<div style="flex:1"></div>' +
-      '<button id="__dai-close2" style="' + b + ';background:rgba(236,72,153,0.06);border-color:rgba(236,72,153,0.18);color:rgba(26,8,16,0.4)">Close</button>';
+      '<button id="__dai-close2" style="' + b + ';background:#f1e8f5;border-color:rgba(26,8,16,0.2);color:#1a0810">Close</button>';
   }
 
   function wireBottomBar(bar, result, mode) {
