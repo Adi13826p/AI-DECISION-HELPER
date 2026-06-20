@@ -215,12 +215,12 @@ async function cropImage(dataUrl, rect, dpr) {
 async function blobToDataUrl(blob) {
   const ab    = await blob.arrayBuffer();
   const bytes = new Uint8Array(ab);
-  let binary  = '';
-  const CHUNK = 65536;
+  const parts = [];
+  const CHUNK = 4096;
   for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + CHUNK, bytes.length)));
+    parts.push(String.fromCharCode(...bytes.subarray(i, Math.min(i + CHUNK, bytes.length))));
   }
-  return `data:${blob.type || 'image/jpeg'};base64,` + btoa(binary);
+  return `data:${blob.type || 'image/jpeg'};base64,` + btoa(parts.join(''));
 }
 
 async function logAnalysis(data) {
