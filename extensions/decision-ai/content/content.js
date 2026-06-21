@@ -7,7 +7,14 @@
 (function () {
   'use strict';
 
-  if (window.__decisionAiInjected) return;
+  // Guard against double-injection AND stale injection after extension context dies.
+  if (window.__decisionAiInjected) {
+    // If a previous injection exists but its runtime context is now dead, allow re-injection.
+    const prevAlive = (() => { try { return !!(chrome.runtime && chrome.runtime.id); } catch (_) { return false; } })();
+    if (prevAlive) return;
+    // Context dead — clear stale listener if stored, then re-inject.
+    if (typeof window.__decisionAiCleanup === 'function') { try { window.__decisionAiCleanup(); } catch (_) {} }
+  }
   window.__decisionAiInjected = true;
 
   chrome.runtime.sendMessage({ type: 'CONTENT_READY' }).catch(() => {});
@@ -80,6 +87,8 @@
     if (wasTruncated && objStart !== -1) {
       try {
         let partial = jsonStr.slice(objStart);
+        // Cap input to prevent memory overflow on malformed AI output
+        if (partial.length > 200000) partial = partial.slice(0, 200000);
         let inStr = false, escape = false;
         for (let i = 0; i < partial.length; i++) {
           const c = partial[i];
@@ -93,8 +102,8 @@
         const stack = [];
         for (let i = 0; i < partial.length; i++) {
           const c = partial[i];
-          if (c === '{') stack.push('}');
-          else if (c === '[') stack.push(']');
+          if (c === '{') { if (stack.length < 128) stack.push('}'); }
+          else if (c === '[') { if (stack.length < 128) stack.push(']'); }
           else if (c === '}' || c === ']') stack.pop();
         }
         partial += stack.reverse().join('');
@@ -151,7 +160,7 @@
       });
       if (!resp.ok) throw new Error('Server proxy error ' + resp.status);
       const data = await resp.json();
-      if (!data.content) throw new Error('Empty server response');
+      if (data.content == null) throw new Error('Empty server response');
       return parseGroqResponse(data.content, !!data.wasTruncated);
     }
 
@@ -433,7 +442,17 @@
   // MESSAGE LISTENER
   // ══════════════════════════════════════════════════════════════════════════
 
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  const __daiMsgHandler = (message, _sender, sendResponse) => {
+    return __daiMsgDispatch(message, _sender, sendResponse);
+  };
+  chrome.runtime.onMessage.addListener(__daiMsgHandler);
+  window.__decisionAiCleanup = () => {
+    try { chrome.runtime.onMessage.removeListener(__daiMsgHandler); } catch (_) {}
+    window.__decisionAiInjected = false;
+    window.__decisionAiCleanup = null;
+  };
+
+  function __daiMsgDispatch(message, _sender, sendResponse) {
     switch (message.type) {
       case 'EXTRACT_PRODUCT_DATA':
         sendResponse({ success: true, data: extractProductData() });
@@ -459,7 +478,7 @@
       default:
         return false;
     }
-  });
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // OVERLAY — main entry point
@@ -994,6 +1013,10 @@
   function overlayShowResult(result, mode) {
     const content = document.getElementById('__dai-content');
     if (!content) return;
+    if (result == null || typeof result !== 'object' || Array.isArray(result)) {
+      overlayShowError('AI returned an unexpected response. Please try again.');
+      return;
+    }
     const isScan = mode === 'masterscan';
     const accent = isScan ? '#06b6d4' : '#a855f7';
     const div = document.createElement('div');
@@ -1028,6 +1051,7 @@
   // ── Truth Layer results HTML ──────────────────────────────────────────────
 
   function buildTruthLayerHTML(d, accent) {
+    if (!d || typeof d !== 'object') return '<div style="padding:20px;color:rgba(26,8,16,0.5);font-size:13px">No analysis data returned. Please try again.</div>';
     const p  = d.product || {};
     const sc = d.truthScore ?? 0;
     const scColor = sc >= 75 ? '#10b981' : sc >= 50 ? '#f59e0b' : '#ef4444';
@@ -1094,6 +1118,7 @@
   // ── MasterScan results HTML ───────────────────────────────────────────────
 
   function buildMasterScanHTML(d, accent) {
+    if (!d || typeof d !== 'object') return '<div style="padding:20px;color:rgba(26,8,16,0.5);font-size:13px">No analysis data returned. Please try again.</div>';
     const ct = d.contentType || 'general';
 
     // ── Header block: type badge + title + topics + quick overview ────────
