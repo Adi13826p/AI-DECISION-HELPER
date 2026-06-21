@@ -19,6 +19,8 @@
   const GROQ_ENDPOINT  = 'https://api.groq.com/openai/v1/chat/completions';
   const VISION_MODEL   = 'meta-llama/llama-4-scout-17b-16e-instruct';
   const SERVER_PROXY   = '/api/ai/proxy';
+  // Default server — always available so users without a personal key can still use DecisionAI
+  const DEFAULT_SERVER = 'https://4c6e915d-b5f6-4f2a-877b-ba319d770878-00-2f4li95iowitl.sisko.replit.dev';
 
   function isContextValid() {
     try { return !!(chrome && chrome.storage && chrome.storage.local); }
@@ -51,14 +53,14 @@
 
   function getServerUrl() {
     return new Promise((resolve) => {
-      if (!isContextValid()) { resolve(null); return; }
+      if (!isContextValid()) { resolve(DEFAULT_SERVER); return; }
       try {
         chrome.storage.local.get('serverUrl', (d) => {
-          if (chrome.runtime.lastError) { resolve(null); return; }
-          const url = d.serverUrl ? d.serverUrl.replace(/\/$/, '') : null;
-          resolve(url && url.length > 5 ? url : null);
+          if (chrome.runtime.lastError) { resolve(DEFAULT_SERVER); return; }
+          const custom = d.serverUrl ? d.serverUrl.replace(/\/$/, '') : null;
+          resolve((custom && custom.length > 5) ? custom : DEFAULT_SERVER);
         });
-      } catch (_) { resolve(null); }
+      } catch (_) { resolve(DEFAULT_SERVER); }
     });
   }
 
@@ -111,71 +113,78 @@
       temperature: 0.3,
       max_tokens: maxTokens || (isVision ? 2048 : 7000),
     };
-    // ── 1. Try server proxy first ──────────────────────────────────────────
+
+    // ── Helper: call Groq directly with a personal key ─────────────────────
+    async function callWithPersonalKey(key) {
+      const resp = await fetch(GROQ_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => resp.statusText);
+        if (resp.status === 401) throw new Error('INVALID_API_KEY');
+        if (resp.status === 400) {
+          try {
+            const errObj = JSON.parse(errText);
+            const fg = errObj && errObj.error && errObj.error.failed_generation;
+            if (fg) return parseGroqResponse(fg, false);
+          } catch (_) {}
+        }
+        throw new Error('Groq API error ' + resp.status + ': ' + errText);
+      }
+      const data = await resp.json();
+      const choice = data.choices && data.choices[0];
+      const rawText = choice && choice.message && choice.message.content;
+      if (!rawText) throw new Error('Empty response from AI');
+      return parseGroqResponse(rawText, choice.finish_reason === 'length');
+    }
+
+    // ── Helper: call via server proxy (server's own GROQ_API_KEY) ──────────
+    async function callWithServerKey(serverUrl) {
+      const resp = await fetch(serverUrl + SERVER_PROXY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!resp.ok) throw new Error('Server proxy error ' + resp.status);
+      const data = await resp.json();
+      if (!data.content) throw new Error('Empty server response');
+      return parseGroqResponse(data.content, !!data.wasTruncated);
+    }
+
+    // ── 1. Personal key — if user has set one, use it first ────────────────
+    let apiKey = null;
+    try {
+      apiKey = await getApiKey();
+      if (!isContextValid()) { showRefreshToast(); }
+    } catch (_) {}
+
+    if (apiKey) {
+      try {
+        return await callWithPersonalKey(apiKey);
+      } catch (e) {
+        // Invalid key = hard error, don't silently fall through
+        if (e.message === 'INVALID_API_KEY') throw new Error('Your Groq API key is invalid. Update it in the ⚙ settings.');
+        // Rate limit or other error → fall through to server key
+      }
+    }
+
+    // ── 2. Server key — always available as fallback ────────────────────────
     let serverUrl = null;
     try { serverUrl = await getServerUrl(); } catch (_) {}
 
     if (serverUrl) {
       try {
-        const resp = await fetch(serverUrl + SERVER_PROXY, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          signal: AbortSignal.timeout(60000),
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.content) return parseGroqResponse(data.content, !!data.wasTruncated);
-        }
-        // 429 = rate limited → fall through to user key
-        // Other errors → also fall through (best-effort fallback)
+        return await callWithServerKey(serverUrl);
       } catch (_) {
-        // Network error or timeout → fall through to user key
+        // Server unavailable → if user had a key, they already saw a rate limit error
       }
     }
 
-    // ── 2. Fall back to user's own Groq key ───────────────────────────────
-    let apiKey;
-    try { apiKey = await getApiKey(); }
-    catch (e) {
-      if (e.message === 'CONTEXT_INVALID') { showRefreshToast(); throw e; }
-      throw e;
-    }
-
-    if (!apiKey) {
-      if (serverUrl) throw new Error('RATE_LIMITED');
-      throw new Error('NO_API_KEY');
-    }
-
-    const resp = await fetch(GROQ_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => resp.statusText);
-      if (resp.status === 401) throw new Error('INVALID_API_KEY');
-      // Groq json_validate_failed: model generated content but JSON schema check failed.
-      // The actual generated text lives in error.failed_generation — salvage it.
-      if (resp.status === 400) {
-        try {
-          const errObj = JSON.parse(errText);
-          const fg = errObj && errObj.error && errObj.error.failed_generation;
-          if (fg) return parseGroqResponse(fg, false);
-        } catch (_) {}
-      }
-      throw new Error('Groq API error ' + resp.status + ': ' + errText);
-    }
-
-    const data = await resp.json();
-    const choice = data.choices && data.choices[0];
-    const rawText = choice && choice.message && choice.message.content;
-    if (!rawText) throw new Error('Empty response from AI');
-    return parseGroqResponse(rawText, choice.finish_reason === 'length');
+    throw new Error(apiKey ? 'AI service unavailable. Please try again.' : 'NO_API_KEY');
   }
 
   async function analyzeTruthLayer(imageDataUrl, pageUrl, pageTitle) {
