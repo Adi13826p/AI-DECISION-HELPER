@@ -439,10 +439,11 @@ Rules:
 
 router.post("/proxy", async (req, res) => {
   try {
-    const { messages, model, maxTokens, responseFormat, temperature } = req.body as {
+    const { messages, model, maxTokens, max_tokens, responseFormat, temperature } = req.body as {
       messages: Array<{ role: string; content: unknown }>;
       model: string;
       maxTokens?: number;
+      max_tokens?: number;
       responseFormat?: { type: string };
       temperature?: number;
     };
@@ -455,7 +456,7 @@ router.post("/proxy", async (req, res) => {
       model,
       messages: messages as Parameters<typeof groq.chat.completions.create>[0]["messages"],
       temperature: temperature ?? 0.3,
-      max_tokens: maxTokens ?? 7000,
+      max_tokens: maxTokens ?? max_tokens ?? 7000,
     };
     if (responseFormat) {
       params.response_format = responseFormat as { type: "json_object" };
