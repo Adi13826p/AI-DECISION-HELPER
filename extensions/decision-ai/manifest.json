@@ -42,7 +42,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["views/*", "content/selector.js"],
+      "resources": ["views/**", "content/selector.js"],
       "matches": ["<all_urls>"]
     }
   ]
