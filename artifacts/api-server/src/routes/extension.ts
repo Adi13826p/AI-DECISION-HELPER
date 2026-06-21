@@ -22,7 +22,7 @@ router.get("/download", (_req, res) => {
   });
 
   archive.pipe(res);
-  archive.directory(extensionDir, "decision-ai-extension");
+  archive.directory(extensionDir, false);
   archive.finalize();
 });
 
