@@ -1818,29 +1818,28 @@
           '<h1>DecisionAI — ' + esc(title) + '</h1>' +
           '<div class="generated">Generated ' + new Date().toLocaleString() + ' · DecisionAI MasterScan</div>' +
           bodyHTML +
-          '<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script>' +
           '</body></html>';
 
-        // Open as a blob URL in a new tab — iframe printing is blocked in Chrome extensions
+        // Direct file download — no new tab, no print dialog
         try {
-          const blob = new Blob([page], { type: 'text/html' });
+          const blob = new Blob([page], { type: 'text/html;charset=utf-8' });
           const url  = URL.createObjectURL(blob);
-          const tab  = window.open(url, '_blank');
-          // Revoke the blob URL after the tab has loaded
-          if (tab) {
-            setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
-          } else {
-            // Popup blocked — fall back to sending via background
-            chrome.runtime.sendMessage({ type: 'OPEN_TAB', url: url });
-            setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
-          }
+          const safeName = (title || 'DecisionAI-Analysis').replace(/[^a-z0-9_\- ]/gi, '_').trim() || 'DecisionAI-Analysis';
+          const a    = document.createElement('a');
+          a.href     = url;
+          a.download = safeName + '.html';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function() { URL.revokeObjectURL(url); }, 8000);
         } catch (e) {
-          // Last resort: data URI (works in all contexts)
+          // Fallback: send to background script to download via chrome.downloads
           const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(page);
-          window.open(dataUrl, '_blank');
+          chrome.runtime.sendMessage({ type: 'DOWNLOAD_FILE', url: dataUrl, filename: 'DecisionAI-Analysis.html' });
         }
 
-        pdfBtn.textContent = '✓ Opening…';
+        pdfBtn.textContent = '✓ Downloaded!';
         setTimeout(() => { pdfBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 16l-4-4h3V4h2v8h3l-4 4z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Download PDF'; }, 3000);
       });
     }

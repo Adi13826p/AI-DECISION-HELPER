@@ -5,6 +5,7 @@
   "description": "AI-powered browser intelligence. Select any area on screen to analyze products, articles, research papers, and more.",
   "permissions": [
     "activeTab",
+    "downloads",
     "scripting",
     "storage",
     "tabs"

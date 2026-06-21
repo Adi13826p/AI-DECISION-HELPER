@@ -179,6 +179,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ success: true });
       return false;
 
+    case 'DOWNLOAD_FILE':
+      if (message.url && message.filename) {
+        chrome.downloads.download({ url: message.url, filename: message.filename, saveAs: false });
+      }
+      sendResponse({ success: true });
+      return false;
+
     case 'GET_ACTIVE_TAB':
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         sendResponse({ success: true, tab: tabs[0] || null });
