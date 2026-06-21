@@ -27,7 +27,7 @@
   const VISION_MODEL   = 'meta-llama/llama-4-scout-17b-16e-instruct';
   const SERVER_PROXY   = '/api/ai/proxy';
   // Default server — always available so users without a personal key can still use DecisionAI
-  const DEFAULT_SERVER = 'https://4c6e915d-b5f6-4f2a-877b-ba319d770878-00-2f4li95iowitl.sisko.replit.dev';
+  const DEFAULT_SERVER = 'https://c535f321-5959-4a4c-a757-eb07b03f5e4b-00-17u5507leaop0.pike.replit.dev';
 
   function isContextValid() {
     try { return !!(chrome && chrome.storage && chrome.storage.local); }
